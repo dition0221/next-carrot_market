@@ -215,4 +215,4 @@
       - 설정법 : 'tailwind.config.ts' 에서 'plugin' 프로퍼티의 배열에 'require("@tailwindcss/forms")'를 입력
         - 설정 후 자동으로 기본 스타일이 적용됨
     - <a href="https://tailwindcss.com/docs/plugins" target="_blank">공식 문서</a>
-- **24-01-05 : #5.3 ~ #5.8 / Tailwind CSS(3)**
+- **24-01-05 : #5.3 ~ #5.11 / Tailwind CSS(3)**
