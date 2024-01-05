@@ -150,3 +150,69 @@
     - 사용자가 토글 버튼을 클릭 시 세부 정보 섹션이 열리거나 닫힘
       - 상태조건 open : 세부 정보 섹션이 열렸을 때의 상태
 - **24-01-04 : #4.9 ~ #5.2 / Tailwind CSS(2)**
+  - 반응형 웹 디자인
+    - Tailwind는 mobile을 디자인한 후, desktop을 디자인하는 방식 (모바일 우선)
+      - Tailwind에서느 모바일 화면을 위한 선택자가 없음
+      - 모든 class명이 기본값으로 모바일에 우선 적용되고, 보다 큰 화면들을 위한 선택자가 존재함
+    - 반응형 선택자
+      - 시작점이 정해져 있지만, 끝점이 정해져 있지 않음 (무한대까지 적용)
+      - sm (min-width: 640px)
+      - md (min-width: 768px)
+      - lg (min-width: 1024px)
+      - xl (min-width: 1280px)
+      - 2xl (min-width: 1536px)
+      - portrait / landscape
+  - 다크모드
+    - 기본값으로, 사용자의 기기 설정에 따라 활성화되게 되어있음
+    - 기본형 : `dark:CSS문`
+    - 수동으로 다크/라이트 모드를 설정 가능
+      - 'tailwind.config.js'에서 기기의 설정에 따를건지, 아니면 직접 토글시킬건지 설정하기
+        - 자동 : `darkMode: "media"` (기본값)
+        - 수동 : `darkMode: "class"`
+          - 사용할 요소에 'dark'라는 class명을 넣어야지 작동함
+            - 부모 요소 중에서 .dark를 찾는 기능을 함
+          - &lt;html&gt; 또는 &lt;body&gt;에 class를 추가하는 것이 일반적
+            - 모든 요소의 부모 요소이기 때문
+            - '\_app.tsx'에서 &lt;Components&gt;의 상위요소를 만들어도 됨
+  - Just-In-Time Compiler (JIT Compiler)
+    - Tailwind 3.0 이전 버전에서는 여러 개의 class를 중첩하여 사용하지 못했음
+      - 수 많은 조합법이 있어, 아주 큰 CSS파일이 되기 때문
+      - 배포 시 프로젝트를 스캔하여, CSS 파일에 포함된 class명을 제외하고 사용하지 않는 나머지 class들을 전부 삭제함 : purging
+    - JIT 컴파일러는 코드를 실시간으로 감시하여, 필요한 class를 생성하는 기능
+      - 작은 파일로 시작해, 사용한 class의 코드만 추가함
+        - 개발자도구(F12)에서 &lt;head&gt; 내의 &lt;style&gt;을 통해 확인 가능
+        - 선택자 중첩이 가능해짐
+      - reset CSS가 존재함 (@tailwind base; 코드에 의함)
+  - 사용자 정의 Tailwind CSS
+    - 기본형 : '값' 부분에 `[값]` 형태로 사용
+      - ex. `text-[36px]`
+      - ex. `text-[#fff]`
+      - ex. `bg-[url('/vercel.svg')]`
+    - JIT Compiler 덕분에 사용이 가능해짐
+  - 코드에 따라 Tailwind class를 바꿀 시 일종의 함수를 만듦
+    - 템플릿 리터럴 대신 함수를 사용함
+    - ex.
+      ```
+      function cls(...classNames: string[]) {
+        return classNames.join(" ");
+      }
+      ......
+      className={cls(
+        "pb-4 font-medium",
+        method === "email"
+          ? "border-b-2 border-orange-500 text-orange-400"
+          : ""
+      )}
+      ```
+  - Tailwind plugins
+    - Tailwind를 확장하는 재사용 가능한 써드파티 plugins
+      - plugin : 부가적인 기능을 더해줌
+      - 여러 개의 plugin들이 존재함
+    - @tailwindcss/forms
+      - &lt;form&gt;의 기본 스타일을 갖도록 해주는 plugin
+        - &lt;input&gt;에 reset layer를 추가할 수 있음
+      - 설치법 : `npm i @tailwindcss/forms`
+      - 설정법 : 'tailwind.config.ts' 에서 'plugin' 프로퍼티의 배열에 'require("@tailwindcss/forms")'를 입력
+        - 설정 후 자동으로 기본 스타일이 적용됨
+    - <a href="https://tailwindcss.com/docs/plugins" target="_blank">공식 문서</a>
+- **24-01-05 : #5.3 ~ #5.8 / Tailwind CSS(3)**
