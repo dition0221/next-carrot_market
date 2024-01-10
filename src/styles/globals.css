@@ -2,8 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/* No scroll-bar */
+body {
+  -ms-overflow-style: none;
+}
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* Remove arrow button on <input:number> */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"] {
+  appearance: textfield;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+}
+
 /* :root {
-  --foreground-rgb: 0, 0, 0;
+  --foreground-rgb: 0, 0, 0; 
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
 }

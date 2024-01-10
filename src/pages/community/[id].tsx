@@ -1,10 +1,15 @@
+import Button from "@/components/button";
+import Layout from "@/components/layout";
+import Textarea from "@/components/textarea";
+
 export default function CommunityDetail() {
   return (
-    <main>
+    <Layout canGoBack>
       <span className="inline-flex my-2.5 ml-4 items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
         동네질문
       </span>
-      <div className="flex px-4 py-3 mb-3 border-b items-center space-x-3 cursor-pointer">
+
+      <section className="flex px-4 py-3 mb-3 border-b items-center space-x-3 cursor-pointer">
         <div className="w-10 h-10 rounded-full bg-slate-300" />
         <div>
           <p className="text-sm font-medium text-gray-700">Steve Jobs</p>
@@ -12,7 +17,7 @@ export default function CommunityDetail() {
             View profile &rarr;
           </p>
         </div>
-      </div>
+      </section>
 
       <section>
         <div className="mt-2 px-4 text-gray-700">
@@ -74,16 +79,15 @@ export default function CommunityDetail() {
         ))}
       </section>
 
-      <section className="px-4">
-        <textarea
-          className="mt-1 shadow-sm w-full border-gray-300 focus:outline-none focus:ring-orange-500 focus:border-orange-500 rounded-md resize-none"
-          rows={4}
+      <form className="px-4 space-y-2">
+        <Textarea
+          name="reply"
+          label="Reply"
           placeholder="Answer this question!"
+          required
         />
-        <button className="mt-2 w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 focus:outline-none transition">
-          Reply
-        </button>
-      </section>
-    </main>
+        <Button text="Reply" full />
+      </form>
+    </Layout>
   );
 }

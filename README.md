@@ -8,11 +8,12 @@
 - "react-dom": "^18"
 - "next": "14.0.4"
 
-<img src="https://img.shields.io/badge/Next.js-000?style=flat-square&logo=nextdotjs&logoColor=white"/> <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white"/> <img src="https://img.shields.io/badge/Tailwind CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white"/>
+<img src="https://img.shields.io/badge/Next.js-000?style=flat-square&logo=nextdotjs&logoColor=white"/> <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white"/> <img src="https://img.shields.io/badge/Tailwind CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white"/>  
+<img src="https://img.shields.io/badge/Prisma-2D3748?style=flat-square&logo=prisma&logoColor=white"/> <img src="https://img.shields.io/badge/PlanetScale-000?style=flat-square&logo=planetscale&logoColor=white"/>
 
 ---
 
-- **24-01-02 : #3.0 ~ #4.8 / Set up + Tailwind CSS(1)**
+- **24-01-02 : #3.0 ~ #4.8 / Set up + Tailwind CSS (1)**
   - Set up (NextJS + Tailwind CSS)
     - 기본형 : `npx create-next-app@latest`
       - TypeScript, Tailwind CSS 사용
@@ -149,7 +150,7 @@
     - &lt;summary&gt; : &lt;details&gt;의 제목을 쓰는 부분
     - 사용자가 토글 버튼을 클릭 시 세부 정보 섹션이 열리거나 닫힘
       - 상태조건 open : 세부 정보 섹션이 열렸을 때의 상태
-- **24-01-04 : #4.9 ~ #5.2 / Tailwind CSS(2)**
+- **24-01-04 : #4.9 ~ #5.2 / Tailwind CSS (2)**
   - 반응형 웹 디자인
     - Tailwind는 mobile을 디자인한 후, desktop을 디자인하는 방식 (모바일 우선)
       - Tailwind에서느 모바일 화면을 위한 선택자가 없음
@@ -215,4 +216,13 @@
       - 설정법 : 'tailwind.config.ts' 에서 'plugin' 프로퍼티의 배열에 'require("@tailwindcss/forms")'를 입력
         - 설정 후 자동으로 기본 스타일이 적용됨
     - <a href="https://tailwindcss.com/docs/plugins" target="_blank">공식 문서</a>
-- **24-01-05 : #5.3 ~ #5.11 / Tailwind CSS(3)**
+- **24-01-05 : #5.3 ~ #5.11 / Tailwind CSS (3)**
+  - divide
+    - 여러 개의 자식 컴포넌트 사이에 border를 그려주는 Tailwind만의 class명
+      - 'space'와 비슷한 역할
+    - 기본형 : `divide-축-값`
+      - 축 : { x, y }
+- **24-01-06 : #5.12 ~ #5.15 / Tailwind CSS (4)**
+- **24-01-06 : #5.16 ~ #5.18 / Tailwind CSS (5)**
+- **24-01-10 : #6.0 ~ #6.4 / Prisma + PlanetScale (1)**
+  - _Update : 컴포넌트 리팩토링_
