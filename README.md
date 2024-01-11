@@ -226,3 +226,105 @@
 - **24-01-06 : #5.16 ~ #5.18 / Tailwind CSS (5)**
 - **24-01-10 : #6.0 ~ #6.4 / Prisma + PlanetScale (1)**
   - _Update : 컴포넌트 리팩토링_
+  - Prisma
+    - JS(또는 TS)와 DB 사이에 다리를 놓아주는 번역기
+      - Node.js and TypeScript ORM(Object Relational Mapping)
+      - SQL 같은 DB언어를 작성하지 않아도 됨
+        - { postgreSQL, MySQL, SQL Server, SQLite, MongoDB } 등에 사용 가능
+    - 설치 및 설정법
+      1. VSCode에서 'Prisma' 확장프로그램 설치하기
+         - Syntax highlight, formatting, 자동완성 등의 기능
+         - VSCode의 'settings.json' 파일에서 아래의 코드 추가하기 (Prettier를 위함)
+           ```
+           "[prisma]": {
+             "editor.defaultFormatter": "Prisma.prisma",
+             "editor.formatOnSave": true
+           }
+           ```
+         - <a href="https://velog.io/@pengoose_dev/schema.prismaprettier" target="_blank">참고 문서</a>
+      2. 'Prisma' 패키지 설치하기
+         - `npm i prisma -D`
+      3. 'Prisma' 초기화하기
+         - `npx prisma init`
+           - 'prisma' 폴더와 '.env' 파일이 생성됨 ('.env' 파일은 .gitignore에 등록할 것)
+         - prisma CLI 사용 시의 접두사는 `npx prisma`
+      4. '.env' 파일에서 'DATABASE_URL' 설정하기
+      5. 'prisma/schema.prisma' 파일에서 datasource의 provider를 설정하기
+         - provider : 사용할 DB의 종류
+    - <a href="https://www.prisma.io/" target="_blank">공식 문서</a>
+  - Prisma에서 DB model 선언법
+    - 'schema.prisma' 파일에서 데이터(모델)의 모양을 설명해주어야 함
+    - Prisma가 자동으로 client를 생성해 줌 (자동완성 기능 제공)
+      - client를 이용해 TS로 DB와 직접 상호작용할 수 있음
+    - 기본형
+      ```
+      model 모델명 {
+        컬럼명 타입 ...
+        ......
+      }
+      ```
+      - 옵션값 : 타입의 말미에 '?' 기호를 입력
+      - @id : 해당 컬럼이 model의 id임을 알려줌
+      - @unique : 중복값 금지
+      - @default(필드값) : 기본값 설정
+        - autoincrement() : 자동으로 증가하는 필드값
+        - now() : 새 데이터가 만들어질 때 그 시점의 날짜를 가져옴
+      - @updatedAt : 데이터가 업데이트 될 때의 시간을 자동으로 저장
+    - ex.
+      ```
+      model User {
+        id        Int      @id @default(autoincrement())
+        phone     Int?     @unique
+        email     String?  @unique
+        name      String
+        avatar    String?
+        createdAt DateTime @default(now())
+        updatedAt DateTime @updatedAt
+      }
+      ```
+  - PlanetScale
+    - MySQL과 호환되는 serverless DB 플랫폼
+      - DB 플랫폼 : DB를 제공함
+      - serverless : 직접 서버를 관리/유지보수할 필요가 없음 (서버가 없는 것이 아님)
+      - Vitess
+        - MySQL을 좀 더 쉽게 scaling 할 수 있도록 하는 오픈소스 시스템
+        - Google이 YouTube를 scale하기 위해 만든 것
+          - 대기업이 규모에 맞게 MySQL을 scale하기 위해 쓰는 방법
+          - scale
+            - 해당 데이터 값의 크기 또는 범위를 나타냄
+            - 데이터의 정확성과 저장 공간을 조절하는 데 사용됨
+    - 설치법
+      1. 회원가입 및 로그인하기
+         - <a href="https://planetscale.com/" target="_blank">홈페이지</a>
+      2. PlanetScale CLI 설치하기
+         - 'scoop' 설치하기
+           - 콘솔을 통해서 쉽게 다운로드 받을 수 있게 해주는 도구
+           - powershell 관리자모드에서 `irm get.scoop.sh -outfile 'install.ps1'` 과
+             `iex "& {$(irm get.scoop.sh)} -RunAsAdmin"` 명령어를 차례로 입력하여 설치
+         - scoop으로 'pscale' 설치하기
+           - [윈도우] 터미널에 아래와 같이 입력
+             - `scoop bucket add pscale https://github.com/planetscale/scoop-bucket.git`
+             - `scoop install pscale mysql`
+      3. 터미널에 'pscale'를 입력해 제대로 설치되었는지 확인하기
+      4. 터미널로 pscale 계정 로그인하기
+         - `pscale auth login`
+    - DB 생성법 (CLI 방법)
+      - 홈페이지에서 DB를 생성하는 방법도 존재
+      1. 지역 리스트 확인하기
+         - `pscale region list`
+      2. 가까운 지역에 DB를 생성하기
+         - 기본형 : `pscale database create 데이터베이스명 --region 슬러그명`
+           - ex. `pscale database create carrot-market --region gcp-asia-northeast3`
+    - PlanetScale에서는 일종의 보안 tunnel을 이용 가능
+      - 장점
+        - 직접 DB의 PW를 관리하지 않아도 됨
+        - MySQL을 설치/실행할 필요 없음
+        - 2개의 DB를 만들어서 컴퓨터용/서버용으로 사용할 필요 없음
+        - '.env' 파일에 PW를 저장할 필요 없음
+      - PW없이 컴퓨터와 PlanetScale 사이에 보안 연결을 하는 방법
+        1. DB와 연결하기
+           - 기본형 : `pscale connect 데이터베이스명`
+           - 연결을 유지해야 사용 가능
+        2. '.env' 파일에 'DATABASE_URL' 입력하기
+           - 기본형 : `mysql://DB연결주소/DB명`
+- **24-01-11 : #6.5 ~ #6.8 / Prisma + PlanetScale (2)**
