@@ -328,3 +328,88 @@
         2. '.env' 파일에 'DATABASE_URL' 입력하기
            - 기본형 : `mysql://DB연결주소/DB명`
 - **24-01-11 : #6.5 ~ #6.8 / Prisma + PlanetScale (2)**
+  - Vitess
+    - MySQL과 호환되는 DB
+      - MySQL과 비슷하지만, 다르게 처리함
+    - PlanetScale은 Vitess를 사용함
+    - 대량의 connections, tables과 다양한 서버들을 scaling 가능
+    - MySQL에서는 하지만, Vitess에서는 하지않는 foreign key 제약
+      - 일반 SQL은 DB에서 한 객체가 다른 객체에 연결된 상태를 생성하려고 할 때, DB가 자동으로 정보라는 것을 앎
+        - DB에 저장 시 연결된 id주소를 확인함 (미존재 시 동작 x)
+      - Vitess는 DB에 저장 시 연결된 id주소가 존재하는지 확인하지 않음
+        - 에러없이 작동하기 때문에 Prisma를 이용해 도움을 받아야 함
+        - DB 측에서 확인하는 것이 아니라, Prisma 측에서 확인함
+      - Prisma의 도움을 받기 위한 설정법
+        - 'schema.prisma' 파일에서 'datasource db' 객체에 `relationMode = "prisma"` 프로퍼티를 추가
+  - Prisma schema를 기반으로 DB를 설정하고 동기화하는 방법
+    - 명령어 : `npx prisma db push`
+      - Prisma client가 생성됨
+      - model schema가 반영됨
+    - 홈페이지의 main branch에서 확인 가능
+  - Prisma Studio 패키지
+    - Visual Database Browser
+      - DB를 위한 관리자 패널
+    - 사용법 : `npx prisma studio`
+  - Prisma client
+    - 생각하는 방식으로 구성하고 앱에 맞춤화된 유형으로, Prisma schema에서 자동 생성되는 쿼리 빌더
+      - TypeScript 및 Node.js용 직관적인 DB client
+      - 'mongoose'와 같은 역할을 함
+    - 'schema.prisma' 파일이 제공해줌
+    - 자동으로 schema를 확인해 TypeScript로 타입을 만들어줌
+      - '/node_modules/.prisma/client/index.d.ts'에서 확인 가능
+    - 설치 및 사용법
+      1. client 설치하기
+         `npm i @prisma/client`
+      2. 초기화 코드 작성하기
+         ```
+         // '@/libs/client.ts'
+         import { PrismaClient } from "@prisma/client";
+         const client = new PrismaClient();
+         export default client;
+         ```
+    - 사용법 : 'client' 객체를 이용해 사용
+      - DB의 새로운 행(record)을 생성하는 방법
+        ```
+        await client.모델명.create({
+          data: {
+            내용
+          }
+        });
+        ```
+    - Front-End에서 Prisma client를 싱행하면 안 됨 (보안 문제)
+      - Back-End에서 사용해야 함
+  - NextJS의 API Routes
+    - NextJS로 API를 빌드하기 위한 솔루션을 제공
+      - server-side 전용 번들이며, client-side 번들 크기를 늘리지 않음
+    - 파일 생성 : '/pages/api' 폴더 내에서 '.tsx' 파일을 생성
+      - connection 핸들러인 함수를 export default 하여 사용함
+    - 기본형
+      ```
+      import { NextApiRequest, NextApiResponse } from "next";
+      export default function handler(
+        req: NextApiRequest,
+        res: NextApiResponse
+      ) {
+        ......
+      }
+      ```
+    - ex.
+      ```
+      import { NextApiRequest, NextApiResponse } from "next";
+      import client from "@/libs/client";
+      export default async function handler(
+        req: NextApiRequest,
+        res: NextApiResponse
+      ) {
+        await client.user.create({
+          data: {
+            email: "hi",
+            name: "hi",
+          },
+        });
+        res.json({
+          ok: true,
+        });
+      }
+      ```
+- **24-01-12 : #7.0~ #8.5 / React-Hook-Form + Refactoring**
