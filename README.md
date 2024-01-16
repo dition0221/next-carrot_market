@@ -412,4 +412,114 @@
         });
       }
       ```
-- **24-01-12 : #7.0~ #8.5 / React-Hook-Form + Refactoring**
+- **24-01-12 : #7.0 ~ #8.5 / React-Hook-Form + Refactoring**
+  - React-Hook-Form 패키지
+    - React에서 검증, 에러, 이벤트 같은 필요한 기능들을 넣어서 form을 만들 수 있게 해주는 패키지
+    - 설치법 : `npm i react-hook-form`
+  - React-Hook-Form 사용법
+    - 선언법 : `const { 요소들 } = useForm<제네릭>(옵션);`
+      - 옵션 'defaultValues' : field의 초기값 설정 가능
+      - 옵션 'mode' : register의 검증 및 에러메시지가 나타나는 시점을 선택
+        - [기본값] 'onSubmit'
+    - register : [필수] &lt;input&gt;을 state와 연결시켜주는 메서드
+      - 사용법 : `<input {...register(이름, 옵션?)} />`
+      - 옵션을 사용해 각각의 field에서 검증 기능(+ 에러 메시지)을 사용 가능
+        - 옵션 : { min, max, minLength, maxLength, pattern(정규식), validate 등 }
+      - validate : 커스텀 검증 규칙을 생성하는 프로퍼티 (여러 개 가능)
+        - 기본형 : `validate : { 검증명 : (value) => 불리안값 || "메시지" }`
+        - ex.
+          ```
+          validate: { notGmail: (value) => !value.includes("@gmail.com") || "No Gmail"}
+          ```
+    - handleSubmit : [필수] form을 제출 시 사용하는 메서드
+      - 사용법 : `<form onSubmit={handleSubmit(유효시실행함수, 무효시실행함수?)}>`
+        - 주로 검증함수를 사용
+      - 유효시실행함수 : `const 변수명 = (data: 제네릭) => { ... };`
+      - 무효시실행함수 : `const 변수명 = (errors: FieldErrors) => { ... };`
+    - watch : 콘솔창에서 확인할 수 있는 메서드
+      - ex. `console.log(watch());`
+    - reset : &lt;form&gt;의 모든 필드를 초기화하는 메서드
+      - 사용법 : `reset();`
+    - formState.errors : 에러 메시지
+  - &lt;form&gt;에서 Back-End로 데이터를 보내는 방법
+    - onSubmit을 통해 Back-End로 데이터를 전송
+      - POST fetch를 사용
+      - 기본형
+        ```
+        fetch(URL주소, {
+          method: "POST",
+          body: JSON.stringify(폼데이터),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        ```
+      - headers의 '"Content-Type": "application/json"'이 있으면 object로 받음
+        - 없으면 JSON문자열(원시 본문)로 받음
+      - ex.
+        ```
+        fetch("/api/users/enter", {
+          method: "POST",
+          body: JSON.stringify(data),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        ```
+    - API Route에서는 'req.body'로 &lt;form&gt; 데이터를 수신
+      - ex.
+        ```
+        export default async function handler (
+          req: NextApiRequest,
+          res: NextApiResponse
+        ) {
+          if (req.method !== "POST") return res.status(405).end();
+          console.log(req.body.email);
+          return res.status(200).end();
+        }
+        ```
+    - 반복되는 부분이 있기에 utility 함수(또는 Hook)를 만드는 것이 편함
+  - 커스텀 React Hook
+    - '.tsx' 파일을 생성해 컴포넌트의 함수, 변수 등을 return하여 사용
+  - NextJS API Routes의 규칙
+    - 무조건 함수를 export default 해야함
+      - 함수를 return함으로써 NextJS에서 실행되기 떄문
+      - 실행할 함수를 return하는 함수를 만드는 것
+    - 고차함수 (HOF; Higher-Order Function)
+      - 하나 이상의 함수를 인자로 받고, 함수를 return하는 함수
+        - 함수를 다루는 함수
+    - 커스텀 유틸리티 함수를 사용 시 handler 함수를 return 해야함
+    - ex.
+      ```
+      // API Route
+        async function handler(req: NextApiRequest, res: NextApiResponse) {
+          console.log(req.body);
+          return res.status(200).end();
+        }
+        export default withHandler("POST", handler);
+      // Utility fn.
+        export default function withHandler(
+          method: "GET" | "POST" | "DELETE",
+          fn: (req: NextApiRequest, res: NextApiResponse) => void
+        ) {
+          return async function (req: NextApiRequest, res: NextApiResponse) {
+            if (req.method !== method) return res.status(405).end();
+            try {
+              await fn(req, res); // handler fn.
+            } catch (error) {
+              console.log(error);
+              return res.status(500).json({ error });
+            }
+          };
+        }
+      ```
+  - import문에서 절대경로 사용법
+    - 'tsconfig.json' 파일에서 'compilerOptions' 객체에 아래와 같은 프로퍼티를 추가
+      ```
+      "paths": {
+        "@/*": ["./src/*"]
+      }
+      ```
+    - NextJS 프로젝트 생성 시 자동으로 설정 가능
+      - React 프로젝트에서 수동으로 설정 가능
+- **24-01-16 : #9.0 ~ #9.2 / Authentication(1)**

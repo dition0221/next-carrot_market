@@ -15,9 +15,9 @@ interface IEnterForm {
 export default function Enter() {
   // <form>
   const [enter, { isLoading, data, error }] = useMutation("/api/users/enter");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { register, handleSubmit, reset } = useForm<IEnterForm>();
   const onValid = async (validForm: IEnterForm) => {
+    if (isLoading) return;
     enter(validForm); // Send form data to Back-End
   };
 
@@ -86,12 +86,12 @@ export default function Enter() {
             required
           />
         ) : null}
-        {/* <Button
-          text={method === "email" ? "Get login link" : "Get one-time password"}
-        /> */}
-        <Button
-          text={isSubmitting ? "...Submitting..." : "Get one-time password"}
-        />
+        {method === "email" ? (
+          <Button text={isLoading ? "Loading.." : "Get login link"} />
+        ) : null}
+        {method === "phone" ? (
+          <Button text={isLoading ? "Loading.." : "Get one-time password"} />
+        ) : null}
       </form>
 
       <section className="mt-8">

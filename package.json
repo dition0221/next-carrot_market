@@ -6,10 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db": "pscale connect carrot-market",
+    "studio": "npx prisma studio"
   },
   "dependencies": {
-    "@prisma/client": "^5.8.0",
+    "@prisma/client": "^5.8.1",
     "@tailwindcss/forms": "^0.5.7",
     "next": "14.0.4",
     "react": "^18",
