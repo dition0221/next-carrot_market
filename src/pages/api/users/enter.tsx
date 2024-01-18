@@ -12,8 +12,9 @@ async function handler(
   res: NextApiResponse<IResponseType>
 ) {
   const { phone, email }: IReqBody = req.body;
-  const user = phone ? { phone: +phone } : email ? { email } : null;
-  if (!user) return res.status(400).json({ ok: false }); // Check <input> data
+  const method = phone ? { phone: +phone } : email ? { email } : null;
+  if (!method) return res.status(400).json({ ok: false });
+
   const payload = Math.floor(100000 + Math.random() * 900000) + "";
 
   // Create token & if user doesn't exist, Create user
@@ -23,11 +24,11 @@ async function handler(
       user: {
         connectOrCreate: {
           where: {
-            ...user,
+            ...method,
           },
           create: {
             name: "Anonymous",
-            ...user,
+            ...method,
           },
         },
       },

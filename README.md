@@ -523,3 +523,117 @@
     - NextJS 프로젝트 생성 시 자동으로 설정 가능
       - React 프로젝트에서 수동으로 설정 가능
 - **24-01-16 : #9.0 ~ #9.2 / Authentication(1)**
+  - 휴대폰 번호를 사용한 회원가입/로그인 단계
+    1. 폰 번호를 Back-End로 전송
+    2. Back-End에서 DB에게 사용자의 폰 번호를 검색
+       - DB에 사용자 정보가 존재하는 지의 여부를 알기 위함
+         - (미 존재 시) 회원가입 시키기
+         - (존재 시) 로그인 하기
+    3. 사용자를 위한 토큰 생성
+       - 토큰은 사용자와 연결되어 있음
+         - User 모델과 관계를 짓는 Token 모델을 만들어야 함
+    4. 난수를 사용하여, 사용자가 로그인 시 난수를 SMS로 발송
+       - 검증을 통해 사용자는 토큰을 발급 받음
+    5. Front-End에서 폰 번호 입력칸을 가리고, 난수(토큰) 입력칸을 추가하기
+       - 토큰 입력 시 Back-End로 전송
+    6. Back-End에서 토큰과 연결된 사용자 정보를 DB에서 찾아 가져오기
+       - 사용자를 찾았다면 로그인 시키기
+  - [Prisma] DB에서 데이터를 찾는 방법
+    - 기본형
+      ```
+      const 변수명 = await 클라이언트.모델명.findUnique({
+        where: {
+          조건문,
+        },
+      });
+      ```
+      - 또는 `.findFirst()`를 사용
+    - ex.
+      ```
+      const { phone, email } = req.body;
+      const user = await client.user.findUnique({
+        where: {
+          email,
+        },
+      });
+      ```
+  - [Prisma] `upsert` 메서드
+    - 데이터를 찾은 후, 있으면 업데이트 / 없으면 생성하는 메서드
+    - 기본형
+      ```
+      const 변수명 = await 클라이언트.모델명.upsert({
+        create: { 데이터가 없을 시 생성문 },
+        update: { 데이터가 존재할 시 업데이트문 },
+        where: { 조건문 },
+      });
+      ```
+  - DB를 통해 사용자 정보를 체크한 후, 없다면 새로운 계정 생성
+    - ex.
+      ```
+      const { phone, email } = req.body;
+      const payload = phone ? { phone: +phone } : { email };
+      const user = await client.user.upsert({
+        where: { ...payload },
+        create: {
+          name: "Anonymous",
+          ...payload,
+        },
+        update: {},
+      });
+      ```
+    - <a href="https://nickname.hwanmoo.kr/" target="_blank">랜덤 닉네임 API</a>
+  - 토큰의 모델 스키마 생성
+    - schema model에서 다른 schema model과 연결하는 방법
+      - 기본형 : `컬럼명 모델명`
+      - 저장 시 자동 완성 기능으로 다른 정보들이 알아서 들어옴
+      - 모델과 모델Id를 가지고 있는 이유 : DB에 실제 모델의 전체 데이터가 들어가지 않기 때문
+      - 연결된 모델의 데이터 정보에 접근이 가능함
+    - `relationMode = "Prisma"`에 대한 경고문이 나올 시 `@@index([모델명 Id])`를 추가하기
+    - ex.
+      ```
+      model Token {
+        id        Int      @id @default(autoincrement())
+        payload   String   @unique
+        user      User     @relation(fields: [userId], references: [id])
+        userId    Int
+        createdAt DateTime @default(now())
+        updatedAt DateTime @updatedAt
+        @@index([userId])
+      }
+      // User 모델에서는 'tokens Token[]' 컬럼이 추가됨
+      ```
+    - model schema 생성 후, PlanetScale에 넘겨주어야 함
+      - 명령어 : `npx prisma db push`
+  - 토큰 생성하기
+    - 생성 시 model schema의 필수 요소들을 사용해야 함
+    - user는 사용자 모델과 연결해야 함
+      - { create?, connectOrCreate? , connect? }
+        - connect : 새로운 Token을 이미 존재하는 User와 연결
+        - create : 새로운 Token을 생성하면서, 새로운 User도 생성
+        - connectOrCreate : User를 찾은 후, 있다면 Token과 연결 / 없다면 User를 생성
+    - ex.
+      ```
+      // 'connectOrCreate'를 이용해 사용자를 'upsert'하는 코드와 합칠 수 있음
+        // 조건을 만족하는 User가 있는 경우, Token과 연결
+        // 없는 경우, User를 생성하고 Token과 연결
+      const method = phone ? { phone: +phone } : email ? { email } : null;
+      const payload = Math.floor(100000 + Math.random() * 900000) + "";
+      const token = await client.token.create({
+        data: {
+          payload,
+          method: {
+            connectOrCreate: {
+              where: {
+                ...method,
+              },
+              create: {
+                name: "Anonymous",
+                ...method,
+              },
+            },
+          },
+        },
+      });
+      ```
+- **24-01-18 : #9.3 / Authentication(2)**
+  - _ISSUE : twilio에서 SMS 테스트 중 21608 에러 발생_
