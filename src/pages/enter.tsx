@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/router";
 // Utilities
 import { cls } from "@/libs/client/utils";
 import useMutation from "@/libs/client/useMutation";
@@ -7,18 +8,30 @@ import useMutation from "@/libs/client/useMutation";
 import Button from "@/components/button";
 import Input from "@/components/input";
 
+interface IMutationResult {
+  ok: boolean;
+}
+
 interface IEnterForm {
   email?: string;
   phone?: string;
 }
 
+interface ITokenForm {
+  token: number;
+}
+
 export default function Enter() {
-  // <form>
-  const [enter, { isLoading, data, error }] = useMutation("/api/users/enter");
+  const router = useRouter();
+
+  // Log-in <form>
+  const [enter, { isLoading, data, error }] =
+    useMutation<IMutationResult>("/api/users/enter");
   const { register, handleSubmit, reset } = useForm<IEnterForm>();
   const onValid = async (validForm: IEnterForm) => {
     if (isLoading) return;
     enter(validForm); // Send form data to Back-End
+    reset();
   };
 
   // Change login method
@@ -32,67 +45,103 @@ export default function Enter() {
     setMethod("phone");
   };
 
+  // Token <form>
+  const [confirmToken, { isLoading: isTokenLoading, data: tokenData }] =
+    useMutation<IMutationResult>("/api/users/confirm");
+  const {
+    register: tokenRegister,
+    handleSubmit: tokenHandleSubmit,
+    reset: tokenReset,
+  } = useForm<ITokenForm>();
+  const onTokenValid = (validForm: ITokenForm) => {
+    if (isTokenLoading) return;
+    confirmToken(validForm);
+    tokenReset();
+  };
+  useEffect(() => {
+    if (tokenData?.ok) router.push("/");
+  }, [tokenData, router]);
+
   return (
     <main className="mt-16 px-4">
       <h3 className="text-3xl font-bold text-center mb-8">Enter to Carrot</h3>
-      <section className="flex flex-col items-center">
-        <h5 className="text-sm text-gray-500 font-medium">Enter using:</h5>
-        <div className="grid border-b w-full mt-8 grid-cols-2 gap-16">
-          <button
-            className={cls(
-              "py-2 font-medium border-b-2",
-              method === "email"
-                ? "border-orange-500 text-orange-400"
-                : "border-transparent text-gray-500"
-            )}
-            onClick={onEmailClick}
-          >
-            Email
-          </button>
-          <button
-            className={cls(
-              "py-2 font-medium border-b-2",
-              method === "phone"
-                ? "border-orange-500 text-orange-400"
-                : "border-transparent text-gray-500"
-            )}
-            onClick={onPhoneClick}
-          >
-            Phone
-          </button>
-        </div>
-      </section>
-
-      <form
-        onSubmit={handleSubmit(onValid)}
-        className="flex flex-col mt-8 space-y-4"
-      >
-        {method === "email" ? (
+      {data?.ok ? (
+        <form
+          onSubmit={tokenHandleSubmit(onTokenValid)}
+          className="flex flex-col mt-8 space-y-4"
+        >
           <Input
-            register={register("email")}
-            name="email"
-            label="Email address"
-            type="email"
-            required
-          />
-        ) : null}
-        {method === "phone" ? (
-          <Input
-            register={register("phone")}
-            name="phone"
-            label="Phone number"
+            register={tokenRegister("token")}
+            name="token"
+            label="Confirmation Token"
             type="number"
-            kind="phone"
             required
           />
-        ) : null}
-        {method === "email" ? (
-          <Button text={isLoading ? "Loading.." : "Get login link"} />
-        ) : null}
-        {method === "phone" ? (
-          <Button text={isLoading ? "Loading.." : "Get one-time password"} />
-        ) : null}
-      </form>
+          <Button text={isTokenLoading ? "Loading.." : "Confirm token"} />
+        </form>
+      ) : (
+        <>
+          <section className="flex flex-col items-center">
+            <h5 className="text-sm text-gray-500 font-medium">Enter using:</h5>
+            <div className="grid border-b w-full mt-8 grid-cols-2 gap-16">
+              <button
+                className={cls(
+                  "py-2 font-medium border-b-2",
+                  method === "email"
+                    ? "border-orange-500 text-orange-400"
+                    : "border-transparent text-gray-500"
+                )}
+                onClick={onEmailClick}
+              >
+                Email
+              </button>
+              <button
+                className={cls(
+                  "py-2 font-medium border-b-2",
+                  method === "phone"
+                    ? "border-orange-500 text-orange-400"
+                    : "border-transparent text-gray-500"
+                )}
+                onClick={onPhoneClick}
+              >
+                Phone
+              </button>
+            </div>
+          </section>
+          <form
+            onSubmit={handleSubmit(onValid)}
+            className="flex flex-col mt-8 space-y-4"
+          >
+            {method === "email" ? (
+              <Input
+                register={register("email")}
+                name="email"
+                label="Email address"
+                type="email"
+                required
+              />
+            ) : null}
+            {method === "phone" ? (
+              <Input
+                register={register("phone")}
+                name="phone"
+                label="Phone number"
+                type="number"
+                kind="phone"
+                required
+              />
+            ) : null}
+            {method === "email" ? (
+              <Button text={isLoading ? "Loading.." : "Get login link"} />
+            ) : null}
+            {method === "phone" ? (
+              <Button
+                text={isLoading ? "Loading.." : "Get one-time password"}
+              />
+            ) : null}
+          </form>
+        </>
+      )}
 
       <section className="mt-8">
         <div className="relative">

@@ -9,7 +9,8 @@
 - "next": "14.0.4"
 
 <img src="https://img.shields.io/badge/Next.js-000?style=flat-square&logo=nextdotjs&logoColor=white"/> <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white"/> <img src="https://img.shields.io/badge/Tailwind CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white"/>  
-<img src="https://img.shields.io/badge/Prisma-2D3748?style=flat-square&logo=prisma&logoColor=white"/> <img src="https://img.shields.io/badge/PlanetScale-000?style=flat-square&logo=planetscale&logoColor=white"/>
+<img src="https://img.shields.io/badge/Prisma-2D3748?style=flat-square&logo=prisma&logoColor=white"/> <img src="https://img.shields.io/badge/PlanetScale-000?style=flat-square&logo=planetscale&logoColor=white"/> <img src="https://img.shields.io/badge/iron&dash;session-18303d?style=flat-square&logoColor=white"/>  
+<img src="https://img.shields.io/badge/Twilio-f22f46?style=flat-square&logo=twilio&logoColor=white"/> <img src="https://img.shields.io/badge/Nodemailer-22B573?style=flat-square&logoColor=white"/>
 
 ---
 
@@ -637,3 +638,26 @@
       ```
 - **24-01-18 : #9.3 / Authentication(2)**
   - _ISSUE : twilio에서 SMS 테스트 중 21608 에러 발생_
+  - Twilio
+    - 휴대폰 번호를 가지고 여러가지 통신 기능을 서비스해주는 플랫폼
+      - SMS 발송, 전화 연결, 안심번호 등
+      - 회원가입 시 무료 15$를 받을 수 있음
+    - [콘솔] SMS 발송을 위한 설정법
+      1. 'Messaging'-'Services'에 접속 후, 메시징 서비스 생성하기
+      2. 'Sender Pool'에서 가상 전화번호 등록하기
+         - 'Messaging'-'Try it out'-'Send an SMS'에서 전화번호를 받음
+         - 가상 전화번호를 받을 수 있음 (가격 1$/월)
+      3. SMS 테스트하기
+         - 'Messaging'-'Try it out'-'Send an SMS'에서 테스트 가능
+      4. '.env' 파일에 사용할 환경변수 저장하기
+         - { 계정 SID, 인증 토큰, 서비스 SID 등 }
+    - <a href="https://www.twilio.com" target="_blank">홈페이지</a>
+- **24-01-22 : #9.4 ~ #9.10 / Authentication(3)**
+
+---
+
+- To-Do
+  - [enter.tsx] useForm register의 검증 옵션 및 error 메시지 추가
+  - 한 계정이 token을 여러 개 생성 시 최신 하나만 유지하도록 하기
+    - 토큰의 유효기간을 짧게 설정하기 (기본값 14일)
+  - token의 payload(난수)가 겹칠 수 있는 문제 해결
