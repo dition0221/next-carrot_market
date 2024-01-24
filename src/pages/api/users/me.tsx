@@ -1,24 +1,39 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import withHandler, { IResponseType } from "@/libs/server/withHandler";
-import client from "@/libs/server/client";
+// LIBS
+import withHandler from "@/libs/server/withHandler";
+import prismaClient from "@/libs/server/client";
 import { getSession } from "@/libs/server/getSession";
+
+interface Profile {
+  id: number;
+  phone: string | null;
+  email: string | null;
+  name: string;
+  avatar: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IUserResponseType {
+  ok: boolean;
+  profile?: Profile;
+}
 
 async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IResponseType>
+  res: NextApiResponse<IUserResponseType>
 ) {
-  const session = await getSession(req, res);
-  if (!session) return res.status(401).end();
-
   // Find user with session from DB
-  const profile = await client.user.findUnique({
-    where: {
-      id: session.user?.id,
-    },
+  const session = await getSession(req, res);
+  const profile = await prismaClient.user.findUnique({
+    where: { id: session.user?.id },
   });
   if (!profile) return res.status(404).end();
 
   return res.status(200).json({ ok: true, profile });
 }
 
-export default withHandler("GET", handler);
+export default withHandler({
+  method: "GET",
+  handler,
+});

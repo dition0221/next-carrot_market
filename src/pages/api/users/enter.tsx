@@ -1,16 +1,19 @@
 import { NextApiRequest, NextApiResponse } from "next";
+// LIBS
 import withHandler, { IResponseType } from "@/libs/server/withHandler";
-import client from "@/libs/server/client";
+import prismaClient from "@/libs/server/client";
+// SMS
 import twilio from "twilio";
+// E-MAIL
 import { SendMailOptions } from "nodemailer";
 import smtpTransporter from "@/libs/server/email";
-
-const twilioClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
 
 interface IReqBody {
   phone?: string;
   email?: string;
 }
+
+const twilioClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
 
 async function handler(
   req: NextApiRequest,
@@ -24,7 +27,7 @@ async function handler(
 
   try {
     // Create token & if user doesn't exist, Create user
-    const token = await client.token.create({
+    const token = await prismaClient.token.create({
       data: {
         payload,
         user: {
@@ -74,4 +77,9 @@ async function handler(
   }
 }
 
-export default withHandler("POST", handler);
+// export default withHandler("POST", handler);
+export default withHandler({
+  method: "POST",
+  handler,
+  isPrivate: false,
+});

@@ -24,5 +24,6 @@ export async function getSession(req: NextApiRequest, res: NextApiResponse) {
     res,
     sessionOptions
   );
+
   return session;
 }

@@ -1,8 +1,14 @@
+// LIBS
+import useUser from "@/libs/client/useUser";
+// COMPONENTS
 import Layout from "@/components/layout";
-import FloatingButton from "./../components/floating-button";
+import FloatingButton from "@/components/floating-button";
 import Item from "@/components/item";
 
 export default function Home() {
+  const { user, isLoading } = useUser();
+  console.log("user", user); // !!!
+
   return (
     <Layout title="홈" hasTabBar>
       <main className="flex flex-col space-y-5">

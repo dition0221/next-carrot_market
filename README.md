@@ -638,6 +638,7 @@
       ```
 - **24-01-18 : #9.3 / Authentication(2)**
   - _ISSUE : twilio에서 SMS 테스트 중 21608 에러 발생_
+    - _인증받은 번호라도 평가판으로는 제대로 작동하지 않는 것으로 보임_
   - Twilio
     - 휴대폰 번호를 가지고 여러가지 통신 기능을 서비스해주는 플랫폼
       - SMS 발송, 전화 연결, 안심번호 등
@@ -651,8 +652,170 @@
          - 'Messaging'-'Try it out'-'Send an SMS'에서 테스트 가능
       4. '.env' 파일에 사용할 환경변수 저장하기
          - { 계정 SID, 인증 토큰, 서비스 SID 등 }
+    - '네이버 클라우드 플랫폼'에서 SMS 기능을 사용할 수 있음
     - <a href="https://www.twilio.com" target="_blank">홈페이지</a>
 - **24-01-22 : #9.4 ~ #9.10 / Authentication(3)**
+  - [Twilio] 설치법 : `npm i twilio`
+  - [Twilio] 코드로 SMS를 보내는 방법
+    1. 'twilio client' 생성하기
+       - 기본형
+         ```
+         import twilio from "twilio";
+         const 변수명 = twilio(계정SID, 인증토큰);
+         ```
+    2. SMS 발송하기
+       - 기본형
+         ```
+         await 트윌리오클라이언트.messages.create({
+           messagingServiceSid: 메시지서비스SID,
+           to: 받는사람휴대폰번호,
+           body: 메시지내용,
+         });
+         ```
+  - nodeMailer
+    - NodeJS 환경에서 이메일을 쉽게 보낼 수 있게 도와주는 패키지
+      - SMTP(Simple Mail Transfer Protocol) 서버를 통해 이메일을 보낼 수 있음
+      - 네이버 메일로도 사용 가능 (SMTP 설정해야 함)
+      - <a href="https://support.google.com/mail/answer/22839" target="_blank">구글은 하루에 500개 발송으로 제한</a>
+        - 'SendGrid' 같은 플랫폼을 이용 시 발송 제한이 없음
+    - 설치법 : `npm i nodemailer`
+      - 타입스크립트 : `npm i -D @types/nodemailer`
+    - 설정법
+      1. 앱 비밀번호를 환경변수로 저장하기 (구글 메일 사용 시)
+         - '구글 계정 관리 - 보안 - 2단계 인증 - 앱 비밀번호'에서 16자리 비밀번호를 저장
+      2. 'transporter' 변수 생성하기
+         - 기본형
+           ```
+           import { createTransport } from "nodemailer";
+           const 변수명 = createTransport({
+             service: "플랫폼",
+             auth: {
+               user: 보내는사람메일주소,
+               pass: 메일앱비밀번호,
+             },
+           });
+           ```
+         - 플랫폼 : { "gmail", "Naver" 등 }
+    - 메일 발송 사용법
+      1. 메일 옵션 설정하기
+         - 기본형
+           ```
+           const 변수명: SendMailOptions = {
+             from: 보내는사람메일주소,
+             to: 받는사람메일주소,
+             subject: 제목,
+             text?: 내용(text),
+             html?: 내용(html),
+           };
+           ```
+      2. 메일 발송하기
+         - 기본형 : `await 트랜스포터.sendMail(메일옵션);`
+    - <a href="https://blog.naver.com/enne123/222969519973" target="_blank">참고자료</a>
+  - [Prisma] DB에서 삭제 시 설정법
+    - 다른 model과 관계짓는 데이터를 삭제 시 에러가 뜰 수 있음
+    - 해결법 : model schema에서 `onDelete: Cascade` 프로퍼티를 추가
+      - 데이터 삭제 시 관계가 있는 model의 데이터도 같이 삭제되도록 함
+        - Cascade : 부모 레코드가 삭제될 시 자식 레코드도 삭제하는 방법
+    - prisma 수정 후 `npx prisma db push` 명령어를 통해 schema 변경 적용하기
+    - ex.
+      ```
+      model Token {
+        id        Int      @id @default(autoincrement())
+        payload   String   @unique
+        user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+        userId    Int
+        createdAt DateTime @default(now())
+        updatedAt DateTime @updatedAt
+        @@index([userId])
+      }
+      ```
+  - iron session
+    - 서명, 암호화된 쿠키를 사용하는 NodeJS 무상태 session 도구 패키지
+      - 사용자에게 쿠키를 주고, 사용자가 요청을 보냈을 때 누구인지 알 수 있도록 인증
+      - JWT(Json Web Token)와는 다름
+        - 웹에서 정보를 안전하기 전송하기 위한 토큰 기반의 인증 방식 중 하나
+        - JWT는 정보를 JSON 형식으로 표현
+        - 서버와 클라이언트 간의 인증을 위해 사용됨
+        - JWT는 암호화되지 않고, 서명이 되었을 뿐임
+          - 세션 DB를 사용하지 x
+      - 세션 DB를 사용하지 않고도, 세션을 처리할 수 있는 패키지 (서버리스)
+    - 작동 방식
+      1. 사용자 정보를 암호화
+      2. 이 암호화된 정보를 사용자에게 쿠키로 전송
+      3. 사용자가 Back-End로 요청 시 쿠키를 같이 전송
+      4. Back-End에서 쿠키를 복호화하여 사용자를 확인
+    - 설치법 : `npm i iron-session`
+    - 세션에 커스텀 프로퍼티를 추가해 업데이트 시 `getIronSession()`에서 Type(제네릭) 정의를 해주어야 함
+    - 사용법 (생성 및 업데이트)
+      - session 생성 기본형
+        ```
+        import { getIronSession } from "iron-session";
+        const 세션명 = await getIronSession<인터페이스명>(req, res {
+          password: 세션패스워드,
+          cookieName: 쿠키이름,
+        });
+        ```
+      - session 업데이트 기본형
+        ```
+        // 해당 session에 커스텀 프로퍼티를 추가 및 업데이트
+        세션명.프로퍼티명 = 값;
+        await 세션명.save();
+        ```
+    - 옵션
+      - password : [필수] 쿠키를 암호화하는 데 사용하는 개인키
+        - 32자 이상이어야 함
+        - 강력한 비밀번호 사용 시 <a href="https://1password.com/password-generator/" target="_blank">해당 홈페이지</a> 사용
+      - cookieName : [필수] 쿠키 저장 시의 쿠키명
+      - ttl? : 세션 유효기간 (초 단위)
+        - 기본값 14일
+        - '0' 입력 시 iron-session이 자동으로 최대값을 적용함
+      - cookieOption? : 'Set-Cookie' 속성이 아닌 경우를 제외한 쿠키 옵션 (문서 참고)
+    - ex.
+      ```
+      interface IIronSessionData {
+        user?: {
+          id: number;
+        };
+      }
+      const session = await getIronSession<IIronSessionData>(req, res, {
+        password: process.env.SESSION_PW!,
+        cookieName: "carrot-session",
+      });
+      session.user = {
+        id: tokenExists.id,
+      };
+      await session.save();
+      ```
+    - 사용자 로그아웃 시 session을 만료시켜야 함
+      - 기본형 : `await 세션명.destroy();`
+    - 쿠키의 저장용량이 크지 않기 때문에, 많은 데이터를 저장하는 것은 좋지 않음
+    - <a href="https://github.com/vvo/iron-session#readme" target="_blank">홈페이지</a>
+    - <a href="https://youtu.be/tosLBcAX1vk" target="_blank">참고자료(세션, 토큰, 쿠키의 정의)</a>
+  - [Prisma] 데이터와 연결된 model schema 데이터를 가져오는 방법
+    - DB 데이터의 기본값은 연결된 model의 id값만 가져옴
+    - 기본형 : DB에서 데이터를 가져올 때 `include: { 모델명: true }`를 추가
+      - prisma가 자동으로 model의 id값을 가지고 해당 테이블을 검색해 가져옴
+    - ex.
+      ```
+      const tokenExists = await client.token.findUnique({
+        where: { payload: String(token) },
+        include: { user: true },
+      });
+      ```
+  - 로그인 시 토큰 삭제하기
+    - 토큰 인증 후 쓸모 없어진 토큰들을 DB에서 삭제해야 함
+    - 기본형 : DB의 `.deleteMany()` 메서드를 사용해 해당 userId의 모든 토큰을 삭제
+    - 로그인된 사용자가 로그인페이지에 오지 못하도록 막아야 함
+  - NextAuth
+    - NextJS에서 Authentication 구현을 도와주는 패키지
+      - 패키지 설정(대부분 복붙)만 하면, 자동적으로 동작함
+    - 특징
+      - DB가 필요없음 (Back-End가 없음)
+        - 사용자 기록을 저장하는 데이터가 없지만, DB에 저장이 가능하긴 함
+        - <a href="https://next-auth.js.org/adapters" target="_blank">참고문서</a>
+      - 어떤 사용자가 로그인 됐는지는 알 수 없지만, 로그인 여부는 알 수 있음
+    - <a href="https://next-auth.js.org/" target="_blank">홈페이지</a>
+- **24-01-24 : #10.0 ~ #10.4 / Authorization + SWR**
 
 ---
 

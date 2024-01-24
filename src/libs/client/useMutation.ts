@@ -8,8 +8,8 @@ interface IUseMutationState<T> {
 type UseMutationResult<T> = [(data: any) => void, IUseMutationState<T>];
 
 /*
-  - <form>의 데이터를 Back-End로 POST하는 Hook
-  - 사용법 : const [mutation, { loading, data, error }] = useMutation(API_ROUTE_URL);
+  <form>의 데이터를 Back-End로 POST하는 Hook
+  기본형 : const [mutation, { isLoading, data, error }] = useMutation(API_ROUTE_URL);
 */
 
 export default function useMutation<T = object>(
