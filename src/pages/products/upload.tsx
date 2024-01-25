@@ -1,12 +1,44 @@
+import { useForm } from "react-hook-form";
+import { useRouter } from "next/router";
+import { useEffect } from "react";
+// LIBS
+import useMutation from "@/libs/client/useMutation";
+import type { IProductResponse } from "@/pages/api/products";
+// COMPONENTS
 import Layout from "@/components/layout";
 import Input from "@/components/input";
 import Textarea from "@/components/textarea";
 import Button from "@/components/button";
 
-export default function ItemUpload() {
+export interface IProductUploadForm {
+  // TODO: Add 'image'
+  name: string;
+  price: string;
+  description: string;
+}
+
+export default function ProductUpload() {
+  const router = useRouter();
+  const [uploadProduct, { isLoading, data }] =
+    useMutation<IProductResponse>("/api/products");
+
+  // <form>
+  const { register, handleSubmit } = useForm<IProductUploadForm>();
+  const onValid = (data: IProductUploadForm) => {
+    if (isLoading) return alert("로딩 중 입니다.");
+    uploadProduct(data);
+  };
+
+  // When finish uploading, Go to 'product detail' page
+  useEffect(() => {
+    if (data?.ok && data.product) {
+      router.push(`/products/${data.product.id}`);
+    }
+  }, [data, router]);
+
   return (
     <Layout title="상품 등록" canGoBack>
-      <form className="px-4 space-y-4">
+      <form className="px-4 space-y-4" onSubmit={handleSubmit(onValid)}>
         <div>
           <label className="w-full h-48 text-gray-600 hover:text-orange-500 flex justify-center items-center border-2 border-dashed border-gray-300 hover:border-orange-500 rounded-md cursor-pointer">
             <svg
@@ -27,6 +59,7 @@ export default function ItemUpload() {
           </label>
         </div>
         <Input
+          register={register("name", { required: true })}
           name="name"
           label="Name"
           type="text"
@@ -34,6 +67,7 @@ export default function ItemUpload() {
           placeholder="Name"
         />
         <Input
+          register={register("price", { required: true, min: 0 })}
           kind="price"
           name="price"
           label="Price"
@@ -41,8 +75,13 @@ export default function ItemUpload() {
           placeholder="0.00"
           required
         />
-        <Textarea name="description" label="Description" />
-        <Button text="Upload item" full />
+        <Textarea
+          register={register("description", { required: true })}
+          name="description"
+          label="Description"
+          required
+        />
+        <Button text={isLoading ? "Loading.." : "Upload item"} full />
       </form>
     </Layout>
   );

@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import useSWR from "swr";
-// API
-import type { IUserResponseType } from "@/pages/api/users/me";
+// INTERFACE
+import type { IUserResponse } from "@/pages/api/users/me";
 
 /*
   로그인 사용자의 프로필을 가져오는 Hook (session storage로부터 가져옴)
@@ -13,7 +13,7 @@ import type { IUserResponseType } from "@/pages/api/users/me";
 
 export default function useUser() {
   const router = useRouter();
-  const { data, isLoading } = useSWR<IUserResponseType>("/api/users/me");
+  const { data, isLoading } = useSWR<IUserResponse>("/api/users/me");
 
   // If no-login, Redirect to "/enter"
   useEffect(() => {

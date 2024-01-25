@@ -1,7 +1,24 @@
+import Link from "next/link";
+import { useRouter } from "next/router";
+import useSWR from "swr";
+// COMPONENTS
 import Button from "@/components/button";
 import Layout from "@/components/layout";
+// INTERFACE
+import type { IProductResponse } from "@/pages/api/products";
 
-export default function ItemDetail() {
+export default function ProductDetail() {
+  // route parameter
+  const router = useRouter();
+  const { id } = router.query;
+
+  // Fetch 'Product'
+  const { data, isLoading } = useSWR<IProductResponse>(
+    id ? `/api/products/${id}` : null
+  );
+
+  // TODO: isLoading 화면, 데이터가 없는 경우 구현하기
+
   return (
     <Layout canGoBack>
       <main className="px-4">
@@ -10,26 +27,26 @@ export default function ItemDetail() {
           <article className="flex py-3 border-t border-b items-center space-x-3 cursor-pointer">
             <div className="w-12 h-12 rounded-full bg-slate-300" />
             <div>
-              <p className="text-sm font-medium text-gray-700">Steve Jobs</p>
-              <p className="text-xs font-medium text-gray-500">
-                View profile &rarr;
+              <p className="text-sm font-medium text-gray-700">
+                {data?.product?.user?.name}
               </p>
+              <Link
+                href={`/users/profiles/${data?.product?.userId}`}
+                className="text-xs font-medium text-gray-500"
+              >
+                View profile &rarr;
+              </Link>
             </div>
           </article>
 
           <div className="mt-5">
-            <h1 className="text-3xl font-bold text-gray-900">Galaxy S50</h1>
-            <span className="text-2xl block mt-3 text-gray-900">$140</span>
-            <p className="my-6 text-gray-700">
-              My money&apos;s in that office, right? If she start giving me some
-              bullshit about it ain&apos;t there, and we got to go someplace
-              else and get it, I&apos;m gonna shoot you in the head then and
-              there. Then I&apos;m gonna shoot that bitch in the kneecaps, find
-              out where my goddamn money is. She gonna tell me too. Hey, look at
-              me when I&apos;m talking to you, motherfucker. You listen: we go
-              in there, and that ni**a Winston or anybody else is in there, you
-              the first motherfucker to get shot. You understand?
-            </p>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {data?.product?.name}
+            </h1>
+            <span className="text-2xl block mt-3 text-gray-900">
+              ${data?.product?.price}
+            </span>
+            <p className="my-6 text-gray-700">{data?.product?.description}</p>
             <div className="flex justify-between items-center space-x-2">
               <Button text="Talk to seller" full />
               <button className="p-3 flex place-items-center text-gray-400 rounded-md hover:bg-gray-100 hover:text-gray-500">

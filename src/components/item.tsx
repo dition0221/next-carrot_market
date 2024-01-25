@@ -17,7 +17,7 @@ export default function Item({
 }: IItemProps) {
   return (
     <Link
-      href={`/items/${id}`}
+      href={`/products/${id}`}
       className="flex justify-between border-b px-4 pb-4 cursor-pointer"
     >
       <div className="flex space-x-4">

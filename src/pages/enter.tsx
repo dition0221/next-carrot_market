@@ -7,17 +7,15 @@ import useMutation from "@/libs/client/useMutation";
 // COMPONENTS
 import Button from "@/components/button";
 import Input from "@/components/input";
+// INTERFACE
+import type { IResponseType } from "@/libs/server/withHandler";
 
-interface IMutationResult {
-  ok: boolean;
-}
-
-interface IEnterForm {
+export interface IEnterForm {
   email?: string;
   phone?: string;
 }
 
-interface ITokenForm {
+export interface ITokenForm {
   token: number;
 }
 
@@ -26,10 +24,10 @@ export default function Enter() {
 
   // Log-in <form>
   const [enter, { isLoading, data, error }] =
-    useMutation<IMutationResult>("/api/users/enter");
+    useMutation<IResponseType>("/api/users/enter");
   const { register, handleSubmit, reset } = useForm<IEnterForm>();
   const onValid = async (validForm: IEnterForm) => {
-    if (isLoading) return;
+    if (isLoading) return alert("로딩 중 입니다.");
     enter(validForm); // Send form data to Back-End
     reset();
   };
@@ -47,7 +45,7 @@ export default function Enter() {
 
   // Token <form>
   const [confirmToken, { isLoading: isTokenLoading, data: tokenData }] =
-    useMutation<IMutationResult>("/api/users/confirm");
+    useMutation<IResponseType>("/api/users/confirm");
   const {
     register: tokenRegister,
     handleSubmit: tokenHandleSubmit,

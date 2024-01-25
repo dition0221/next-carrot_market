@@ -2,17 +2,15 @@ import { NextApiRequest, NextApiResponse } from "next";
 // LIBS
 import withHandler, { IResponseType } from "@/libs/server/withHandler";
 import { getSession } from "@/libs/server/getSession";
-import prismaClient from "@/libs/server/client";
-
-interface IReqBody {
-  token: number;
-}
+import prismaClient from "@/libs/server/prismaClient";
+// INTERFACE
+import type { ITokenForm } from "@/pages/enter";
 
 async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseType>
 ) {
-  const { token }: IReqBody = req.body;
+  const { token }: ITokenForm = req.body;
 
   // Find token from DB
   const foundToken = await prismaClient.token.findUnique({
@@ -38,6 +36,6 @@ async function handler(
 }
 
 export default withHandler({
-  method: "POST",
+  methods: ["POST"],
   handler,
 });

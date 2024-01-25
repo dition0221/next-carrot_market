@@ -1,29 +1,35 @@
+import useSWR from "swr";
 // LIBS
 import useUser from "@/libs/client/useUser";
 // COMPONENTS
 import Layout from "@/components/layout";
 import FloatingButton from "@/components/floating-button";
 import Item from "@/components/item";
+// INTERFACE
+import type { IProductResponse } from "./api/products";
 
 export default function Home() {
+  // Get 'User' session
   const { user, isLoading } = useUser();
-  console.log("user", user); // !!!
+
+  // Fetch 'Product' list from DB
+  const { data } = useSWR<IProductResponse>("/api/products");
 
   return (
     <Layout title="홈" hasTabBar>
       <main className="flex flex-col space-y-5">
-        {[...Array(10)].map((_, i) => (
+        {data?.products?.map((product) => (
           <Item
-            title="New iPhone14"
-            id={i}
-            price={95}
+            title={product.name}
+            id={product.id}
+            price={product.price}
             hearts={1}
             comments={1}
-            key={i}
+            key={product.id}
           />
         ))}
 
-        <FloatingButton href="/items/upload">
+        <FloatingButton href="/products/upload">
           <svg
             className="h-6 w-6"
             xmlns="http://www.w3.org/2000/svg"

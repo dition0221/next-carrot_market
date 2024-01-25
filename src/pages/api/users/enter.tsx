@@ -1,17 +1,14 @@
 import { NextApiRequest, NextApiResponse } from "next";
 // LIBS
 import withHandler, { IResponseType } from "@/libs/server/withHandler";
-import prismaClient from "@/libs/server/client";
+import prismaClient from "@/libs/server/prismaClient";
 // SMS
 import twilio from "twilio";
 // E-MAIL
 import { SendMailOptions } from "nodemailer";
 import smtpTransporter from "@/libs/server/email";
-
-interface IReqBody {
-  phone?: string;
-  email?: string;
-}
+// INTERFACE
+import type { IEnterForm } from "@/pages/enter";
 
 const twilioClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
 
@@ -19,7 +16,7 @@ async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseType>
 ) {
-  const { phone, email }: IReqBody = req.body;
+  const { phone, email }: IEnterForm = req.body;
   const method = phone ? { phone } : email ? { email } : null;
   if (!method) return res.status(400).json({ ok: false });
 
@@ -79,7 +76,7 @@ async function handler(
 
 // export default withHandler("POST", handler);
 export default withHandler({
-  method: "POST",
+  methods: ["POST"],
   handler,
   isPrivate: false,
 });

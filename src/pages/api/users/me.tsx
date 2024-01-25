@@ -1,27 +1,19 @@
 import { NextApiRequest, NextApiResponse } from "next";
 // LIBS
 import withHandler from "@/libs/server/withHandler";
-import prismaClient from "@/libs/server/client";
+import prismaClient from "@/libs/server/prismaClient";
 import { getSession } from "@/libs/server/getSession";
+// INTERFACE
+import type { User } from "@prisma/client";
 
-interface Profile {
-  id: number;
-  phone: string | null;
-  email: string | null;
-  name: string;
-  avatar: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface IUserResponseType {
+export interface IUserResponse {
   ok: boolean;
-  profile?: Profile;
+  profile?: User;
 }
 
 async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IUserResponseType>
+  res: NextApiResponse<IUserResponse>
 ) {
   // Find user with session from DB
   const session = await getSession(req, res);
@@ -34,6 +26,6 @@ async function handler(
 }
 
 export default withHandler({
-  method: "GET",
+  methods: ["GET"],
   handler,
 });

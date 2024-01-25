@@ -9,7 +9,7 @@
 - "next": "14.0.4"
 
 <img src="https://img.shields.io/badge/Next.js-000?style=flat-square&logo=nextdotjs&logoColor=white"/> <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white"/> <img src="https://img.shields.io/badge/Tailwind CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white"/>  
-<img src="https://img.shields.io/badge/Prisma-2D3748?style=flat-square&logo=prisma&logoColor=white"/> <img src="https://img.shields.io/badge/PlanetScale-000?style=flat-square&logo=planetscale&logoColor=white"/> <img src="https://img.shields.io/badge/iron&dash;session-18303d?style=flat-square&logoColor=white"/>  
+<img src="https://img.shields.io/badge/Prisma-2D3748?style=flat-square&logo=prisma&logoColor=white"/> <img src="https://img.shields.io/badge/PlanetScale-000?style=flat-square&logo=planetscale&logoColor=white"/> <img src="https://img.shields.io/badge/iron&dash;session-18303d?style=flat-square&logoColor=white"/> <img src="https://img.shields.io/badge/SWR-000?style=flat-square&logo=swr&logoColor=white"/>  
 <img src="https://img.shields.io/badge/Twilio-f22f46?style=flat-square&logo=twilio&logoColor=white"/> <img src="https://img.shields.io/badge/Nodemailer-22B573?style=flat-square&logoColor=white"/>
 
 ---
@@ -816,11 +816,123 @@
       - 어떤 사용자가 로그인 됐는지는 알 수 없지만, 로그인 여부는 알 수 있음
     - <a href="https://next-auth.js.org/" target="_blank">홈페이지</a>
 - **24-01-24 : #10.0 ~ #10.4 / Authorization + SWR**
+  - Protected Route & API Route
+    - 비로그인 사용자가 특정 페이지(또는 API 페이지)를 사용하지 못하도록 해야함
+      - 비로그인 사용자가 API Route에서 session을 이용해 DB로부터 사용자를 찾는 행위는 에러가 발생하기 때문
+      - { 로그인/비로그인 전용 페이지, 로그인/비로그인 전용 핸들러 }
+    - API Route 보호하기
+      - 'withHandler()' 커스텀 함수에서 로그인 유무에 대한 Boolean 값을 받는 인자를 추가함
+      - '로그인전용 + 비로그인 사용자' 시 401 상태코드를 반환'
+      - ex.
+        ```
+        interface IWithHandlerProps {
+          handler: (req: NextApiRequest, res: NextApiResponse) => Promise<any>;
+          isPrivate?: boolean;
+        }
+        export default function withHandler({
+          handler,
+          isPrivate = false,
+        }: IWithHandlerProps) {
+          return async function (req: NextApiRequest, res: NextApiResponse) {
+            // Protected API route from user
+            const session = await getSession(req, res);
+            if(isPrivate && !session.user) {
+              return res.status(401).json({ ok: false });
+            }
+            // Execute API route
+            try {
+              await handler(req, res);
+            } catch {
+              console.log(error);
+              return res.status(500).json({ ok: false, error });
+            }
+          };
+        }
+        ```
+    - Route 보호하기
+      - Front-End에서 사용자 프로필을 확인할 수 있는 API Route로부터 fetch하여 가져옴
+        - 커스텀 hook을 생성하여 간단하게 사용
+        - 사용지 프로필이 존재 시 프로필 데이터를 반환
+        - 미 존재 시 로그인페이지로 redirect
+      - ex.
+        ```
+        export default function useUser() {
+          const router = useRouter();
+          const [user, setUser] = useState<Profile>();
+          useEffect(()=>{
+            (async () => {
+              const data: IUserResponseType = await (await fetch("/api/users/me")).json();
+              if (!data.ok) {
+                return router.replace("/enter");
+              }
+              setUser(data.profile);
+            })();
+          }, [router]);
+          return user;
+        }
+        ```
+      - redirect 시 화면 깜빡거림 현상이 있다면, middleware를 사용해 문제해결 가능
+      - `router.push()`는 브랑줘 히스토리에 기록이 남지만, `router.replace()`는 기록하지 않음
+      - 여러 개의 페이지에서 해당 hook을 사용 시 매번 API fetch를 해야하므로 좋지 않음
+        - 캐싱을 이용해 모든 페이지에서 데이터를 공유하도록 해야함
+        - 'SWR' 패키지를 사용
+  - SWR 패키지
+    - React hook 기반의 데이터 fetching 라이브러리
+    - 특징 : SWR(Stale While Revalidate)은 HTTP 캐시 무효화 전략
+      - 데이터를 rendering하기 전에 캐시된 데이터를 먼저 사용하고, 동시에 백그라운드에서 새로운 데이터를 가져오는 전략
+      - 데이터가 업데이트 되었다면, 자동으로 업데이트된 데이터로 대체됨
+        - 컴포넌트가 데이터의 변경을 계속 자동으로 감지할 수 있음
+        - 다른 탭에 갔다가 돌아왔을 시 자동으로 데이터를 새로고침 해줌 (실시간처럼 느껴짐)
+    - <a href="https://goongoguma.github.io/2021/11/04/React-Query-vs-SWR/" target="_blank">React-Query와 SWR 비교</a>
+    - 설치법 : `npm i swr`
+    - 사용법 : `const { data, error, isLoading, mutate 등 } = useSWR<제네릭>(URL주소, fetcher함수);`
+      - URL주소 : API를 요청할 URL이면서, 캐시를 저장할 때 사용할 key이기도 함
+      - fetcher함수 : 첫 번째 인자(URL주소)로 요청을 보내는 함수
+        - 데이터를 불러오고, 해당 데이터를 return하는 함수
+      - mutate : 캐시 안에 저장된 data를 수정하는 함수
+    - fetch 데이터를 캐시에 저장하므로, 앱의 어느 곳에서라도 같은 데이터를 사용 가능
+      - 같은 key(URL주소)를 가진 fetch 데이터이어야 함
+    - ex.
+      ```
+      const fetcher = async (url: string) => await (await fetch(url)).json();
+      export default function useUser() {
+        const router = useRouter();
+        const { data, isLoading } = useSWR<IUserResponseType>("/api/users/me", fetcher);
+        // If no-login, Redirect to "/enter"
+        useEffect(()=>{
+          if (data && !data.ok) router.replace("/enter");
+        },[data, router]);
+        return { user: data?.profile, isLoading };
+      }
+      ```
+    - <a href="https://swr.vercel.app/ko" target="_blank">홈페이지</a>
+  - [SWR] Global SWR Configuration (전역 설정)
+    - 모든 `useSWR()` hook에 대한 기본값을 지정할 수 있는 전역 설정
+      - `useSWR()`을 여러 번 사용 시 일일이 fetcher함수를 작성하거나 import하기가 꺼려지기 때문
+    - 설정법 : 'App' 컴포넌트에서 `<SWRConfig value={설정값}>`으로 컴포넌트를 감싸줌
+      - ex.
+        ```
+        // _app.tsx
+        export default function App({ Component, pageProps }: AppProps) {
+          return (
+            <SWRConfig value={{fetcher: async (ulr: string) => await (await fetch(url)).json()}}>
+              <Component {...pageProps} />
+            </SWRConfig>
+          );
+        }
+        // useUser.ts
+        const { data, isLoading }= useSWR<IUserResponseType>("/api/users/me");
+        ```
+    - <a href="https://swr.vercel.app/ko/docs/global-configuration" target="_blank">공식문서</a>
+- **24-01-25 : #11.0 ~ #11.4 / Product-page (1)**
 
 ---
 
 - To-Do
-  - [enter.tsx] useForm register의 검증 옵션 및 error 메시지 추가
+  - useForm register의 검증 옵션 및 error 메시지 추가
+    - [/enter] 등
   - 한 계정이 token을 여러 개 생성 시 최신 하나만 유지하도록 하기
     - 토큰의 유효기간을 짧게 설정하기 (기본값 14일)
   - token의 payload(난수)가 겹칠 수 있는 문제 해결
+  - [/products/upload.tsx], [/api/products/index.tsx] 추후 'imageUrl' 추가하기
+  - [/products/[id].tsx] isLoading, 데이터가 없는 경우의 화면 구현하기

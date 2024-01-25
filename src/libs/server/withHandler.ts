@@ -3,17 +3,20 @@ import { getSession } from "./getSession";
 
 export interface IResponseType {
   ok: boolean;
+  error?: any;
   [key: string]: any;
 }
 
+type Method = "GET" | "POST" | "DELETE";
+
 interface IWithHandlerProps {
-  method: "GET" | "POST" | "DELETE";
-  handler: (req: NextApiRequest, res: NextApiResponse) => Promise<void | any>;
+  methods: Method[];
+  handler: (req: NextApiRequest, res: NextApiResponse) => Promise<any>;
   isPrivate?: boolean;
 }
 
 export default function withHandler({
-  method,
+  methods,
   handler,
   isPrivate = true,
 }: IWithHandlerProps) {
@@ -22,7 +25,8 @@ export default function withHandler({
     res: NextApiResponse<IResponseType>
   ) {
     // Check HTTP method
-    if (req.method !== method) return res.status(405).end();
+    if (req.method && !methods.includes(req.method as Method))
+      return res.status(405).end();
 
     // Check user exists to protect API route
     const session = await getSession(req, res);
