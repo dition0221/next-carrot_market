@@ -925,14 +925,164 @@
         ```
     - <a href="https://swr.vercel.app/ko/docs/global-configuration" target="_blank">공식문서</a>
 - **24-01-25 : #11.0 ~ #11.4 / Product-page (1)**
+  - [Prisma] 10개 이상의 인스턴스가 있다는 warning
+    - `There are already 10 instances of Prisma Client actively running.`
+    - 발생 이유 : NextJS는 수정 시 마다 hot reloading 되기 때문 (서버를 완전히 껐다 키지 않음)
+    - 해결법
+      - 첫 실행 시에는 'PrismaClient' 객체를 생성하고, 개방 중에 이미 있다면 'global' 객체의 프로퍼티의 할당
+      - TypeScript 사용 시 type 설정을 해주어야 함
+      - ex.
+        ```
+        import { PrismaClient } from "@prisma/client";
+        declare global {
+          var prismaClient: PrismaClient | undefined;
+        }
+        const prismaClient = global.prismaClient || new PrismaClient();
+        if (process.env.NODE_DEV === "development") global.prismaClient = prismaClient;
+        export default prismaClient;
+        ```
+    - <a href="https://www.prisma.io/docs/orm/more/help-and-troubleshooting/help-articles/nextjs-prisma-client-dev-practices" target="_blank">공식문서</a>
+  - DB 개발 순서
+    1. model schema 생성
+    2. DB 업데이트: `npx prisma db push`
+    3. mutation: form 데이터를 Back-End로 전송하여, DB에 저장
+    4. DB로부터 데이터를 fetch
+  - [Prisma] 'Products' 모델 schema 생성
+    - `String` 타입은 길이 제한이 있는데, 더 늘리고 싶으면 `@db.프로퍼티명`으로 옵션을 부여
+    - ex.
+      ```
+      model Product {
+        id          Int      @id @default(autoincrement())
+        createdAt   DateTime @default(now())
+        updatedAt   DateTime @updatedAt
+        user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+        userId      Int
+        imageUrl    String
+        name        String
+        price       Int
+        description String   @db.MediumText
+        @@index([userId])
+      }
+      ```
+    - model schema 생성/수정 후, 터미널에 `npx prisma db push` 입력하여 동기화하기
+  - [Prisma] 'Product' model 데이터를 DB에 저장
+    - ex.
+      ```
+      async function handler(
+        req: NextApiRequest,
+        res: NextApiResponse<IProductUploadResponse>
+      ) {
+        const { name, price, description }: IProductUploadForm = req.body;
+        const { user } = await getSession(req, res);
+        // Upload 'product' to DB
+        try {
+          const product = await prismaClient.product.create({
+            data: {
+              name,
+              price,
+              description,
+              imageUrl: "TEST",
+              user: {
+                connect: {
+                  id: user?.id,
+                },
+              },
+            },
+          });
+          return res.status(200).json({ ok: true, product });
+        } catch (error) {
+          console.log(error);
+          return res.status(500).json({ ok: false, error });
+        }
+      }
+      ```
+  - Back-End의 응답을 받아, Front-End에서 보여주기
+    - 업로드페이지에서 form 데이터를 성공적으로 DB에 저장했다면, 해당 product 페이지로 이동시킬 것
+    - ex.
+      ```
+      const router = useRouter();
+      const [uploadProduct, { isLoading, data }] =
+        useMutation<IProductUploadResponse>("/api/products");
+      // <form> (react-hook-form)
+      const { register, handleSubmit } = useForm<IProductUploadForm>();
+      const onValid = (data: IProductUploadForm) => {
+        if (isLoading) return alert("로딩 중 입니다.");
+        uploadProduct(data);
+      };
+      // When finish uploading, Go to 'product detail' page
+      useEffect(() => {
+        if (data?.ok && data.product) {
+          router.push(`/products/${data.product.id}`);
+        }
+      }, [data, router]);
+      ```
+  - DB로부터 데이터를 fetch하는 방법
+    - REST API를 사용해 같은 주소로부터 GET, POST 방식으로 각각 다른 일을 하도록 만듦
+    1. [Back-End] 'withHandler()' 커스텀 함수에서 method를 배열로 받게하기
+       - ex.
+         ```
+         type Method = "GET" | "POST" | "DELETE";
+         interface IWithHandlerProps {
+           methods: Method[];
+           handler: (req: NextApiRequest, res: NextApiResponse) => Promise<any>;
+           isPrivate?: boolean;
+         }
+         // Check HTTP method in 'withHandler()' custom fn.
+         if (req.method && !methods.includes(req.method as Method))
+           return res.status(405).end();
+         ```
+    2. [Back-End] 핸들러 함수에서 `req.method`에 따라 각기 다른 일을 하도록 만들기
+       - ex. `if (req.method === "GET") { ... }`
+    3. [Back-End] 'GET' 방식일 때 DB로부터 특정 테이블 목록을 받아오기
+       - 기본형 : `const 변수명 = await PRISMA클라언트.모델명.findMany({});`
+    4. [Front-End] Back-End로부터 fetch하기
+  - Product 상세 페이지 (/products/[id].tsx)
+    1. [Front-End] dynamicURL의 쿼리값 받아오기
+       - 기본형
+         ```
+         const 라우터변수 = useRouter();
+         const { 쿼리변수명 } = 라우터변수.query;
+         ```
+    2. [Front-End] 해당 쿼리변수를 Back-End로부터 fetch하기
+       - (라우터 마운트 시) 쿼리값이 'undefined -> 값'으로 변하기 때문에 주의 필요
+         - 삼항연산자를 사용해 표현
+         - ex. `` const { data } = useSWR(id ? `/api/products${id}` : null) ``
+    3. [Back-End] 특정 Product 데이터를 DB로부터 받아오기
+       - `req.query`를 통해 쿼리값을 받아옴
+       - 데이터와 연결된 model의 전체 값을 가져오기 위해 `include: { 모델명: true }`를 사용
+         - 특정 값만 가져오려면 `include: { 모델명: { select: { 컬럼명: true, ... } } }`
+       - ex.
+         ```
+         const { id } = req.query;
+         if (typeof id !== "string")
+           return res
+             .status(400)
+             .json({ ok: false, error: "Only one dynamicParam is allowed." });
+         const product = await prismaClient.product.findUnique({
+           where: { id: +id },
+           include: {
+             user: {
+               select: {
+                 id: true,
+                 name: true,
+                 avatar: true,
+               },
+             },
+           },
+         });
+         return res.status(200).json({ ok: true, product });
+         ```
+- **24-01-25 : #11.5 ~ #11.6 / Product-page (2)**
 
 ---
 
 - To-Do
   - useForm register의 검증 옵션 및 error 메시지 추가
     - [/enter] 등
-  - 한 계정이 token을 여러 개 생성 시 최신 하나만 유지하도록 하기
-    - 토큰의 유효기간을 짧게 설정하기 (기본값 14일)
+  - [Token] 한 계정이 token을 여러 개 생성 시 최신 하나만 유지하도록 하기
+    - 토큰의 유효기간을 짧게 설정하기 (기본값 14일) (ex. 3분)
+    - 유효기간 만료 or 토큰 인증 시 토큰 삭제
+    - 토큰이 존재하는 경우, 토큰 재생성 못하게 막기
   - token의 payload(난수)가 겹칠 수 있는 문제 해결
   - [/products/upload.tsx], [/api/products/index.tsx] 추후 'imageUrl' 추가하기
   - [/products/[id].tsx] isLoading, 데이터가 없는 경우의 화면 구현하기

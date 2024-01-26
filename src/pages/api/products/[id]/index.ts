@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 // LIBS
-import withHandler, { IResponseType } from "@/libs/server/withHandler";
+import withHandler from "@/libs/server/withHandler";
 import prismaClient from "@/libs/server/prismaClient";
 // INTERFACE
 import type { IProductResponse } from "@/pages/api/products";
@@ -9,6 +9,7 @@ async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IProductResponse>
 ) {
+  // productId
   const { id } = req.query;
   if (typeof id !== "string")
     return res
@@ -30,7 +31,27 @@ async function handler(
   });
   if (!product) return res.status(404).json({ ok: false });
 
-  return res.status(200).json({ ok: true, product });
+  // Get similar 'Product' from DB
+  const terms = product.name
+    .split(" ")
+    .filter((word) => word !== "") // Except blank
+    .map((word) => ({
+      name: {
+        contains: word,
+      },
+    }));
+  const relatedProducts = await prismaClient.product.findMany({
+    where: {
+      OR: terms,
+      AND: {
+        id: {
+          not: +id,
+        },
+      },
+    },
+  });
+
+  return res.status(200).json({ ok: true, product, relatedProducts });
 }
 
 export default withHandler({

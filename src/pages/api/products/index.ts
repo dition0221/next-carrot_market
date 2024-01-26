@@ -22,8 +22,11 @@ interface ProductWithUser extends Product {
 export interface IProductResponse {
   ok: boolean;
   error?: any;
-  product?: ProductWithUser; // POST
-  products?: Product[]; // GET
+  // POST
+  product?: ProductWithUser;
+  // GET
+  products?: Product[];
+  relatedProducts?: Product[];
 }
 
 async function handler(
@@ -45,6 +48,8 @@ async function handler(
   if (req.method === "POST") {
     const { name, price, description }: IProductUploadForm = req.body;
     const { user } = await getSession(req, res);
+    if (!user)
+      return res.status(401).json({ ok: false, error: "Please log-in." });
 
     try {
       const product = await prismaClient.product.create({

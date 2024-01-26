@@ -70,18 +70,25 @@ export default function ProductDetail() {
           </div>
         </section>
 
-        <section>
-          <h2 className="text-2xl font-bold text-gray-950">Similar items</h2>
-          <div className="mt-6 grid grid-cols-2 gap-4">
-            {[...Array(6)].map((_, i) => (
-              <article key={i}>
-                <div className="h-56 w-full mb-4 bg-slate-300" />
-                <h3 className="text-gray-700 -mb-1">Galaxy S60</h3>
-                <span className="text-sm font-medium text-gray-900">$6</span>
-              </article>
-            ))}
-          </div>
-        </section>
+        {/* Similar Items */}
+        {data?.relatedProducts ? (
+          <section>
+            <h2 className="text-2xl font-bold text-gray-950">Similar items</h2>
+            <div className="mt-6 grid grid-cols-2 gap-4">
+              {data?.relatedProducts?.map((product) => (
+                <article key={product.id}>
+                  <Link href={`${product.id}`}>
+                    <div className="h-56 w-full mb-4 bg-slate-300" />
+                    <h3 className="text-gray-700 -mb-1">{product.name}</h3>
+                    <span className="text-sm font-medium text-gray-900">
+                      ${product.price}
+                    </span>
+                  </Link>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
       </main>
     </Layout>
   );
