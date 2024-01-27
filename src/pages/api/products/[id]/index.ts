@@ -1,13 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 // LIBS
-import withHandler from "@/libs/server/withHandler";
+import withHandler, { IResponseType } from "@/libs/server/withHandler";
 import prismaClient from "@/libs/server/prismaClient";
-// INTERFACE
-import type { IProductResponse } from "@/pages/api/products";
+import { getSession } from "@/libs/server/getSession";
 
 async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IProductResponse>
+  res: NextApiResponse<IResponseType>
 ) {
   // productId
   const { id } = req.query;
@@ -15,6 +14,9 @@ async function handler(
     return res
       .status(400)
       .json({ ok: false, error: "Only one dynamicParam is allowed." });
+
+  // user
+  const { user } = await getSession(req, res);
 
   // Get 'Product' from DB
   const product = await prismaClient.product.findUnique({
@@ -51,7 +53,20 @@ async function handler(
     },
   });
 
-  return res.status(200).json({ ok: true, product, relatedProducts });
+  // Favorite or not
+  const isLiked = Boolean(
+    await prismaClient.favorite.findFirst({
+      where: {
+        productId: +id,
+        userId: user?.id,
+      },
+      select: {
+        id: true,
+      },
+    })
+  );
+
+  return res.status(200).json({ ok: true, product, isLiked, relatedProducts });
 }
 
 export default withHandler({

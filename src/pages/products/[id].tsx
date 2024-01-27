@@ -1,11 +1,26 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import useSWR from "swr";
+// LIBS
+import useMutation from "@/libs/client/useMutation";
 // COMPONENTS
 import Button from "@/components/button";
 import Layout from "@/components/layout";
 // INTERFACE
-import type { IProductResponse } from "@/pages/api/products";
+import type { Product, User } from "@prisma/client";
+import { cls } from "@/libs/client/utils";
+
+interface ProductWithUser extends Product {
+  user: User;
+}
+
+interface IProductDetailResponse {
+  ok: boolean;
+  product?: ProductWithUser;
+  isLiked?: boolean;
+  relatedProducts?: Product[];
+  error?: any;
+}
 
 export default function ProductDetail() {
   // route parameter
@@ -13,11 +28,16 @@ export default function ProductDetail() {
   const { id } = router.query;
 
   // Fetch 'Product'
-  const { data, isLoading } = useSWR<IProductResponse>(
+  // TODO: isLoading 화면, 데이터가 없는 경우 구현하기
+  const { data, isLoading } = useSWR<IProductDetailResponse>(
     id ? `/api/products/${id}` : null
   );
 
-  // TODO: isLoading 화면, 데이터가 없는 경우 구현하기
+  // Click favorite
+  const [toggleFav] = useMutation(`/api/products/${id}/favorite`);
+  const onFavoriteClick = () => {
+    toggleFav({});
+  };
 
   return (
     <Layout canGoBack>
@@ -49,7 +69,15 @@ export default function ProductDetail() {
             <p className="my-6 text-gray-700">{data?.product?.description}</p>
             <div className="flex justify-between items-center space-x-2">
               <Button text="Talk to seller" full />
-              <button className="p-3 flex place-items-center text-gray-400 rounded-md hover:bg-gray-100 hover:text-gray-500">
+              <button
+                onClick={onFavoriteClick}
+                className={cls(
+                  "p-3 flex place-items-center rounded-md hover:bg-gray-100",
+                  data?.isLiked
+                    ? "text-red-500 hover:text-red-600"
+                    : "text-gray-400 hover:text-gray-500"
+                )}
+              >
                 <svg
                   className="h-6 w-6 "
                   xmlns="http://www.w3.org/2000/svg"

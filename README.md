@@ -1072,7 +1072,29 @@
          });
          return res.status(200).json({ ok: true, product });
          ```
-- **24-01-25 : #11.5 ~ #11.6 / Product-page (2)**
+- **24-01-26 : #11.5 ~ #11.6 / Product-page (2)**
+  - [Prisma] 연산자를 사용한 DB 검색 기능
+    - DB에서 데이터를 검색 시 연산자를 이용해 특정 데이터를 가져올 수 있음
+    - 비슷한 Product 이름을 가졌다면, similar items로 보여주려고 함
+      - Product의 이름을 어절별로 나눈 후, 'OR' 연산자를 사용해 검색
+      - ex.
+        ```
+        const terms = product.name
+          .split(" ")
+          .filter((word) => word !== "") // Except blank
+          .map((word) => ({
+            name: {
+              contains: word,
+            },
+          }));
+        const relatedProducts = await prismaClient.product.findMany({
+          where: {
+            OR: terms,
+          },
+        });
+        ```
+    - <a href="https://www.prisma.io/docs/orm/reference/prisma-client-reference#filter-conditions-and-operators" target="_blank">공식문서</a>
+- **24-01-27 : #11.7 / Product-page (3)**
 
 ---
 
