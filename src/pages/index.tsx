@@ -23,8 +23,8 @@ export default function Home() {
             title={product.name}
             id={product.id}
             price={product.price}
-            hearts={1}
-            comments={1}
+            hearts={product._count?.Favorites ?? 0}
+            comments={0}
             key={product.id}
           />
         ))}

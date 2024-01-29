@@ -17,6 +17,9 @@ interface ProductWithUser extends Product {
     createdAt?: Date;
     updatedAt?: Date;
   };
+  _count?: {
+    Favorites?: number;
+  };
 }
 
 export interface IProductResponse {
@@ -25,7 +28,7 @@ export interface IProductResponse {
   // POST
   product?: ProductWithUser;
   // GET
-  products?: Product[];
+  products?: ProductWithUser[];
   relatedProducts?: Product[];
 }
 
@@ -36,7 +39,15 @@ async function handler(
   // GET: Find 'Product' list from DB
   if (req.method === "GET") {
     try {
-      const products = await prismaClient.product.findMany({});
+      const products = await prismaClient.product.findMany({
+        include: {
+          _count: {
+            select: {
+              Favorites: true,
+            },
+          },
+        },
+      });
       return res.status(200).json({ ok: true, products });
     } catch (error) {
       console.log(error);

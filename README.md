@@ -1095,6 +1095,7 @@
         ```
     - <a href="https://www.prisma.io/docs/orm/reference/prisma-client-reference#filter-conditions-and-operators" target="_blank">공식문서</a>
 - **24-01-27 : #11.7 / Product-page (3)**
+- **24-01-29 : #11.8 ~ #11.10 / Product-page (4)**
 
 ---
 

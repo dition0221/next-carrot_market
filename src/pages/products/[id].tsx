@@ -1,14 +1,15 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
-import useSWR from "swr";
+import useSWR, { useSWRConfig } from "swr";
 // LIBS
 import useMutation from "@/libs/client/useMutation";
+import { cls } from "@/libs/client/utils";
+import useUser from "@/libs/client/useUser";
 // COMPONENTS
 import Button from "@/components/button";
 import Layout from "@/components/layout";
 // INTERFACE
 import type { Product, User } from "@prisma/client";
-import { cls } from "@/libs/client/utils";
 
 interface ProductWithUser extends Product {
   user: User;
@@ -23,20 +24,29 @@ interface IProductDetailResponse {
 }
 
 export default function ProductDetail() {
+  // Allow only logged-in user
+  const { user, isLoading: isUserLoading } = useUser();
+  const { mutate } = useSWRConfig();
+
   // route parameter
   const router = useRouter();
   const { id } = router.query;
 
   // Fetch 'Product'
   // TODO: isLoading 화면, 데이터가 없는 경우 구현하기
-  const { data, isLoading } = useSWR<IProductDetailResponse>(
+  const { data, mutate: boundMutate } = useSWR<IProductDetailResponse>(
     id ? `/api/products/${id}` : null
   );
 
   // Click favorite
-  const [toggleFav] = useMutation(`/api/products/${id}/favorite`);
+  const [toggleFav, { isLoading: isToggleLoading }] = useMutation(
+    `/api/products/${id}/favorite`
+  );
   const onFavoriteClick = () => {
-    toggleFav({});
+    if (isToggleLoading) return;
+    boundMutate((prev) => prev && { ...prev, isLiked: !prev.isLiked }, false);
+    // mutate("/api/users/me", (prev: any) => ({ ok: !prev.ok }), false);
+    toggleFav({}); // DB
   };
 
   return (
@@ -81,7 +91,7 @@ export default function ProductDetail() {
                 <svg
                   className="h-6 w-6 "
                   xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
+                  fill={data?.isLiked ? "currentColor" : "none"}
                   viewBox="0 0 24 24"
                   stroke="currentColor"
                   aria-hidden="true"
