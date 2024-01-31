@@ -36,7 +36,7 @@ async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IProductResponse>
 ) {
-  // GET: Find 'Product' list from DB
+  /* GET: Find 'Product' list from DB */
   if (req.method === "GET") {
     try {
       const products = await prismaClient.product.findMany({
@@ -55,12 +55,12 @@ async function handler(
     }
   }
 
-  // POST: Upload 'Product' to DB
+  /* POST: Upload 'Product' to DB */
   if (req.method === "POST") {
     const { name, price, description }: IProductUploadForm = req.body;
     const { user } = await getSession(req, res);
     if (!user)
-      return res.status(401).json({ ok: false, error: "Please log-in." });
+      return res.status(401).json({ ok: false, error: "Please log-in" });
 
     try {
       const product = await prismaClient.product.create({

@@ -21,18 +21,23 @@ async function handler(
   if (!foundToken) return res.status(401).end();
 
   // If user log-in, add user data to session
-  const session = await getSession(req, res);
-  session.user = {
-    id: foundToken.userId,
-  };
-  await session.save();
-  await prismaClient.token.deleteMany({
-    where: {
-      userId: foundToken.userId,
-    },
-  });
+  try {
+    const session = await getSession(req, res);
+    session.user = {
+      id: foundToken.userId,
+    };
+    await session.save();
+    await prismaClient.token.deleteMany({
+      where: {
+        userId: foundToken.userId,
+      },
+    });
 
-  return res.status(200).json({ ok: true });
+    return res.status(200).json({ ok: true });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ ok: false, error });
+  }
 }
 
 export default withHandler({

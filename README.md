@@ -1057,7 +1057,7 @@
          if (typeof id !== "string")
            return res
              .status(400)
-             .json({ ok: false, error: "Only one dynamicParam is allowed." });
+             .json({ ok: false, error: "Only one dynamicParam is allowed" });
          const product = await prismaClient.product.findUnique({
            where: { id: +id },
            include: {
@@ -1096,6 +1096,124 @@
     - <a href="https://www.prisma.io/docs/orm/reference/prisma-client-reference#filter-conditions-and-operators" target="_blank">공식문서</a>
 - **24-01-27 : #11.7 / Product-page (3)**
 - **24-01-29 : #11.8 ~ #11.10 / Product-page (4)**
+  - 관심상품(즐겨찾기) 기능 구현
+    1. [Prisma] 관심상품 model schema 생성하기
+       - ex.
+         ```
+         model Favorite {
+           id        Int      @id @default(autoincrement())
+           createdAt DateTime @default(now())
+           updatedAt DateTime @updatedAt
+           user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+           userId    Int
+           product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+           productId Int
+           @@index([userId])
+           @@index([productId])
+         }
+         ```
+    2. [Back-End] API Route 생성하기
+       - 'Product Id'로 DB에 검색 ➡ 존재 시 삭제 / 미 존재 시 생성
+       - DB 사용 시 unique한 값을 사용하지 않기 때문에 `.findFirst()` 메서드를 사용
+         - `.findUnique()` 메서드 사용 불가
+    3. [Front-End] 관심상품 클릭 시 UI 업데이트하기
+       - 새로고침 시 해당 제품이 관심상품인지 아닌지 알아야하므로, 관심상품 필드도 DB로부터 가져와야 함
+       - ex.
+         ```
+         const isLiked = Boolean(
+           await prismaClient.favorite.findFirst({
+             where: {
+               productId: +id,
+               userId: user.?id,
+             },
+             select: {
+               id: true,
+             },
+           })
+         );
+         ```
+    4. [Front-End] 즉시 실시간으로 UI 업데이트하기
+       - Optimistic UI Update : Back-End에 요청을 보낸 후, 응답을 기자리지 않고 즉시 변경사항을 반영하는 것
+         - 낙관적(optimistic)이며, UI에서 요청이 정상적으로 잘 수행했다고 가정
+         - 새로고침 없이 즉시 바뀌어야 하므로, SWR패키지의 `mutate()`를 사용
+       - 기본형
+         ```
+         const { mutate } = useSWR(URL주소);
+         mutate({ 데이터, 재검증여부 });
+         ```
+         - 데이터 : 원하는 어떤 데이터든 상관없이 사용 ➡ 새로운 데이터로 덮어씌움
+           - 사용자 화면 UI의 변경사항을 보여주기 위한 부분
+         - 재검증여부 : [Boolean] 변경이 일어난 후, 다시 API에서 데이터를 불러올지 결정
+           - true 시 SWR은 즉시 첫 번째 인자를 데이터로 갱신하고, 모든 UI가 변경된 이후에 백그라운드에서 SWR이 URL주소로 최신 데이터를 fetch함
+       - ex.
+         ```
+         // Fetch 'Product'
+         const { data, mutate } = useSWR<IProductDetailResponse>(
+           id ? `/api/products/${id}` : null
+         );
+         // Click 'Favorite'
+         const [toggleFav, { isLoading: isToggleLoading }] = useMutation(
+           `/api/products/${id}/favorite`
+         );
+         const onFavoriteClick = () => {
+           if (isToggleLoading || !data) return;
+           toggleFav({}); // DB
+           mutate({ ...data, isLiked: !data.isLiked }, false);
+         };
+         // 또는
+         mutate((prev) => prev && { ...prev, isLiked: !prev.isLiked }, false);
+         ```
+  - [SWR] `useSWR()`로부터 나온 데이터를 아무곳에서나 `mutate()`하는 방법
+    - 기본형
+      ```
+      const { mutate } = useSWRConfig();
+      mutate(키, 데이터, 재검증여부);
+      ```
+      - 키 : URL 주소
+        - 인자로 키만 사용한다면, 새로 fetch하게 됨
+      - 데이터 : 다른 컴포넌트의 데이터를 변경할 때는 화살표함수 형으로 작성
+        - 자동으로 인자에 기존 데이터를 줌
+    - 얽매인게 없기(unbounded) 때문에 변경시키려는 데이터를 정확하게 명시해야 함
+    - ex.
+      ```
+      const { mutate } = useSWRConfig();
+      mutate("/api/users/me", (prev: any) => ({ ok: !prev.ok }), false);
+      ```
+  - [Prisma] Product에 얼마나 많은 사람들이 Favorite을 눌렀는지 표시하는 방법
+    - Product model에 Favorite model이 연결되어있어, 이것을 사용하면 됨
+      - 새로운 컬럼을 생성해 직접 갯수를 지정하지 않아도 됨
+      - ex.
+        ```
+        model Product {
+          Favorites  Favorite[]
+        }
+        ```
+    - 기본형
+      ```
+      const 변수명 = await PRISMA클라이언트.모델명.findMany({
+        include: {
+          _count: {
+            select: {
+              연결모델변수: true,
+            },
+          },
+        },
+      });
+      ```
+      - \_count : relation을 카운트해주는 프로퍼티
+    - ex.
+      ```
+      const products = await prismaClient.product.findMany({
+        include: {
+          _count: {
+            select: {
+              Favorites: true,
+            },
+          },
+        },
+      });
+      ```
+- **24-01-31 : #12.0 ~ #12.3 / Community-page (1)**
 
 ---
 
@@ -1108,4 +1226,9 @@
     - 토큰이 존재하는 경우, 토큰 재생성 못하게 막기
   - token의 payload(난수)가 겹칠 수 있는 문제 해결
   - [/products/upload.tsx], [/api/products/index.tsx] 추후 'imageUrl' 추가하기
-  - [/products/[id].tsx] isLoading, 데이터가 없는 경우의 화면 구현하기
+  - isLoading, 데이터가 없는 경우의 화면 구현하기
+    - [/products/[id].tsx]
+    - [/community/[id].tsx]
+  - 404페이지 만들기 (data가 없을 시)
+    - [/products/[id].tsx]
+    - [/community/[id].tsx]

@@ -21,7 +21,7 @@ export default function useMutation<T = object>(
   const [error, setError] = useState<undefined | any>(undefined);
 
   // POST fetch fn.
-  async function enter(data: any) {
+  async function postFetch(data: any) {
     setIsLoading(true);
     try {
       const json = await (
@@ -41,5 +41,5 @@ export default function useMutation<T = object>(
     }
   }
 
-  return [enter, { isLoading, data, error }];
+  return [postFetch, { isLoading, data, error }];
 }

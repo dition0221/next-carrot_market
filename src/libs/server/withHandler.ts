@@ -31,7 +31,7 @@ export default function withHandler({
     // Check user exists to protect API route
     const session = await getSession(req, res);
     if (isPrivate && !session.user) {
-      return res.status(401).json({ ok: false, error: "Please log-in." });
+      return res.status(401).json({ ok: false, error: "Please log-in" });
     }
 
     try {

@@ -13,7 +13,7 @@ async function handler(
   if (typeof id !== "string")
     return res
       .status(400)
-      .json({ ok: false, error: "Only one dynamicParam is allowed." });
+      .json({ ok: false, error: "Only one dynamicParam is allowed" });
 
   // user
   const { user } = await getSession(req, res);
@@ -31,7 +31,8 @@ async function handler(
       },
     },
   });
-  if (!product) return res.status(404).json({ ok: false });
+  if (!product)
+    return res.status(404).json({ ok: false, error: "404 Not Found" });
 
   // Get similar 'Product' from DB
   const terms = product.name

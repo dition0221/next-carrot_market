@@ -1,14 +1,14 @@
-import type { NextApiRequest, NextApiResponse } from "next";
+import { NextApiRequest, NextApiResponse } from "next";
 // LIBS
 import withHandler, { IResponseType } from "@/libs/server/withHandler";
-import prismaClient from "@/libs/server/prismaClient";
 import { getSession } from "@/libs/server/getSession";
+import prismaClient from "@/libs/server/prismaClient";
 
 async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseType>
 ) {
-  // productId
+  // postId
   const { id } = req.query;
   if (typeof id !== "string")
     return res
@@ -19,31 +19,32 @@ async function handler(
   const { user } = await getSession(req, res);
   if (!user) return res.status(401).json({ ok: false, error: "Please log-in" });
 
-  // If 'favorite product' already exists => Delete / Not exists => Create
+  // If 'wondering post' already exists => Delete / Not exists => Create
   try {
-    const alreadyFavExists = await prismaClient.favorite.findFirst({
+    const alreadyExists = await prismaClient.wondering.findFirst({
       where: {
-        productId: +id,
         userId: user.id,
+        postId: +id,
+      },
+      select: {
+        id: true,
       },
     });
-    if (alreadyFavExists) {
-      // Delete
-      await prismaClient.favorite.delete({
+    if (alreadyExists) {
+      await prismaClient.wondering.delete({
         where: {
-          id: alreadyFavExists.id,
+          id: alreadyExists.id,
         },
       });
     } else {
-      // Create
-      await prismaClient.favorite.create({
+      await prismaClient.wondering.create({
         data: {
           user: {
             connect: {
               id: user.id,
             },
           },
-          product: {
+          post: {
             connect: {
               id: +id,
             },
@@ -51,7 +52,6 @@ async function handler(
         },
       });
     }
-
     return res.status(200).json({ ok: true });
   } catch (error) {
     console.log(error);

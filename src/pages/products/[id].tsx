@@ -8,6 +8,7 @@ import useUser from "@/libs/client/useUser";
 // COMPONENTS
 import Button from "@/components/button";
 import Layout from "@/components/layout";
+import LinkProfile from "@/components/link-profile";
 // INTERFACE
 import type { Product, User } from "@prisma/client";
 
@@ -24,10 +25,6 @@ interface IProductDetailResponse {
 }
 
 export default function ProductDetail() {
-  // Allow only logged-in user
-  const { user, isLoading: isUserLoading } = useUser();
-  const { mutate } = useSWRConfig();
-
   // route parameter
   const router = useRouter();
   const { id } = router.query;
@@ -38,14 +35,13 @@ export default function ProductDetail() {
     id ? `/api/products/${id}` : null
   );
 
-  // Click favorite
+  // Click 'Favorite'
   const [toggleFav, { isLoading: isToggleLoading }] = useMutation(
     `/api/products/${id}/favorite`
   );
   const onFavoriteClick = () => {
     if (isToggleLoading) return;
     boundMutate((prev) => prev && { ...prev, isLiked: !prev.isLiked }, false);
-    // mutate("/api/users/me", (prev: any) => ({ ok: !prev.ok }), false);
     toggleFav({}); // DB
   };
 
@@ -54,19 +50,12 @@ export default function ProductDetail() {
       <main className="px-4">
         <section className="mb-8">
           <div className="h-96 bg-slate-300" />
-          <article className="flex py-3 border-t border-b items-center space-x-3 cursor-pointer">
+          <article className="flex py-3 border-t border-b items-center space-x-3">
             <div className="w-12 h-12 rounded-full bg-slate-300" />
-            <div>
-              <p className="text-sm font-medium text-gray-700">
-                {data?.product?.user?.name}
-              </p>
-              <Link
-                href={`/users/profiles/${data?.product?.userId}`}
-                className="text-xs font-medium text-gray-500"
-              >
-                View profile &rarr;
-              </Link>
-            </div>
+            <LinkProfile
+              userName={data?.product?.user.name ?? "Undefined"}
+              href={`/users/profiles/${data?.product?.userId}`}
+            />
           </article>
 
           <div className="mt-5">
