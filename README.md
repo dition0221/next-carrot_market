@@ -1214,6 +1214,73 @@
       });
       ```
 - **24-01-31 : #12.0 ~ #12.3 / Community-page (1)**
+  - 동네생활 페이지 생성
+    1. [Prisma] model schema 생성하기
+       - 질문(Post), 답변(Answer), 궁금해요(Wondering) model 생성
+    2. [Front-End] Post를 작성하는 &lt;form&gt; 생성하기
+       - 폼 제출 시 폼데이터는 Back-End로 전송
+    3. [Back-End] DB에 Post를 저장하기
+       - ex.
+         ```
+         const post = await prismaClient.post.create({
+           data: {
+             question,
+             user: {
+               connect: {
+                 id: user.id,
+               },
+             },
+           },
+         });
+         ```
+    4. [Front-End] DB에 Post 저장 완료 시 해당 Post로 이동하기
+       - ex.
+         ```
+         const router = useRouter();
+         // Submit form
+         const [post, { data, isLoading }] = useMutation<IWriteResponse>("/api/posts");
+         const onValid = (formData: IWriteForm) => {
+           if (isLoading) return alert("로딩 중 입니다.");
+           post(formData); // DB
+         };
+         // Succeed post => Go this post
+         useEffect(()=>{
+           if (data?.post) {
+             router.push(`/community/${data.post.id}`);
+           }
+         }, [data?.post, router]);
+         ```
+    5. [Front-End] 해당 Post 페이지 보여주기
+    - ex. `` const { data, error } = useSWR<ICommunityPostRes>(id ? `/api/posts/${id}` : null); ``
+  - 동네질문 즐겨찾기 설정
+    1. [Back-End] DB로부터 즐겨찾기 여부 확인하기
+       - 확인 후, 존재 시 삭제 / 미 존재 시 생성
+    2. [Front-End] 즐겨찾기 이벤트에 대한 UI 업데이트하기
+       - ex.
+         ```
+         const [wonder] = useMutation(`/api/posts/${id}/wonder`);
+         const onWonderClick = () => {
+           if (!data || !data.post) return;
+           mutate(
+             {
+               ...data,
+               post: {
+                 ...data.post,
+                 _count: {
+                   ...data.post._count,
+                   Wonderings: data.isWondering
+                     ? data.post._count.Wonderings - 1
+                     : data.post._count.Wonderings + 1,
+                 },
+               },
+               isWondering: !data.isWondering,
+             },
+             false
+           );
+           wonder({}); // DB
+         };
+         ```
+- **24-02-05 : #12.4 ~ #12.8 / Community-page (2)**
 
 ---
 
@@ -1232,3 +1299,5 @@
   - 404페이지 만들기 (data가 없을 시)
     - [/products/[id].tsx]
     - [/community/[id].tsx]
+  - [/community/[id].tsx] 답변의 시간 재설정하기
+  - useSWR()의 error 핸들링하기

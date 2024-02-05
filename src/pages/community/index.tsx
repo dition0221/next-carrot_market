@@ -1,27 +1,61 @@
+import useSWR from "swr";
+// LIBS
+import useCoords from "@/libs/client/useCoords";
+// COMPONENTS
 import FloatingButton from "@/components/floating-button";
 import Layout from "@/components/layout";
 import Link from "next/link";
+// INTERFACE
+import type { Post } from "@prisma/client";
+
+interface PostWithUser extends Post {
+  user: {
+    id: number;
+    name: string;
+    avatar?: string;
+  };
+  _count: {
+    Wonderings: number;
+    Answers: number;
+  };
+}
+
+interface IPostList {
+  ok: boolean;
+  posts?: PostWithUser[];
+  error?: any;
+}
 
 export default function Community() {
+  const { latitude, longitude } = useCoords();
+  console.log(latitude, longitude);
+
+  // Get 'post' list
+  const { data } = useSWR<IPostList>(
+    latitude && longitude
+      ? `/api/posts?latitude=${latitude}&longitude=${longitude}`
+      : null
+  );
+
   return (
     <Layout title="동네생활" hasTabBar>
       <main className="space-y-8">
-        {[...Array(6)].map((_, i) => (
+        {data?.posts?.map((post) => (
           <Link
-            key={i}
-            href={`/community/${i}`}
+            key={post.id}
+            href={`/community/${post.id}`}
             className="flex flex-col items-start cursor-pointer"
           >
             <span className="flex ml-4 items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
               동네질문
             </span>
             <div className="mt-2 px-4 text-gray-700">
-              <span className="text-orange-500 font-medium">Q.</span> What is
-              the best dumpling restaurant?
+              <span className="text-orange-500 font-medium">Q. </span>
+              {post.question}
             </div>
             <div className="mt-5 px-4 flex items-center justify-between w-full text-gray-500 font-medium text-xs">
-              <span>니꼬</span>
-              <span>18시간 전</span>
+              <span>{post.user.name}</span>
+              <span>{post.createdAt + ""}</span>
             </div>
             <div className="flex px-4 space-x-5 mt-3 text-gray-700 py-2.5 border-t border-b-2 w-full">
               <span className="flex space-x-2 items-center">
@@ -39,7 +73,7 @@ export default function Community() {
                     d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                   ></path>
                 </svg>
-                <span>궁금해요 1</span>
+                <span>궁금해요 {post._count.Wonderings}</span>
               </span>
               <span className="flex space-x-2 items-center">
                 <svg
@@ -56,7 +90,7 @@ export default function Community() {
                     d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                   ></path>
                 </svg>
-                <span>답변 1</span>
+                <span>답변 {post._count.Answers}</span>
               </span>
             </div>
           </Link>

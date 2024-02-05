@@ -3,10 +3,12 @@ import { useEffect } from "react";
 import { useRouter } from "next/router";
 // LIBS
 import useMutation from "@/libs/client/useMutation";
+import useCoords from "@/libs/client/useCoords";
 // COMPONENTS
 import Button from "@/components/button";
 import Layout from "@/components/layout";
 import Textarea from "@/components/textarea";
+import FormErrorMessage from "@/components/form-error-msg";
 // INTERFACE
 import type { Post } from "@prisma/client";
 
@@ -22,6 +24,9 @@ interface IWriteResponse {
 
 export default function CommunityWrite() {
   const router = useRouter();
+  const { latitude, longitude } = useCoords();
+
+  // <form>
   const {
     register,
     handleSubmit,
@@ -32,10 +37,10 @@ export default function CommunityWrite() {
   const [post, { data, isLoading }] = useMutation<IWriteResponse>("/api/posts");
   const onValid = (formData: IWriteForm) => {
     if (isLoading) return alert("로딩 중 입니다.");
-    post(formData); // DB
+    post({ ...formData, latitude, longitude }); // DB
   };
 
-  // Succeed post => go this post
+  // Succeed post => Go this post
   useEffect(() => {
     if (data?.post) {
       router.push(`/community/${data.post.id}`);
@@ -61,10 +66,8 @@ export default function CommunityWrite() {
         <Button text={isLoading ? "Loading.." : "Submit"} full />
       </form>
 
-      {errors.question ? (
-        <p className="px-4 mt-4 text-sm text-center italic text-red-600 underline underline-offset-2">
-          {errors.question.message}
-        </p>
+      {errors.question?.message ? (
+        <FormErrorMessage text={errors.question.message} />
       ) : null}
     </Layout>
   );

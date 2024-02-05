@@ -1,5 +1,7 @@
 import { useRouter } from "next/router";
 import useSWR from "swr";
+import { useForm } from "react-hook-form";
+import { useEffect } from "react";
 // LIBS
 import useMutation from "@/libs/client/useMutation";
 import { cls } from "@/libs/client/utils";
@@ -8,8 +10,9 @@ import Button from "@/components/button";
 import Layout from "@/components/layout";
 import Textarea from "@/components/textarea";
 import LinkProfile from "@/components/link-profile";
+import FormErrorMessage from "@/components/form-error-msg";
 // INTERFACE
-import type { Post } from "@prisma/client";
+import type { Answer, Post } from "@prisma/client";
 
 interface AnswerWithUser {
   id: number;
@@ -42,6 +45,16 @@ interface ICommunityPostRes {
   error?: any;
 }
 
+interface IAnswerForm {
+  answer: string;
+}
+
+interface IAnswerResponse {
+  ok: boolean;
+  answer?: Answer;
+  error?: any;
+}
+
 export default function CommunityDetail() {
   const { id } = useRouter().query; // postId
 
@@ -50,10 +63,10 @@ export default function CommunityDetail() {
     id ? `/api/posts/${id}` : null
   );
 
-  // Wondering
-  const [wonder] = useMutation(`/api/posts/${id}/wonder`);
+  // Wondering (on/off)
+  const [wonder, { isLoading }] = useMutation(`/api/posts/${id}/wonder`);
   const onWonderClick = () => {
-    if (!data || !data.post) return;
+    if (!data || !data.post || isLoading) return;
     mutate(
       {
         ...data,
@@ -73,13 +86,36 @@ export default function CommunityDetail() {
     wonder({}); // DB
   };
 
+  // Answer <form>
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<IAnswerForm>();
+
+  // Post 'answer' data
+  const [sendAnswer, { data: answerData, isLoading: isAnswerLoading }] =
+    useMutation<IAnswerResponse>(`/api/posts/${id}/answers`);
+  const onValid = (formData: IAnswerForm) => {
+    if (isAnswerLoading) return;
+    sendAnswer(formData); // DB
+  };
+  useEffect(() => {
+    if (answerData?.ok) {
+      reset();
+      mutate();
+    }
+  }, [answerData?.ok, reset, mutate]);
+
   return (
     <Layout canGoBack>
       <span className="inline-flex ml-4 items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
         동네질문
       </span>
 
-      <section className="flex px-4 py-3 mb-3 border-b items-center space-x-3 cursor-pointer">
+      {/* Profile */}
+      <section className="flex px-4 py-3 mb-3 border-b items-center space-x-3">
         <div className="w-10 h-10 rounded-full bg-slate-300" />
         <LinkProfile
           userName={data?.post?.user.name ?? "Undefined"}
@@ -136,7 +172,7 @@ export default function CommunityDetail() {
         </div>
       </section>
 
-      {/* Reply */}
+      {/* Reply[] */}
       {data?.post?.Answers && data?.post?.Answers.length > 0 ? (
         <section className="px-4 my-5 space-y-5">
           {data?.post?.Answers.map((answer) => (
@@ -156,15 +192,26 @@ export default function CommunityDetail() {
         </section>
       ) : null}
 
-      <form className="px-4 space-y-2 mt-2">
+      {/* Reply Form */}
+      <form onSubmit={handleSubmit(onValid)} className="px-4 space-y-2 mt-2">
         <Textarea
+          register={register("answer", {
+            required: "답변을 적어주세요.",
+            minLength: {
+              value: 5,
+              message: "답변을 5자 이상 적어주세요.",
+            },
+          })}
           name="reply"
           label="Reply"
           placeholder="Answer this question!"
           required
         />
-        <Button text="Reply" full />
+        <Button text={isAnswerLoading ? "Loading.." : "Reply"} full />
       </form>
+      {errors.answer?.message ? (
+        <FormErrorMessage text={errors.answer.message} />
+      ) : null}
     </Layout>
   );
 }

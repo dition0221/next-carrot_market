@@ -19,6 +19,18 @@ async function handler(
   const { user } = await getSession(req, res);
   if (!user) return res.status(401).json({ ok: false, error: "Please log-in" });
 
+  // Check 'product' exists
+  const product = await prismaClient.product.findUnique({
+    where: {
+      id: +id,
+    },
+    select: {
+      id: true,
+    },
+  });
+  if (!product)
+    return res.status(404).json({ ok: false, error: "404 Not Found" });
+
   // If 'favorite product' already exists => Delete / Not exists => Create
   try {
     const alreadyFavExists = await prismaClient.favorite.findFirst({

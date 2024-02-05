@@ -4,10 +4,16 @@ import withHandler, { IResponseType } from "@/libs/server/withHandler";
 import { getSession } from "@/libs/server/getSession";
 import prismaClient from "@/libs/server/prismaClient";
 
+interface IReqBody {
+  answer: string;
+}
+
 async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseType>
 ) {
+  const { answer }: IReqBody = req.body;
+
   // postId
   const { id } = req.query;
   if (typeof id !== "string")
@@ -30,40 +36,24 @@ async function handler(
   });
   if (!post) return res.status(404).json({ ok: false, error: "404 Not Found" });
 
-  // If 'wondering post' already exists => Delete / Not exists => Create
+  // Create new 'answer'
   try {
-    const alreadyExists = await prismaClient.wondering.findFirst({
-      where: {
-        userId: user.id,
-        postId: +id,
-      },
-      select: {
-        id: true,
+    const newAnswer = await prismaClient.answer.create({
+      data: {
+        user: {
+          connect: {
+            id: user.id,
+          },
+        },
+        post: {
+          connect: {
+            id: +id,
+          },
+        },
+        answer,
       },
     });
-    if (alreadyExists) {
-      await prismaClient.wondering.delete({
-        where: {
-          id: alreadyExists.id,
-        },
-      });
-    } else {
-      await prismaClient.wondering.create({
-        data: {
-          user: {
-            connect: {
-              id: user.id,
-            },
-          },
-          post: {
-            connect: {
-              id: +id,
-            },
-          },
-        },
-      });
-    }
-    return res.status(200).json({ ok: true });
+    return res.status(200).json({ ok: true, answer: newAnswer });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ ok: false, error });
