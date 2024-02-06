@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
-import useSWR, { useSWRConfig } from "swr";
+import useSWR from "swr";
 // LIBS
 import useMutation from "@/libs/client/useMutation";
 import { cls } from "@/libs/client/utils";
-import useUser from "@/libs/client/useUser";
 // COMPONENTS
 import Button from "@/components/button";
 import Layout from "@/components/layout";

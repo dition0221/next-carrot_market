@@ -6,24 +6,22 @@ import Layout from "@/components/layout";
 import FloatingButton from "@/components/floating-button";
 import Item from "@/components/item";
 // INTERFACE
-import type { IProductResponse } from "./api/products";
+import type { IProductList } from "./api/products";
 
 export default function Home() {
-  // Get 'User' session
-  const { user, isLoading } = useUser();
-
   // Fetch 'Product' list from DB
-  const { data } = useSWR<IProductResponse>("/api/products");
+  const { data } = useSWR<IProductList>("/api/products");
 
   return (
     <Layout title="홈" hasTabBar>
       <main className="flex flex-col space-y-5">
+        {/* Product List */}
         {data?.products?.map((product) => (
           <Item
             title={product.name}
             id={product.id}
             price={product.price}
-            hearts={product._count?.Favorites ?? 0}
+            hearts={product._count.Records}
             comments={0}
             key={product.id}
           />

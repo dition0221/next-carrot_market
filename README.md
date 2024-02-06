@@ -1281,6 +1281,88 @@
          };
          ```
 - **24-02-05 : #12.4 ~ #12.8 / Community-page (2)**
+  - 동네질문 Post에 대한 Answer 생성
+    1. [Front-End] Answer 폼 데이터를 Back-End로 전송하기
+    2. [Back-End] Answer에 대한 DB 처리하기
+       - 먼저, Post가 존재하는지 확인 ➡ 미 존재 시 404 상태코드 반환
+    3. [Front-End] UI 업데이트하기
+       - DB에 정상적으로 저장되었으면, form을 reset
+    4. [Front-End] 실시간UI 처리하기
+       - `useSWR()`의 `mutate`를 사용해 optimistic으로 처리해도 되지만, 데이터 양이 많기에 re-fetch하는 것이 나음
+         - 인수없이 `mutate()`만 사용하면 됨
+       - ex.
+         ```
+         useEffect(() => {
+           if (answerData?.ok) {
+            reset(); // reset form
+            mutate(); // refetch
+           }
+         }, [answerData?.ok, reset, mutate]);
+         ```
+  - 게시글 작성 시 위치정보 첨부
+    - 게시글 작성 시 위치정보와 함께 작성되도록 할 예정
+    1. 사용 편의성을 위해 커스텀 hook을 생성
+       - ex.
+         ```
+         interface IUseCoordsState {
+           latitude: number | null;
+           longitude: number | null;
+         }
+         export default function useCoords() {
+           const [coords, setCoords] = useState<IUseCoordsState>({
+             latitude: null,
+             longitude: null,
+           });
+           const onSuccess = ({
+             coords: { latitude, longitude },
+           }: GeolocationPosition) => {
+             setCoords({ latitude, longitude });
+           };
+           // Get user's coordination
+           useEffect(() => {
+             navigator.geolocation.getCurrentPosition(onSuccess);
+           }, []);
+           return coords;
+         }
+         ```
+    2. [Prisma] Post model schema 변경하기
+       - `latitude Float?, longitude Float?`를 추가
+    3. [Front-End] 현재 좌표를 보내어 근방의 Post들만 fetch하기
+       - Post 리스트를 fetch 시 현재 사용자가 위치한 좌표를 전송해야 함
+         - 쿼리파라미터('?')를 이용 (Back-End에서 'req.query'로부터 가져옴)
+         - ex.
+           ```
+           const { latitude, longitude } = useCoords();
+           const { data, isLoading } = useSWR<IPostList>(
+             latitude && longitude
+               ? `/api/posts?latitude=${latitude}&longitude=${longitude}`
+               : null
+           );
+           ```
+    4. [Back-End] 특정 좌표 범위 내에 있는 Post만 찾기
+       - 적절한 위치 반경을 설정해야 함
+         - 특정 좌표의 ±0.01 정도가 적당함
+         - 또는 사용자가 직접 반경을 지정할 수 있도록 함
+       - DB 검색 시 where 조건문에서 연산자 옵션을 사용
+         - gte : 크거나 같음 (greater then or equal)
+         - lte : 크거나 같음 (less then or equal)
+       - ex.
+         ```
+         where: {
+           latitude: {
+             gte: latitudeNumber - 0.01,
+             lte: latitudeNumber + 0.01,
+           },
+           longitude: {
+             gte: longitudeNumber - 0.01,
+             lte: longitudeNumber + 0.01,
+           },
+         },
+         ```
+- **24-02-06 : #13.0 ~ #13.4 / Profile-page (1)**
+  - _[/api/users/me/records] API 리팩토링_
+    - _model: Sale, Favorite, Purchase을 enum을 사용해 하나로 합쳐서 사용_
+  - _Fix : [/api/enter.tsx] 로그인이 안 되는 현상 수정_
 
 ---
 
@@ -1291,11 +1373,14 @@
     - 토큰의 유효기간을 짧게 설정하기 (기본값 14일) (ex. 3분)
     - 유효기간 만료 or 토큰 인증 시 토큰 삭제
     - 토큰이 존재하는 경우, 토큰 재생성 못하게 막기
-  - token의 payload(난수)가 겹칠 수 있는 문제 해결
+  - [Token] payload(난수)가 겹칠 수 있는 문제 해결
+  - [Token] 다른 계정의 token을 사용하는 문제 해결 (자신의 token만 사용하도록 하기)
   - [/products/upload.tsx], [/api/products/index.tsx] 추후 'imageUrl' 추가하기
   - isLoading, 데이터가 없는 경우의 화면 구현하기
+    - ? getServerSideProps()
     - [/products/[id].tsx]
     - [/community/[id].tsx]
+    - [/profile/index.tsx]
   - 404페이지 만들기 (data가 없을 시)
     - [/products/[id].tsx]
     - [/community/[id].tsx]

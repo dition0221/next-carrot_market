@@ -28,9 +28,9 @@ export default function withHandler({
     if (req.method && !methods.includes(req.method as Method))
       return res.status(405).end();
 
-    // Check user exists to protect API route
-    const session = await getSession(req, res);
-    if (isPrivate && !session.user) {
+    // Check online user
+    const { user } = await getSession(req, res);
+    if (isPrivate && !user) {
       return res.status(401).json({ ok: false, error: "Please log-in" });
     }
 

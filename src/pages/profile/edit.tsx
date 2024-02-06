@@ -1,8 +1,14 @@
+// LIBS
+import useUser from "@/libs/client/useUser";
+// COMPONENTS
 import Layout from "@/components/layout";
 import Input from "@/components/input";
 import Button from "@/components/button";
 
 export default function EditProfile() {
+  // Check online/offline
+  const { user } = useUser();
+
   return (
     <Layout canGoBack title="프로필 수정">
       <form className="px-4 space-y-4">

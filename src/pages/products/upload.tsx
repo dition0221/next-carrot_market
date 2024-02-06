@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { useEffect } from "react";
 // LIBS
 import useMutation from "@/libs/client/useMutation";
-import type { IProductResponse } from "@/pages/api/products";
+import type { IProductList } from "@/pages/api/products";
 // COMPONENTS
 import Layout from "@/components/layout";
 import Input from "@/components/input";
@@ -20,7 +20,7 @@ export interface IProductUploadForm {
 export default function ProductUpload() {
   const router = useRouter();
   const [uploadProduct, { isLoading, data }] =
-    useMutation<IProductResponse>("/api/products");
+    useMutation<IProductList>("/api/products");
 
   // <form>
   const { register, handleSubmit } = useForm<IProductUploadForm>();

@@ -27,8 +27,8 @@ interface IPostList {
 }
 
 export default function Community() {
+  // Get user's coordination
   const { latitude, longitude } = useCoords();
-  console.log(latitude, longitude);
 
   // Get 'post' list
   const { data } = useSWR<IPostList>(

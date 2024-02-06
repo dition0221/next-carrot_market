@@ -5,36 +5,27 @@ import { getSession } from "@/libs/server/getSession";
 import prismaClient from "@/libs/server/prismaClient";
 // INTERFACE
 import type { IProductUploadForm } from "@/pages/products/upload";
-import type { Product, User } from "@prisma/client";
+import type { Product } from "@prisma/client";
 
-interface ProductWithUser extends Product {
-  user?: {
-    id: number;
-    phone?: string | null;
-    email?: string | null;
-    name: string;
-    avatar: string | null;
-    createdAt?: Date;
-    updatedAt?: Date;
-  };
-  _count?: {
-    Favorites?: number;
+export interface ProductWithCount extends Product {
+  _count: {
+    Records: number; // kind
   };
 }
 
-export interface IProductResponse {
+export interface IProductList {
   ok: boolean;
   error?: any;
   // POST
-  product?: ProductWithUser;
+  product?: Product;
   // GET
-  products?: ProductWithUser[];
+  products?: ProductWithCount[];
   relatedProducts?: Product[];
 }
 
 async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<IProductResponse>
+  res: NextApiResponse<IProductList>
 ) {
   /* GET: Find 'Product' list from DB */
   if (req.method === "GET") {
@@ -43,7 +34,11 @@ async function handler(
         include: {
           _count: {
             select: {
-              Favorites: true,
+              Records: {
+                where: {
+                  kind: "Favorite",
+                },
+              },
             },
           },
         },
@@ -76,6 +71,10 @@ async function handler(
           },
         },
       });
+      if (!product)
+        return res
+          .status(500)
+          .json({ ok: false, error: "Create product error" });
       return res.status(200).json({ ok: true, product });
     } catch (error) {
       console.log(error);

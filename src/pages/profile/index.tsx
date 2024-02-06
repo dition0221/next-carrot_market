@@ -1,14 +1,42 @@
-import Layout from "@/components/layout";
 import Link from "next/link";
+import useSWR from "swr";
+// LIBS
+import useUser from "@/libs/client/useUser";
+import { cls } from "@/libs/client/utils";
+// COMPONENTS
+import Layout from "@/components/layout";
+// INTERFACE
+import type { Review } from "@prisma/client";
+
+interface ReviewWithUser extends Review {
+  createdBy: {
+    id: number;
+    name: string;
+    avatar: string | null;
+  };
+}
+
+interface IReviewList {
+  ok: boolean;
+  reviews?: ReviewWithUser[];
+  error?: any;
+}
 
 export default function Profile() {
+  // Profile
+  const { user } = useUser();
+
+  // Review List
+  const { data: reviewData } = useSWR<IReviewList>("/api/reviews");
+
   return (
     <Layout title="나의 캐럿" hasTabBar>
-      <main className="px-4">
+      <div className="px-4">
+        {/* Profile */}
         <section className="flex items-center space-x-3">
           <div className="w-16 h-16 bg-slate-400 rounded-full" />
           <div className="flex flex-col">
-            <span className="font-medium text-gray-900">Steve Jobs</span>
+            <span className="font-medium text-gray-900">{user?.name}</span>
             <Link href="/profile/edit" className="text-sm text-gray-700">
               Edit profile &rarr;
             </Link>
@@ -81,70 +109,44 @@ export default function Profile() {
           </Link>
         </section>
 
-        <section className="mt-12">
-          <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 rounded-full bg-slate-400" />
-            <div>
-              <h4 className="text-sm font-bold text-gray-800">니꼬</h4>
-              <div className="flex items-center">
-                <svg
-                  className="text-yellow-400 h-5 w-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-                <svg
-                  className="text-yellow-400 h-5 w-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-                <svg
-                  className="text-yellow-400 h-5 w-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-                <svg
-                  className="text-yellow-400 h-5 w-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-                <svg
-                  className="text-gray-400 h-5 w-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-          <p className="mt-4 text-gray-700 text-sm">
-            Normally, both your asses would be dead as fucking fried chicken,
-            but you happen to pull this shit while I&apos;m in a transitional
-            period so I don&apos;t wanna kill you, I wanna help you. But I
-            can&apos;t give you this case, it don&apos;t belong to me. Besides,
-            I&apos;ve already been through too much shit this morning over this
-            case to hand it over to your dumb ass.
-          </p>
-        </section>
-      </main>
+        {/* Received review list */}
+        {reviewData?.reviews?.length ? (
+          <section className="mt-12 space-y-12">
+            {reviewData?.reviews?.map((review) => (
+              <article key={review.id}>
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 rounded-full bg-slate-400" />
+                  <div>
+                    <h4 className="text-sm font-bold text-gray-800">
+                      {review.createdBy.name}
+                    </h4>
+                    <div className="flex items-center">
+                      {[...Array(5)].map((_, i) => (
+                        <svg
+                          key={i}
+                          className={cls(
+                            "h-5 w-5",
+                            review.score > i
+                              ? "text-yellow-400"
+                              : "text-gray-400"
+                          )}
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <p className="mt-2 text-gray-700 text-sm">{review.review}</p>
+              </article>
+            ))}
+          </section>
+        ) : null}
+      </div>
     </Layout>
   );
 }

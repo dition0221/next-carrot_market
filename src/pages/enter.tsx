@@ -141,6 +141,7 @@ export default function Enter() {
         </>
       )}
 
+      {/* Social Log-in */}
       <section className="mt-8">
         <div className="relative">
           <div className="absolute w-full border-t border-gray-300" />

@@ -33,22 +33,24 @@ async function handler(
 
   // If 'favorite product' already exists => Delete / Not exists => Create
   try {
-    const alreadyFavExists = await prismaClient.favorite.findFirst({
+    const alreadyFavExists = await prismaClient.record.findFirst({
       where: {
         productId: +id,
         userId: user.id,
+        kind: "Favorite",
       },
     });
     if (alreadyFavExists) {
       // Delete
-      await prismaClient.favorite.delete({
+      await prismaClient.record.delete({
         where: {
           id: alreadyFavExists.id,
+          kind: "Favorite",
         },
       });
     } else {
       // Create
-      await prismaClient.favorite.create({
+      await prismaClient.record.create({
         data: {
           user: {
             connect: {
@@ -60,6 +62,7 @@ async function handler(
               id: +id,
             },
           },
+          kind: "Favorite",
         },
       });
     }

@@ -54,12 +54,13 @@ async function handler(
     },
   });
 
-  // Favorite or not
+  // 'Favorite' or not
   const isLiked = Boolean(
-    await prismaClient.favorite.findFirst({
+    await prismaClient.record.findFirst({
       where: {
         productId: +id,
         userId: user?.id,
+        kind: "Favorite",
       },
       select: {
         id: true,
