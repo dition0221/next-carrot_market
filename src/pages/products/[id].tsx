@@ -52,7 +52,7 @@ export default function ProductDetail() {
           <article className="flex py-3 border-t border-b items-center space-x-3">
             <div className="w-12 h-12 rounded-full bg-slate-300" />
             <LinkProfile
-              userName={data?.product?.user.name ?? "Undefined"}
+              userName={data?.product?.user.name}
               href={`/users/profiles/${data?.product?.userId}`}
             />
           </article>

@@ -118,7 +118,7 @@ export default function CommunityDetail() {
       <section className="flex px-4 py-3 mb-3 border-b items-center space-x-3">
         <div className="w-10 h-10 rounded-full bg-slate-300" />
         <LinkProfile
-          userName={data?.post?.user.name ?? "Undefined"}
+          userName={data?.post?.user.name}
           href={`/users/profiles/${data?.post?.userId}`}
         />
       </section>
@@ -207,11 +207,11 @@ export default function CommunityDetail() {
           placeholder="Answer this question!"
           required
         />
+        {errors.answer?.message ? (
+          <FormErrorMessage text={errors.answer.message} />
+        ) : null}
         <Button text={isAnswerLoading ? "Loading.." : "Reply"} full />
       </form>
-      {errors.answer?.message ? (
-        <FormErrorMessage text={errors.answer.message} />
-      ) : null}
     </Layout>
   );
 }

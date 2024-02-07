@@ -63,12 +63,11 @@ export default function CommunityWrite() {
           placeholder="Ask a question!"
           required
         />
+        {errors.question?.message ? (
+          <FormErrorMessage text={errors.question.message} />
+        ) : null}
         <Button text={isLoading ? "Loading.." : "Submit"} full />
       </form>
-
-      {errors.question?.message ? (
-        <FormErrorMessage text={errors.question.message} />
-      ) : null}
     </Layout>
   );
 }

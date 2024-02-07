@@ -1375,9 +1375,9 @@
            createdAt    DateTime @default(now())
            updatedAt    DateTime @updatedAt
            review       String   @db.MediumText
-          createdBy    User     @relation(name: "WrittenReviews",  fields: [createdById], references: [id], onDelete: Cascade)
+           createdBy    User     @relation(name: "WrittenReviews",  fields: [createdById], references: [id], onDelete: Cascade)
            createdById  Int
-          createdFor   User     @relation(name: "ReceivedReviews",  fields: [createdForId], references: [id], onDelete: Cascade)
+           createdFor   User     @relation(name: "ReceivedReviews",  fields: [createdForId], references: [id], onDelete: Cascade)
            createdForId Int
            score        Int
            @@index([createdById])
@@ -1402,8 +1402,8 @@
            }
            ```
          - 사용 시 where조건문에서 'kind'만 설정하면 됨
-           - 하나의 API만 사요앻도 되는 장점이 존재함
-           - API 요청 시 쿼리파라미터('?') 사용
+           - 하나의 API만 사용해도 되는 장점이 존재함
+           - API 요청 시 쿼리파라미터('?')를 사용
              - ex. `/api/users/me/records?kind={kind}`
     2. [Back-End] 받은 Review 목록에 대한 API 생성하기
        - ex.
@@ -1425,18 +1425,18 @@
          });
          return res.status(200).json({ ok: true, reviews });
          ```
-  - [Prisma] 이미 존재하는 DB model에 새로운 컬럼을 생성할 때의 문제
+  - [Prisma] 이미 존재하는 model에게 새로운 컬럼을 생성할 때의 문제
     - DB에 이미 존재하는 데이터는 새 컬럼의 값이 없기 때문에 문제가 발생
     - 해결법 (다음 중 택1)
-      1.  모든 DB를 초기화하는 방법
-      2.  새 컬럼의 값을 옵셔널로 지정
-      3.  새 컬럼의 값에 기본값을 지정
-      - 기본형: `@default(기본값)`
-      - ex. `score Int @default(1)`
+      1. 모든 DB를 초기화하는 방법
+      2. 새 컬럼의 값을 옵셔널로 지정
+      3. 새 컬럼의 값에 기본값을 지정
+         - 기본형: `@default(기본값)`
+         - ex. `score Int @default(1)`
+- **24-02-07 : #13.5 ~ #13.6 / Profile-page (2)**
 
 ---
 
-- **24-02-07 : #13.5 ~ #13.6 / Profile-page (2)**
 - To-Do
   - useForm register의 검증 옵션 및 error 메시지 추가
     - [/enter] 등

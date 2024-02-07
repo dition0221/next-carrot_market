@@ -5,6 +5,7 @@ import useUser from "@/libs/client/useUser";
 import { cls } from "@/libs/client/utils";
 // COMPONENTS
 import Layout from "@/components/layout";
+import LinkProfile from "@/components/link-profile";
 // INTERFACE
 import type { Review } from "@prisma/client";
 
@@ -35,12 +36,7 @@ export default function Profile() {
         {/* Profile */}
         <section className="flex items-center space-x-3">
           <div className="w-16 h-16 bg-slate-400 rounded-full" />
-          <div className="flex flex-col">
-            <span className="font-medium text-gray-900">{user?.name}</span>
-            <Link href="/profile/edit" className="text-sm text-gray-700">
-              Edit profile &rarr;
-            </Link>
-          </div>
+          <LinkProfile userName={user?.name} href="/profile/edit" isEdit />
         </section>
 
         <section className="mt-10 flex justify-around">
