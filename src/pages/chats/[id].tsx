@@ -6,7 +6,7 @@ export default function ChatDetail() {
     <Layout canGoBack>
       <main className="pb-16 px-4 space-y-4">
         <Message text="Hi how much are you selling them for?" />
-        <Message text="I want ￦20,000" reverse />
+        <Message text="I want ￦20,000" reversed />
         <Message text="미쳤어" />
 
         <form className="fixed py-2 bg-white  bottom-0 inset-x-0">

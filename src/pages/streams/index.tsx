@@ -1,21 +1,38 @@
 import Link from "next/link";
-import FloatingButton from "@/components/floating-button";
+import useSWR from "swr";
+// COMPONENTS
 import Layout from "@/components/layout";
+import FloatingButton from "@/components/floating-button";
+// INTERFACE
+import type { Stream } from "@prisma/client";
 
-export default function Live() {
+interface IStreamsResponse {
+  ok: boolean;
+  streams?: Stream[];
+  error?: any;
+}
+
+export default function Streams() {
+  // Get stream list
+  const { data } = useSWR<IStreamsResponse>("/api/streams");
+
   return (
-    <Layout title="라이브" hasTabBar>
-      <main className="divide-y-[1px] space-y-4">
-        {[...Array(5)].map((_, i) => (
-          <Link href={`live/${i}`} key={i} className="block pt-4 px-4">
+    <Layout title="라이브 스트리밍" hasTabBar>
+      <div className="divide-y-[1px] space-y-4">
+        {data?.streams?.map((stream) => (
+          <Link
+            href={`/streams/${stream.id}`}
+            key={stream.id}
+            className="block pt-4 px-4"
+          >
             <div className="w-full bg-slate-500 aspect-video rounded-md shadow-sm" />
             <h1 className="text-2xl mt-2 font-bold text-gray-900">
-              Galaxy S50
+              {stream.name}
             </h1>
           </Link>
         ))}
 
-        <FloatingButton href="/live/create">
+        <FloatingButton href="/streams/create">
           <svg
             className="w-6 h-6"
             fill="none"
@@ -32,7 +49,7 @@ export default function Live() {
             />
           </svg>
         </FloatingButton>
-      </main>
+      </div>
     </Layout>
   );
 }

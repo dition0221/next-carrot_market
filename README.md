@@ -8,7 +8,7 @@
 - "react-dom": "^18"
 - "next": "14.0.4"
 
-<img src="https://img.shields.io/badge/Next.js-000?style=flat-square&logo=nextdotjs&logoColor=white"/> <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white"/> <img src="https://img.shields.io/badge/Tailwind CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white"/>  
+<img src="https://img.shields.io/badge/Next.js-000?style=flat-square&logo=nextdotjs&logoColor=white"/> <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white"/> <img src="https://img.shields.io/badge/Tailwind CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white"/> <img src="https://img.shields.io/badge/React Hook Form-EC5990?style=flat-square&logo=reacthookform&logoColor=white"/>  
 <img src="https://img.shields.io/badge/Prisma-2D3748?style=flat-square&logo=prisma&logoColor=white"/> <img src="https://img.shields.io/badge/PlanetScale-000?style=flat-square&logo=planetscale&logoColor=white"/> <img src="https://img.shields.io/badge/iron&dash;session-18303d?style=flat-square&logoColor=white"/> <img src="https://img.shields.io/badge/SWR-000?style=flat-square&logo=swr&logoColor=white"/>  
 <img src="https://img.shields.io/badge/Twilio-f22f46?style=flat-square&logo=twilio&logoColor=white"/> <img src="https://img.shields.io/badge/Nodemailer-22B573?style=flat-square&logoColor=white"/>
 
@@ -1434,6 +1434,16 @@
          - 기본형: `@default(기본값)`
          - ex. `score Int @default(1)`
 - **24-02-07 : #13.5 ~ #13.6 / Profile-page (2)**
+  - 사용자 프로필 업데이트
+    - react-hook-form 패키지의 `setValue`를 사용해 session의 사용자 정보를 미리 &lt;input&gt;에 넣어둠
+    - Back-End에서 DB의 데이터와 중복 체크 후 업데이트하기
+      - 새로운 프로필 내용만 가져다가 사용
+        - ex. `const newName = name && name !== currentUser?.name ? name: undefined;`
+      - DB로부터 unique한 컬럼값이 중복인지 확인
+        - 중복 시 error
+        - 미 중복 시 업데이트
+- **24-02-13 : #14.0 ~ #14.6 / Streams**
+  <!-- TODO: Pagination -->
 
 ---
 

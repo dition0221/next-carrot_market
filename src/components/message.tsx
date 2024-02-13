@@ -2,14 +2,14 @@ import { cls } from "@/libs/client/utils";
 
 interface IMessageProps {
   text: string;
-  reverse?: boolean;
+  reversed?: boolean;
 }
 
-export default function Message({ text, reverse }: IMessageProps) {
+export default function Message({ text, reversed }: IMessageProps) {
   return (
     <article
       className={cls(
-        reverse ? "flex-row-reverse space-x-reverse" : "",
+        reversed ? "flex-row-reverse space-x-reverse" : "",
         "flex items-start space-x-2"
       )}
     >
