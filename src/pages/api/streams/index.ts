@@ -6,6 +6,10 @@ import { getSession } from "@/libs/server/getSession";
 // INTERFACE
 import type { ICreateLiveForm } from "@/pages/streams/create";
 
+interface IGetReqQuery {
+  page: number;
+}
+
 async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseType>
@@ -29,7 +33,6 @@ async function handler(
           },
         },
       });
-
       return res.status(200).json({ ok: true, stream });
     } catch (error) {
       console.log(error);
@@ -39,10 +42,19 @@ async function handler(
 
   // GET: Get stream list
   if (req.method === "GET") {
+    const { page } = req.query;
+    if (typeof page !== "string")
+      return res
+        .status(400)
+        .json({ ok: false, error: "Only one 'page' parameter is allowed" });
+    const offset = +page;
     try {
       const streams = await prismaClient.stream.findMany({
         take: 10,
+        skip: offset * 10,
       });
+      if (streams.length === 0)
+        return res.status(404).json({ ok: false, error: "Not Found" });
       return res.status(200).json({ ok: true, streams });
     } catch (error) {
       console.log(error);

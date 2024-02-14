@@ -1443,10 +1443,195 @@
         - 중복 시 error
         - 미 중복 시 업데이트
 - **24-02-13 : #14.0 ~ #14.6 / Streams**
-  <!-- TODO: Pagination -->
+  - 라이브 스트림 페이지 구현
+    1. [Prisma] 라이브와 라이브챗메시지 model schema 생성하기
+       - ex.
+         ```
+         model Stream {
+           id          Int       @id @default(autoincrement())
+           createdAt   DateTime  @default(now())
+           updatedAt   DateTime  @updatedAt
+           name        String
+           description String    @db.MediumText
+           price       Int
+           user        User      @relation(fields: [userId], references:  [id], onDelete: Cascade)
+           userId      Int
+           Messages    Message[]
+           @@index([userId])
+         }
+         model Message {
+           id        Int      @id @default(autoincrement())
+           createdAt DateTime @default(now())
+           updatedAt DateTime @updatedAt
+           message   String   @db.MediumText
+           user      User     @relation(fields: [userId], references:  [id], onDelete: Cascade)
+           userId    Int
+           stream    Stream   @relation(fields: [streamId], references:  [id], onDelete: Cascade)
+           streamId  Int
+           @@index([userId])
+           @@index([streamId])
+         }
+         ```
+    2. [Front-End] 라이브를 시작하는 form 생성하기
+       - react-hook-form 패키지의 `register`에서 `valueAsNumber: true` 옵션을 부여하면, 값이 number 형태가 됨
+    3. [Back-End] DB에 저장하는 API 생성하기
+       - ex.
+         ```
+         const { name, price, description }: ICreateLiveForm = req.body;
+         const stream = await prismaClient.stream.create({
+           data: {
+             name,
+             price,
+             description,
+             user: {
+               connect: {
+                 id: user.id,
+               },
+             },
+           },
+         });
+         ```
+    4. [Front-End] DB로부터 데이터를 fetch하기
+  - 라이브 채팅 시스템에서 실시간 같은 기능 구현
+    1. [Back-End] Stream model을 가져올 때, `include`를 사용해 Message model도 가져오기
+       - ex.
+         ```
+         const stream = await prismaClient.stream.findUnique({
+           where: {
+             id: +id,
+           },
+           include: {
+             Messages: {
+               select: {
+                 id: true,
+                 message: true,
+                 user: {
+                   select: {
+                     id: true,
+                     avatar: true,
+                   },
+                 },
+               },
+             },
+           },
+         });
+         ```
+    2. [Front-End] Message 리스트로부터 메시지 가져오기
+       - ex.
+         ```
+         {data?.stream?.Messages.map((msg) => (
+           <Message
+             key={msg.id}
+             text={msg.message}
+             reversed={msg.user.id === user?.id ? true : false}
+           />
+         ))}
+         ```
+    3. [Front-End] 눈속임으로 사용자가 보낸 메시지를 실시간으로 구현하기
+       - NextJS는 serverless이기 때문에 실시간을 만들 수 없음
+         - 웹소켓서버를 이용해야지 실시간 구현 가능
+       - `mutate()`를 사용해 re-fetch하는 방법
+         - 인수를 사용하지 않으면, re-fetch를 함
+       - 가짜 데이터 트릭을 사용하는 방법
+         - `mutate(데이터, 재확인여부)`를 사용해 폼데이터를 추가함
+         - ex.
+           ```
+           mutate(
+             (prev) =>
+               user &&
+               prev?.stream && {
+                 ...prev,
+                 stream: {
+                   ...prev.stream,
+                   Messages: [
+                     ...prev.stream.Messages,
+                     {
+                       id: Date.now(),
+                       message: formData.message,
+                       user: {
+                         id: user.id,
+                         avatar: user.avatar,
+                       },
+                     },
+                   ],
+                 },
+               },
+             false
+           );
+           ```
+    4. [Front-End] `useSWR()`의 `refreshInterval`옵션을 사용해 자동으로 fetch하여 실시간으로 보이도록하기
+       - 기본형 : `useSWR(URL주소, { refreshInterval: 밀리초 });`
+  - [Prisma] seeding
+    - 초기 데이터를 DB에 삽입하는 프로세스
+      - 주로 개발 및 테스트 목적으로 사용
+      - App을 처음으로 설정하거나 새로운 개발 환경을 구성할 때, DB에 테스트용 데이터를 채우는 데 사용
+    - 사용법
+      1. 파일 생성하기
+         - 파일명 : `prisma/파일명.ts`
+         - ex.
+           ```
+           import { PrismaClient } from "@prisma/client";
+           const prismaClient = new PrismaClient();
+           async function main() {
+             [...Array.from(Array(500).keys())].forEach(async (item) => {
+               const stream = await prismaClient.stream.create({
+                 data: {
+                   name: String(item),
+                   description: String(item),
+                   price: item,
+                   user: {
+                     connect: {
+                       id: 11,
+                     },
+                   },
+                 },
+               });
+               console.log(`${item}/500`);
+             });
+           }
+           try {
+             main();
+           } catch (error) {
+             console.log(error);
+           } finally {
+             () => prismaClient.$disconnect();
+           }
+           ```
+      2. `ts-node` 패키지 설치하기
+         - 설치법 : `npm i ts-node`
+      3. 스트립트 생성하기
+         - 'package.json' 파일에서 생성
+           - ex.
+             ```
+             "prisma": {
+               "seed": "ts-node prisma/파일명.ts"
+             }
+             ```
+           - `npx prisma db seed`라는 명령어를 통해 실행 가능해짐
+         - `Cannot use import statement outside a module` 에러 발생 시
+           - `"ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/파일명.ts"`로 수정
+    - <a href="https://www.prisma.io/docs/guides/database/seed-database" target="_blank">공식문서</a>
+  - [Prisma] DB에 연결하는 갯수 설정
+    - 기본형 : DB URL에 `?connection_limit=연결갯수`를 입력하여 사용
+    - 그 외에도 다른 옵션들 설정 가능
+  - [Prisma] pagination
+    - DB로부터 데이터를 가져올 때, 여러 페이지로 나누어 한 번의 일정량의 데이터만 표시하는 방법
+    - 옵션 기본형
+      - `take` : [number] 가져올 데이터 갯수
+      - `skip` : [number] 건너뛸 데이터 갯수
+    - 관계된 다른 model(include)에서도 사용 가능하며, 응답에 포함시킬 경우 pagination을 권장
+      - DB 사용 시 최소한의 데이터만 가져오는 것이 좋음
+        - pagination과 select를 사용하는 것을 권장
+    - Front-End에서는 state변수와 쿼리파라미터('?')를 사용해 Back-End에 전송
+- **24-02-14 : Infinite scroll pagination**
+  - _ISSUE : [/pages/streams/index.ts] 무한스크롤을 사용한 pagination_
+    - _react-query 도입? SWR로 잘 되지 않음_
+      - _useSWRInfinite()를 사용하자니 isLoading이 바뀌지 않아 runtime error_
+      - _useSWR()를 사용하자니, 불분명 원인에 의해 같은 데이터를 2번씩 fetch되는 문제 => key 중복 문제, 게다가 다른 페이지에 갔다가 돌아오면 제대로 동작하지 않음. 이 방법 아님._
 
 ---
 
+- **24-02-15 : #15.0 ~ #15.8 / Cloudflare Images**
 - To-Do
   - useForm register의 검증 옵션 및 error 메시지 추가
     - [/enter] 등
