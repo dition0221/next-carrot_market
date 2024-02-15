@@ -1625,9 +1625,17 @@
     - Front-End에서는 state변수와 쿼리파라미터('?')를 사용해 Back-End에 전송
 - **24-02-14 : Infinite scroll pagination**
   - _ISSUE : [/pages/streams/index.ts] 무한스크롤을 사용한 pagination_
-    - _react-query 도입? SWR로 잘 되지 않음_
+    - _고려사항 : react-query 도입? SWR로 잘 되지 않음_
       - _useSWRInfinite()를 사용하자니 isLoading이 바뀌지 않아 runtime error_
-      - _useSWR()를 사용하자니, 불분명 원인에 의해 같은 데이터를 2번씩 fetch되는 문제 => key 중복 문제, 게다가 다른 페이지에 갔다가 돌아오면 제대로 동작하지 않음. 이 방법 아님._
+      - _useSWR()를 사용하자니, 불분명 원인에 의해 같은 데이터를 2번씩 fetch되는 문제 => key 중복 문제, 게다가 다른 페이지에 갔다가 돌아오면 제대로 동작하지 않음. 이 방법은 아닌듯._
+- **24-02-15 : Infinite scroll pagination (2)**
+  - _UPDATE : 무한스크롤을 사용한 pagination_
+    - _최대한 SWR 패키지를 이용해 구현하기_
+    - _'react-infinite-scroller' 패키지가 문제 있는 게 아닐까?_
+      - _2년 전부터 패키지 업데이트가 없음 => 다른 방법 모색_
+    - _'react-intersection-observer' 패키지 사용하기_
+      - _ISSUE: 2번씩 fetch되는 문제 발생_
+      - _FIX: setTimeout() 사용으로 해결_
 
 ---
 

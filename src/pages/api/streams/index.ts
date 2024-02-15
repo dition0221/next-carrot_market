@@ -50,8 +50,8 @@ async function handler(
     const offset = +page;
     try {
       const streams = await prismaClient.stream.findMany({
-        take: 10,
-        skip: offset * 10,
+        take: 5,
+        skip: offset * 5,
       });
       if (streams.length === 0)
         return res.status(404).json({ ok: false, error: "Not Found" });
