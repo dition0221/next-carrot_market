@@ -36,12 +36,12 @@ export default function useInfiniteScroll<T = any>(url: string) {
   // Scroll fn.
   const { ref, inView } = useInView(); // Watch viewport
   useEffect(() => {
-    if (inView && !isLoading && !isValidating && isCanScroll) {
+    if (inView && isCanScroll) {
       setIsCanScroll(false);
       setSize((prev) => prev + 1);
       setTimeout(() => setIsCanScroll(true), 1000); // Prevent duplicate runs
     }
-  }, [inView, isLoading, isValidating, isCanScroll, setSize]);
+  }, [inView, isCanScroll, setSize]);
 
   return { data, ref, isLoading: isLoading || isValidating };
 }

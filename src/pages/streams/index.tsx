@@ -5,6 +5,7 @@ import FloatingButton from "@/components/floating-button";
 import useInfiniteScroll from "@/libs/client/useInfiniteScroll";
 // INTERFACE
 import type { Stream } from "@prisma/client";
+import { useEffect } from "react";
 
 interface IStreamsResponse {
   ok: boolean;
@@ -17,28 +18,43 @@ export default function Streams() {
   const { data, ref, isLoading } =
     useInfiniteScroll<IStreamsResponse>("/api/streams");
 
+  // const data = [{ ok: false }];
+
+  useEffect(() => {
+    console.log("data", data);
+  }, [data]);
+
   return (
     <Layout title="라이브 스트리밍" hasTabBar>
+      {/* Stream list */}
       <section className="divide-y-[1px] space-y-4">
-        {data?.map((page) =>
-          page.streams?.map((stream) => (
-            <Link
-              href={`/streams/${stream.id}`}
-              key={stream.id}
-              className="block pt-4 px-4"
-            >
-              <div className="w-full bg-slate-500 aspect-video rounded-md shadow-sm" />
-              <h1 className="text-2xl mt-2 font-bold text-gray-900">
-                {stream.name}
-              </h1>
-            </Link>
-          ))
+        {data && !data[0].ok ? (
+          <p className="text-center text-base italic text-gray-600">
+            현재 라이브가 없습니다.
+          </p>
+        ) : (
+          data?.map((page) =>
+            page.streams?.map((stream) => (
+              <Link
+                href={`/streams/${stream.id}`}
+                key={stream.id}
+                className="block pt-4 px-4"
+              >
+                <div className="w-full bg-slate-500 aspect-video rounded-md shadow-sm" />
+                <h1 className="text-2xl mt-2 font-bold text-gray-900">
+                  {stream.name}
+                </h1>
+              </Link>
+            ))
+          )
         )}
-        {isLoading ? (
-          <p className="text-center italic text-gray-500 text-sm">Loading..</p>
-        ) : null}
-        <div ref={ref} />
       </section>
+
+      {/* Infinite scroll */}
+      {isLoading ? (
+        <p className="text-center italic text-gray-500 text-sm">Loading..</p>
+      ) : null}
+      <div ref={ref} />
 
       <FloatingButton href="/streams/create">
         <svg

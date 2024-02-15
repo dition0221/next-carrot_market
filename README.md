@@ -1636,13 +1636,18 @@
     - _'react-intersection-observer' 패키지 사용하기_
       - _ISSUE: 2번씩 fetch되는 문제 발생_
       - _FIX: setTimeout() 사용으로 해결_
+  - ISSUE: 더 이상 불러올 데이터가 없음에도 불구하고, 계속 시도함
+    - `useSWRInfinite()`의 `isLoading`과 `isValidating` 때문
+    - FIX: setSize()의 조건을 inView와 스크롤가능여부(boolean)만 사용
+      - isLoading과 isValidating 제거
 
 ---
 
 - **24-02-15 : #15.0 ~ #15.8 / Cloudflare Images**
 - To-Do
   - useForm register의 검증 옵션 및 error 메시지 추가
-    - [/enter] 등
+    - [/enter] 특정 메일주소만 가입 가능하도록
+    - 기타 등등
   - [Token] 한 계정이 token을 여러 개 생성 시 최신 하나만 유지하도록 하기
     - 토큰의 유효기간을 짧게 설정하기 (기본값 14일) (ex. 3분)
     - 유효기간 만료 or 토큰 인증 시 토큰 삭제
