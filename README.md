@@ -1636,14 +1636,14 @@
     - _'react-intersection-observer' 패키지 사용하기_
       - _ISSUE: 2번씩 fetch되는 문제 발생_
       - _FIX: setTimeout() 사용으로 해결_
-  - ISSUE: 더 이상 불러올 데이터가 없음에도 불구하고, 계속 시도함
-    - `useSWRInfinite()`의 `isLoading`과 `isValidating` 때문
-    - FIX: setSize()의 조건을 inView와 스크롤가능여부(boolean)만 사용
-      - isLoading과 isValidating 제거
+  - _ISSUE: 더 이상 불러올 데이터가 없음에도 불구하고, 계속 시도함_
+    - _`useSWRInfinite()`의 `isLoading`과 `isValidating` 때문_
+  - _FIX: setSize()의 조건을 inView와 스크롤가능여부(boolean)만 사용_
+    - _isLoading과 isValidating 제거_
 
 ---
 
-- **24-02-15 : #15.0 ~ #15.8 / Cloudflare Images**
+- **24-02-16 : #15.0 ~ #15.8 / Cloudflare Images**
 - To-Do
   - useForm register의 검증 옵션 및 error 메시지 추가
     - [/enter] 특정 메일주소만 가입 가능하도록

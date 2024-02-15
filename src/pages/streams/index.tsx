@@ -18,12 +18,6 @@ export default function Streams() {
   const { data, ref, isLoading } =
     useInfiniteScroll<IStreamsResponse>("/api/streams");
 
-  // const data = [{ ok: false }];
-
-  useEffect(() => {
-    console.log("data", data);
-  }, [data]);
-
   return (
     <Layout title="라이브 스트리밍" hasTabBar>
       {/* Stream list */}
