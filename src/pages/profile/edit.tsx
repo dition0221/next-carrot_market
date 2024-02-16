@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 // LIBS
 import useUser from "@/libs/client/useUser";
@@ -9,16 +9,15 @@ import Layout from "@/components/layout";
 import Input from "@/components/input";
 import Button from "@/components/button";
 import FormErrorMessage from "@/components/form-error-msg";
+// INTERFACE
+import type { IResponseType } from "@/libs/server/withHandler";
+import type { ICloudflareUrl, IUploadImage } from "@/pages/api/files";
 
-export interface IEditProfileForm {
+interface IEditProfileForm {
+  avatar?: FileList;
   name: string;
   email?: string;
   phone?: string;
-}
-
-interface IEditProfileResponse {
-  ok: boolean;
-  error?: string;
 }
 
 export default function EditProfile() {
@@ -32,22 +31,77 @@ export default function EditProfile() {
     setValue,
     setError,
     formState: { errors },
+    watch,
   } = useForm<IEditProfileForm>();
+
+  // Default form
   useEffect(() => {
     setValue("name", user?.name!);
     if (user?.email) setValue("email", user.email);
     if (user?.phone) setValue("phone", user.phone);
+    if (user?.avatar)
+      setAvatarPreview(
+        `https://imagedelivery.net/kk4YLvIogqMNHpBdH1Y55w/${user?.avatar}/avatar`
+      );
   }, [setValue, user]);
+
+  // Change avatar image
+  const [avatarPreview, setAvatarPreview] = useState("");
+  const avatar = watch("avatar");
+  useEffect(() => {
+    if (avatar && avatar.length > 0) {
+      const file = avatar[0];
+      setAvatarPreview(URL.createObjectURL(file));
+    }
+  }, [avatar]);
 
   // Submit form
   const [editProfile, { data, isLoading }] =
-    useMutation<IEditProfileResponse>("/api/users/me");
-  const onValid = ({ name, email, phone }: IEditProfileForm) => {
-    if (isLoading) return;
+    useMutation<IResponseType>("/api/users/me");
+  const [isAvatarLoading, setIsAvatarLoading] = useState(false);
+  const onValid = async ({ name, email, phone, avatar }: IEditProfileForm) => {
+    // Error handling
+    if (isLoading || isAvatarLoading) return;
     if (email === "" && phone === "")
       return setError("root", {
         message: "이메일 또는 휴대폰 번호를 적어주세요.",
       });
+
+    // If avatar changed
+    if (avatar && avatar.length > 0 && user?.id) {
+      setIsAvatarLoading(true);
+
+      try {
+        // Ask for CF URL
+        const cloudflareUrl = (await (
+          await fetch("/api/files")
+        ).json()) as ICloudflareUrl;
+        if (!cloudflareUrl.ok) throw new Error();
+
+        // Upload avatar file to Cloudflare
+        const form = new FormData();
+        form.append("file", avatar[0], String(user.id));
+        const uploadAvatar = (await (
+          await fetch(cloudflareUrl.url!, {
+            method: "POST",
+            body: form,
+          })
+        ).json()) as IUploadImage;
+        if (!uploadAvatar.success) throw new Error();
+
+        // Upload to DB
+        return editProfile({
+          name,
+          email,
+          phone,
+          avatarId: uploadAvatar.result?.id!,
+        });
+      } catch (error) {
+        return alert("Fail to upload avatar image");
+      } finally {
+        setIsAvatarLoading(false);
+      }
+    }
 
     editProfile({ name, email, phone });
   };
@@ -67,14 +121,25 @@ export default function EditProfile() {
     <Layout canGoBack title="프로필 수정">
       <form onSubmit={handleSubmit(onValid)} className="px-4 space-y-4">
         <div className="flex items-center space-x-3">
-          <div className="w-14 h-14 rounded-full bg-slate-500" />
+          {avatarPreview ? (
+            <img src={avatarPreview} className="w-14 h-14 rounded-full" />
+          ) : (
+            <div className="w-14 h-14 rounded-full bg-slate-500" />
+          )}
           <label
-            htmlFor="picture"
+            htmlFor="avatar"
             className="py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 cursor-pointer"
           >
             Change
             <input
-              id="picture"
+              {...register("avatar", {
+                validate: {
+                  isImage: (value) =>
+                    (value && value[0].type.includes("image")) ||
+                    "이미지 파일만 업로드 가능합니다.",
+                },
+              })}
+              id="avatar"
               type="file"
               accept="image/*"
               className="hidden"
@@ -112,6 +177,9 @@ export default function EditProfile() {
         />
 
         {/* Form Error */}
+        {errors.avatar?.message ? (
+          <FormErrorMessage text={errors.avatar.message} />
+        ) : null}
         {errors.name?.message ? (
           <FormErrorMessage text={errors.name.message} />
         ) : null}
@@ -119,7 +187,10 @@ export default function EditProfile() {
           <FormErrorMessage text={errors.root.message} />
         ) : null}
 
-        <Button text={isLoading ? "Loading.." : "Update profile"} full />
+        <Button
+          text={isLoading || isAvatarLoading ? "Loading.." : "Update profile"}
+          full
+        />
       </form>
     </Layout>
   );

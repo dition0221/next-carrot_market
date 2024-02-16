@@ -48,9 +48,23 @@ export default function ProductDetail() {
     <Layout canGoBack>
       <main className="px-4">
         <section className="mb-8">
-          <div className="h-96 bg-slate-300" />
+          {data?.product?.imageUrl ? (
+            <img
+              src={`https://imagedelivery.net/kk4YLvIogqMNHpBdH1Y55w/${data?.product?.imageUrl}/public`}
+              className="h-96 bg-slate-300"
+            />
+          ) : (
+            <div className="h-96 bg-slate-300" />
+          )}
           <article className="flex py-3 border-t border-b items-center space-x-3">
-            <div className="w-12 h-12 rounded-full bg-slate-300" />
+            {data?.product?.user.avatar ? (
+              <img
+                src={`https://imagedelivery.net/kk4YLvIogqMNHpBdH1Y55w/${data?.product?.user.avatar}/avatar`}
+                className="w-12 h-12 rounded-full"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-slate-300" />
+            )}
             <LinkProfile
               userName={data?.product?.user.name}
               href={`/users/profiles/${data?.product?.userId}`}

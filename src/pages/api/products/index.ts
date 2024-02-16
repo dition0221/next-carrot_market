@@ -4,7 +4,6 @@ import withHandler from "@/libs/server/withHandler";
 import { getSession } from "@/libs/server/getSession";
 import prismaClient from "@/libs/server/prismaClient";
 // INTERFACE
-import type { IProductUploadForm } from "@/pages/products/upload";
 import type { Product } from "@prisma/client";
 
 export interface ProductWithCount extends Product {
@@ -21,6 +20,13 @@ export interface IProductList {
   // GET
   products?: ProductWithCount[];
   relatedProducts?: Product[];
+}
+
+interface IUploadProduct {
+  name: string;
+  price: string;
+  description: string;
+  photoId?: string;
 }
 
 async function handler(
@@ -52,7 +58,7 @@ async function handler(
 
   /* POST: Upload 'Product' to DB */
   if (req.method === "POST") {
-    const { name, price, description }: IProductUploadForm = req.body;
+    const { name, price, description, photoId }: IUploadProduct = req.body;
     const { user } = await getSession(req, res);
     if (!user)
       return res.status(401).json({ ok: false, error: "Please log-in" });
@@ -63,7 +69,7 @@ async function handler(
           name,
           price: +price,
           description,
-          imageUrl: "TEST",
+          imageUrl: photoId ?? "",
           user: {
             connect: {
               id: user?.id,

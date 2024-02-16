@@ -28,9 +28,10 @@ export default function useInfiniteScroll<T = any>(url: string) {
 
   // Fetch data
   const getKey = (pageIndex: number, prevData: T) => {
+    // if 'ok: false', Reached the end
     if (prevData && (prevData as any).ok === false) {
       setIsKillScroll(true);
-      return null; // if 'ok: false', Reached the end
+      return null;
     }
 
     return `${url}?page=${pageIndex}`;

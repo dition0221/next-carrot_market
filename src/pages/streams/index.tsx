@@ -1,11 +1,11 @@
 import Link from "next/link";
+// LIBS
+import useInfiniteScroll from "@/libs/client/useInfiniteScroll";
 // COMPONENTS
 import Layout from "@/components/layout";
 import FloatingButton from "@/components/floating-button";
-import useInfiniteScroll from "@/libs/client/useInfiniteScroll";
 // INTERFACE
 import type { Stream } from "@prisma/client";
-import { useEffect } from "react";
 
 interface IStreamsResponse {
   ok: boolean;

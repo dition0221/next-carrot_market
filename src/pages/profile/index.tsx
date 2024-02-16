@@ -35,7 +35,14 @@ export default function Profile() {
       <div className="px-4">
         {/* Profile */}
         <section className="flex items-center space-x-3">
-          <div className="w-16 h-16 bg-slate-400 rounded-full" />
+          {user?.avatar ? (
+            <img
+              src={`https://imagedelivery.net/kk4YLvIogqMNHpBdH1Y55w/${user?.avatar}/avatar`}
+              className="w-16 h-16 rounded-full"
+            />
+          ) : (
+            <div className="w-16 h-16 bg-slate-400 rounded-full" />
+          )}
           <LinkProfile userName={user?.name} href="/profile/edit" isEdit />
         </section>
 

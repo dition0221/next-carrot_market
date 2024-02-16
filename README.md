@@ -1623,27 +1623,109 @@
       - DB 사용 시 최소한의 데이터만 가져오는 것이 좋음
         - pagination과 select를 사용하는 것을 권장
     - Front-End에서는 state변수와 쿼리파라미터('?')를 사용해 Back-End에 전송
-- **24-02-14 : Infinite scroll pagination**
+- **24-02-14 : Infinite scroll pagination (1)**
   - _ISSUE : [/pages/streams/index.ts] 무한스크롤을 사용한 pagination_
-    - _고려사항 : react-query 도입? SWR로 잘 되지 않음_
-      - _useSWRInfinite()를 사용하자니 isLoading이 바뀌지 않아 runtime error_
-      - _useSWR()를 사용하자니, 불분명 원인에 의해 같은 데이터를 2번씩 fetch되는 문제 => key 중복 문제, 게다가 다른 페이지에 갔다가 돌아오면 제대로 동작하지 않음. 이 방법은 아닌듯._
+    - ~~고려사항 : react-query 도입? SWR로 잘 되지 않음~~
+      - ~~useSWRInfinite()를 사용하자니 isLoading이 바뀌지 않아 runtime error~~
+      - ~~useSWR()를 사용하자니, 불분명 원인에 의해 같은 데이터를 2번씩 fetch되는 문제 => key 중복 문제, 게다가 다른 페이지에 갔다가 돌아오면 제대로 동작하지 않음. 이 방법은 아닌듯.~~
 - **24-02-15 : Infinite scroll pagination (2)**
   - _UPDATE : 무한스크롤을 사용한 pagination_
     - _최대한 SWR 패키지를 이용해 구현하기_
     - _'react-infinite-scroller' 패키지가 문제 있는 게 아닐까?_
-      - _2년 전부터 패키지 업데이트가 없음 => 다른 방법 모색_
+      - _2년 전부터 패키지 업데이트가 없음 ➡️ 다른 방법 모색_
     - _'react-intersection-observer' 패키지 사용하기_
-      - _ISSUE: 2번씩 fetch되는 문제 발생_
-      - _FIX: setTimeout() 사용으로 해결_
+  - _ISSUE: 첫 동작, 스크롤 동작 시 2번씩 실행되는 문제_
+    - _FIX: 동작 여부의 boolean 변수를 생성하고, 동작 후 setTimeout()을 사용해 일정시간동안 막아둠_
+    - _<a href="https://www.phpschool.com/gnuboard4/bbs/board.php?bo_table=qna_html&wr_id=216727" target="_blank">참고자료</a>_
   - _ISSUE: 더 이상 불러올 데이터가 없음에도 불구하고, 계속 시도함_
-    - _`useSWRInfinite()`의 `isLoading`과 `isValidating` 때문_
-  - _FIX: setSize()의 조건을 inView와 스크롤가능여부(boolean)만 사용_
-    - _isLoading과 isValidating 제거_
+    - _원인 : `useSWRInfinite()`의 `isLoading`과 `isValidating` 때문_
+    - _FIX: `setSize()`의 조건을 inView와 스크롤가능여부(boolean)만 사용_
+      - _isLoading과 isValidating 제거_
+  - 무한스크롤을 사용한 pagination
+    - `useSWRInfinite()`을 사용한 데이터 fetch
+      - pagination을 하기 편하게 도와주는 hook
+        - 여러 개의 데이터를 배열에 담아서 줌
+      - 사용법
+        ```
+        const { data, size, setSize, isValidating, isLoading 등 } = useSWRInfinite<데이터제네릭>(getKey함수, ?Fetcher함수, ?옵션);
+        const getKey = (pageIndex: number, prevData: 데이터제네릭) => {
+          if (prevData && !prevData.length) return null; // Reached the end
+          return `URL주소?쿼리파라미터=${pageIndex}`;
+        };
+        ```
+      - <a href="https://swr.vercel.app/docs/pagination" target="_blank">공식문서</a>
+      - <a href="https://2mojurmoyang.tistory.com/237#5.10.%20%ED%8E%98%EC%9D%B4%EC%A7%80%EB%84%A4%EC%9D%B4%EC%85%98" target="_blank">참고자료</a>
+  - react-intersection-observer 패키지
+    - React App에서 Intersection Observer API를 쉽게 사용할 수 있도록 도와주는 패키지
+      - 요소가 뷰포트(화면)에 들어오거나 나갈 때 알려줌
+        - 요소의 가시성과 관련된 이벤트를 처리하는 데 편리한 컴포넌트와 hook을 제공
+      - Intersection Observer API
+        - 브라우저에서 제공하는 기능으로, 요소들의 교차 영역(intersection)을 비동기적으로 감시할 수 있게 해주는 기능
+        - 요소들이 화면에 보이는지 여부를 쉽게 감지하고, 그에 따른 작업을 수행 가능
+    - 설치법 : `npm i react-intersection-observer -D`
+    - 사용법 : `const { ref, inView 등 } = useInView();`
+      - `ref` : 참조 요소, ref 프로퍼티에 할당
+      - `inView` : [Boolean] 참조 요소가 화면에 보이는지의 여부
+    - <a href="https://www.npmjs.com/package/react-intersection-observer" target="_blank">공식문서</a>
+    - <a href="https://velog.io/@resyve/SWR%EB%A1%9C-%EB%AC%B4%ED%95%9C%EC%8A%A4%ED%81%AC%EB%A1%A4-%EA%B5%AC%ED%98%84%ED%95%98%EA%B8%B0-%EB%82%9C%EC%9D%B4%EB%8F%84-%EC%A4%91%ED%95%98" target="_blank">참고자료</a>
+  - 무한스크롤 pagination ex.
+    ```
+    /* Custom hook */
+      export default function useInfiniteScroll<T = any>(url: string) {
+        const [isScrollLoading, setIsScrollLoading] = useState(true);
+        const [isKillScroll, setIsKillScroll] = useState(false);
+        // Prevent duplicate runs at the first time
+        // ! 데이터가 없는 경우, 2번 동작함
+        useEffect(() => {
+          setTimeout(() => setIsScrollLoading(false), 1000);
+        }, []);
+        // Fetch data
+        const getKey = (pageIndex: number, prevData: T) => {
+          if (prevData && (prevData as any).ok === false) {
+            setIsKillScroll(true);
+            return null; // if 'ok: false', Reached the end
+          }
+          return `${url}?page=${pageIndex}`;
+        };
+        const { data, setSize, isLoading, isValidating } = useSWRInfinite<T>(getKey);
+        // Scroll fn.
+        const { ref, inView } = useInView(); // Watch viewport
+        useEffect(() => {
+          if (inView && !isScrollLoading && !isKillScroll) {
+            setIsScrollLoading(true);
+            setSize((prev) => prev + 1);
+            setTimeout(() => setIsScrollLoading(false), 1000); // Prevent duplicate runs
+          }
+        }, [inView, isScrollLoading, setSize, isKillScroll]);
+        return { data, ref, isLoading: isLoading || isValidating };
+      }
+    /* In use */
+      const { data, ref, isLoading } =
+        useInfiniteScroll<IStreamsResponse>("/api/streams");
+      return (
+        <section>
+          {(data ?? []).map((page) =>
+            page.streams?.map((stream) => (
+              <Link
+                href={`/streams/${stream.id}`}
+                key={stream.id}
+              >
+                <h1>{stream.name}</h1>
+              </Link>
+            ))
+          )}
+        </section>
+        {isLoading ? <div>Loading..</div> : null}
+        <div ref={ref} />
+      );
+    ```
+- **24-02-16 : #15.0 ~ #15.8 / Cloudflare Images**
+  - TODO
+    - [/api/users/me/index.ts] POST부분 리팩토링
+    - 이미지를 가져오는 커스텀 function 만들기
 
 ---
 
-- **24-02-16 : #15.0 ~ #15.8 / Cloudflare Images**
 - To-Do
   - useForm register의 검증 옵션 및 error 메시지 추가
     - [/enter] 특정 메일주소만 가입 가능하도록
@@ -1665,3 +1747,4 @@
     - [/community/[id].tsx]
   - [/community/[id].tsx] 답변의 시간 재설정하기
   - useSWR()의 error 핸들링하기
+  - [무한스크롤] 홈, 동네생활, 채팅, 판매내역, 구매내역, 관심목록에 적용하기

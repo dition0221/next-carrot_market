@@ -3,8 +3,13 @@ import { NextApiRequest, NextApiResponse } from "next";
 import withHandler, { IResponseType } from "@/libs/server/withHandler";
 import prismaClient from "@/libs/server/prismaClient";
 import { getSession } from "@/libs/server/getSession";
-// INTERFACE
-import type { IEditProfileForm } from "@/pages/profile/edit";
+
+interface IEditProfile {
+  name: string;
+  email?: string;
+  phone?: string;
+  avatarId?: string;
+}
 
 async function handler(
   req: NextApiRequest,
@@ -28,7 +33,7 @@ async function handler(
   /* POST: Edit user's profile */
   if (req.method === "POST") {
     try {
-      const { name, email, phone }: IEditProfileForm = req.body;
+      const { name, email, phone, avatarId }: IEditProfile = req.body;
       const currentUser = await prismaClient.user.findUnique({
         where: {
           id: user.id,
@@ -53,6 +58,17 @@ async function handler(
           },
           data: {
             name: newName,
+          },
+        });
+
+      // Update 'avatar'
+      if (avatarId)
+        await prismaClient.user.update({
+          where: {
+            id: user.id,
+          },
+          data: {
+            avatar: avatarId,
           },
         });
 
