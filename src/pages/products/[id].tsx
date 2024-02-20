@@ -1,9 +1,10 @@
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/router";
 import useSWR from "swr";
 // LIBS
 import useMutation from "@/libs/client/useMutation";
-import { cls } from "@/libs/client/utils";
+import { cls, getImage } from "@/libs/client/utils";
 // COMPONENTS
 import Button from "@/components/button";
 import Layout from "@/components/layout";
@@ -49,18 +50,27 @@ export default function ProductDetail() {
       <main className="px-4">
         <section className="mb-8">
           {data?.product?.imageUrl ? (
-            <img
-              src={`https://imagedelivery.net/kk4YLvIogqMNHpBdH1Y55w/${data?.product?.imageUrl}/public`}
-              className="h-96 bg-slate-300"
-            />
+            <div className="flex justify-center items-center">
+              <Image
+                src={getImage(data.product.imageUrl, "public")}
+                className="max-w-full max-h-96 w-auto h-auto"
+                alt="product image"
+                width={500}
+                height={500}
+              />
+            </div>
           ) : (
-            <div className="h-96 bg-slate-300" />
+            <div className="w-full h-96 bg-slate-300" />
           )}
-          <article className="flex py-3 border-t border-b items-center space-x-3">
+
+          <article className="flex py-3 border-b items-center space-x-3">
             {data?.product?.user.avatar ? (
-              <img
-                src={`https://imagedelivery.net/kk4YLvIogqMNHpBdH1Y55w/${data?.product?.user.avatar}/avatar`}
+              <Image
+                src={getImage(data.product.user.avatar, "avatar")}
                 className="w-12 h-12 rounded-full"
+                alt="avatar image"
+                width={500}
+                height={500}
               />
             ) : (
               <div className="w-12 h-12 rounded-full bg-slate-300" />

@@ -1720,11 +1720,157 @@
       );
     ```
 - **24-02-16 : #15.0 ~ #15.8 / Cloudflare Images**
-  - TODO
-    - [/api/users/me/index.ts] POST부분 리팩토링
-    - 이미지를 가져오는 커스텀 function 만들기
+  - Cloudflare
+    - 인터넷에 연결하는 모든 것을 안전하고 비밀을 유지하면서, 신속하고 안정적으로 연결하도록 설계된 전역 네트워크
+  - Cloudflare Images API
+    - 대규모로 이미지를 저장, 크기 조정, 최적화하는 하나의 API
+      - 이미지 인프라를 구축하고 유지하는 효율적인 솔류션을 제공함
+      - 하나의 통합 제품을 이용해 이미지를 대규모로 저장, 크기 조정, 최적화 함
+    - 요금제
+      - 저장 : 5 달러 / 10만 개
+      - 전송 : 1 달러 / 10만 개
+      - 대역폭 요금이 없어서 이미지 용량에 신경쓰지 않아도 됨
+      - 크기 조정, 최적화에 추가 요금 x
+  - react-hook-form에서 `input:file` 다루는 방법
+    1. file을 제출하는 `register` 생성하기
+       - 타입은 `FileList`를 사용
+       - ex.
+         ```
+         {...register("avatar", {
+           validate: {
+             isImage: (value) =>
+               (value && value[0].type.includes("image")) ||
+               "이미지 파일만 업로드 가능합니다.",
+           },
+         })}
+         ```
+    2. file 변경을 감지하는 이벤트 리스너 생성하기
+       - 이미지 파일이 변경된다면, 화면에 미리보기로 보여주기
+         - `useForm()`의 `watch()`를 사용해 변경을 감지
+         - `watch(?INPUT명)` : form의 변경을 감지할 수 있음
+       - ex.
+         ```
+         const avatar = watch("avatar");
+         useEffect(()=>{
+           if (avatar && avatar.length > 0) {
+             const file = avatar[0];
+           }
+         }, [avatar]);
+         ```
+    3. file의 URL을 알아내기
+       - file을 선택하고나면 browser의 memory에 저장되므로, 해당 URL주소를 알아내야 함
+       - 기본형 : `URL.createObjectURL(파일변수);`
+         - 'blob' 글자를 포함한 URL주소를 사용해야 함
+    4. 미리보기 이미지 제공하기
+       - `useState()`를 이용해 &lt;img&gt;의 src로 제공
+       - ex.
+         ```
+         const [avatarPreview, setAvatarPreview] = useState("");
+         const avatar = watch("avatar");
+         useEffect(()=>{
+           if (avatar && avatar.length > 0) {
+             const file = avatar[0];
+             setAvatarPreview(URL.createObjectURL(file));
+           }
+         },[avatar]);
+         return {avatarPreview ? <img src={avatarPreview} /> : null}
+         ```
+  - Cloudflare 이미지 업로드
+    - [콘솔] image dashboard를 사용하는 방법
+      - 관리자 권한이 있는 사람만 사용 가능
+    - [코드] API token을 사용하는 방법
+      - client ➡️ server ➡️ Cloudflare 순으로 업로드를 하기 때문에, 불필요하게 server에서 사용해 대역폭을 낭비하는 문제
+    - [코드] Direct Create Upload 방법 ✅
+      - 사용자의 browser가 Cloudflare에 직접 업로드하는 방법
+        - 사용자의 이미지를 직접 다루지않아, 비용절감
+      - 보안URL을 통해 업로드 (token을 노출하지 않음)
+        - 실행 방식
+          1. 사용자가 파일 업로드 요청
+          2. [Back-End] API key와 함께 Cloudflare에 요청
+          3. Cloudflare는 빈 파일 URL(1회용)을 Back-End에 걸쳐 사용자에게 전달
+          4. 사용자는 해당 URL을 통해 Cloudflare에 직접 파일 업로드
+        - 사용자가 파일을 업로드하지 않을 시 30분 뒤에 자동으로 URL이 삭제됨
+      - 사용법 (먼저 번들 구매)
+        1. 'images - 개요 - API 사용'에서 API token 얻기
+           - 커스텀 token 생성 후, .env파일에 저장
+             - 권한 : 계정 / Cloudflare Images / 편집
+           - 계정 ID도 .env파일에 저장
+        2. [Back-End] Cloudflare URL 요청하기
+           - 기본형
+             ```
+             const 변수명 = (await (
+               await fetch(
+                 `https://api.cloudflare.com/client/v4/accounts/${process.env.CF_ID}/images/v2/direct_upload`,
+                 {
+                   method: "POST",
+                   headers: {
+                     Authorization: `Bearer ${process.env.CF_TOKEN}`,
+                   },
+                 }
+               )
+             ).json());
+             ```
+           - 사용자는 URL주소를 통해 이미지를 저장
+        3. [Front-End] form을 사용해 Cloudflare URL로 파일 업로드하기
+           - 기본형
+             ```
+             const 변수명 = new FormData();
+             변수명.append(키명, 값, ?파일명);
+             // 파일명 미 입력 시 원래 파일명으로 대체
+             ```
+           - 업로드의 결과로 주어지는 `id`를 통해 Cloudflare에 접근가능하므로, DB에 저장해야 함
+           - ex.
+             ```
+             // Ask for Cloudflare URL
+               const cloudflareUrl = await (await fetch("/api/files")).json();
+             // Error handling
+               if (!cloudflare.ok) return;
+             // Submit form with avatar file to Cloudflare
+               const form = new FormData();
+               form.append("file", avatar[0]);
+               try {
+                 const uploadAvatar = (await (
+                   await fetch(cloudflareUrl.url, {
+                     method: "POST",
+                     body: form,
+                   })
+                 ).json());
+               } catch (error) {
+                 return alert("Fail: ", error);
+               }
+             ```
+    - <a href="https://developers.cloudflare.com/images/upload-images/direct-creator-upload/" target="_blank">공식문서</a>
+  - Cloudflare 이미지 가져오는 방법
+    - [콘솔] 이미지 제공 URL을 복사하여, src로 사용하기
+      - 기본형 : `https://imagedelivery.net/<계정해시>/<image_id>/<variant_name>`
+        - 계정해시 : 콘솔에서 확인가능
+        - image_id : 사용자 DB를 통해 가져와 사용
+        - variant_name : 리사이징값, 원본은 `public`으로 입력해 사용
+    - ex.
+      ```
+      const = { user } = useUser(); // 세션으로부터 사용자 정보 가져오기
+      {user?.avatar ? (
+        <img
+          src={`https://imagedelivery.net/<계정해시>${user?.avatar}/public`}
+        />
+      ) : null}
+      ```
+  - Cloudflare 이미지 리사이징(re-size, 크기 조정)
+    - 작은 곳에 큰 이미지가 사용되면 낭비이기 때문에 리사이징을 사용함
+      - Cloudflare가 무료로 자동적인 리사이징을 제공함
+    - 설정법 : [콘솔] 'Images-변형'에서 새로운 &lt;variant_name&gt; 생성 및 편집
+      - Scale down : 비율의 맞춰 이미지의 크기를 맞춤
+      - Contain : 비율에 맞춰 이미지의 크기를 가능한 맞춤
+      - Cover : 비율에 맞춰 딱 원하는 이미지의 크기를 맞추나, 튀어나온 부분은 자름
+      - Crop : 비율 상관없이 딱 원하는 이미지의 크기를 맞춤
+      - Pad : 비율에 맞춰 이미지의 크기를 맞추며, 남는부분에 흰색 padding 적용
+    - 사용법 : 이미지를 가져올 때 `<variant_name>` 부분에서 변수를 사용
+- **24-02-20 : #16.0 ~ #16.1 / NextJS Images (1)**
+  <!-- TODO: #16.2~ -->
 
 ---
+
+  <!-- TODO: 이미지를 가져오는 커스텀 function 만들기 -->
 
 - To-Do
   - useForm register의 검증 옵션 및 error 메시지 추가
@@ -1748,3 +1894,4 @@
   - [/community/[id].tsx] 답변의 시간 재설정하기
   - useSWR()의 error 핸들링하기
   - [무한스크롤] 홈, 동네생활, 채팅, 판매내역, 구매내역, 관심목록에 적용하기
+  - [/api/users/me/index.ts] POST부분 리팩토링

@@ -72,10 +72,10 @@ async function handler(
           },
         });
 
-      // No happening
+      // 1) No happening
       if (!newEmail && !newPhone) return res.status(200).json({ ok: true });
 
-      // Check duplication: email
+      // 2) Check duplication: email
       if (newEmail && !newPhone) {
         const alreadyExists = Boolean(
           await prismaClient.user.findUnique({
@@ -102,7 +102,7 @@ async function handler(
         return res.status(200).json({ ok: true });
       }
 
-      // Check duplication: phone
+      // 3) Check duplication: phone
       if (newPhone && !newEmail) {
         const alreadyExists = Boolean(
           await prismaClient.user.findUnique({
@@ -129,7 +129,7 @@ async function handler(
         return res.status(200).json({ ok: true });
       }
 
-      // Check duplication: email & phone
+      // 4) Check duplication: email & phone
       if (newEmail && newPhone) {
         const alreadyExists = Boolean(
           await prismaClient.user.findFirst({

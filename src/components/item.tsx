@@ -1,17 +1,21 @@
 import Link from "next/link";
+// LIBS
+import { getImage } from "@/libs/client/utils";
 
 interface IItemProps {
-  title: string;
   id: number;
+  title: string;
   price: number;
+  imageUrl: string | null;
   hearts: number;
   comments: number;
 }
 
 export default function Item({
-  title,
   id,
+  title,
   price,
+  imageUrl,
   hearts,
   comments,
 }: IItemProps) {
@@ -21,7 +25,14 @@ export default function Item({
       className="flex justify-between border-b px-4 pb-4 cursor-pointer"
     >
       <div className="flex space-x-4">
-        <div className="w-20 h-20 bg-gray-400 rounded-md" />
+        {imageUrl ? (
+          <img
+            src={getImage(imageUrl, "avatar")}
+            className="w-20 h-20 rounded-md"
+          />
+        ) : (
+          <div className="w-20 h-20 bg-gray-400 rounded-md" />
+        )}
         <div className="pt-2 flex flex-col">
           <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
           <span className="font-medium mt-1 text-gray-900">${price}</span>
