@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
@@ -104,7 +105,14 @@ export default function ProductUpload() {
       <form className="px-4 space-y-4" onSubmit={handleSubmit(onValid)}>
         <div>
           {photoPreview ? (
-            <img src={photoPreview} className="w-full h-48 rounded-md" />
+            <div className="relative w-full h-48">
+              <Image
+                src={photoPreview}
+                alt="product image"
+                className="object-contain bg-slate-200 rounded-md"
+                fill={true}
+              />
+            </div>
           ) : (
             <label className="w-full h-48 text-gray-600 hover:text-orange-500 flex justify-center items-center border-2 border-dashed border-gray-300 hover:border-orange-500 rounded-md cursor-pointer">
               <svg

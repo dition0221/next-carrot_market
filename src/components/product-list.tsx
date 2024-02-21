@@ -29,8 +29,8 @@ export default function ProductList({ kind }: IProductListProps) {
           id={record.product.id}
           title={record.product.name}
           price={record.product.price}
+          imageUrl={record.product.imageUrl}
           hearts={record.product._count.Records}
-          comments={0}
         />
       ))}
     </>

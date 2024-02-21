@@ -1,7 +1,19 @@
+import { useForm } from "react-hook-form";
+// COMPONENTS
 import Layout from "@/components/layout";
 import Message from "@/components/message";
 
+// TODO: 기능 구현
+
+interface IChatForm {
+  chat: string;
+}
+
 export default function ChatDetail() {
+  // chat <form>
+  const { register, handleSubmit } = useForm<IChatForm>();
+  const onValid = () => {};
+
   return (
     <Layout canGoBack>
       <main className="pb-16 px-4 space-y-4">
@@ -9,9 +21,16 @@ export default function ChatDetail() {
         <Message text="I want ￦20,000" reversed />
         <Message text="미쳤어" />
 
-        <form className="fixed py-2 bg-white  bottom-0 inset-x-0">
+        <form
+          onSubmit={handleSubmit(onValid)}
+          className="fixed py-2 bg-white  bottom-0 inset-x-0"
+        >
           <div className="flex relative max-w-md items-center  w-full mx-auto">
             <input
+              {...register("chat", {
+                required: true,
+                maxLength: 100,
+              })}
               type="text"
               className="shadow-sm rounded-full w-full border-gray-300 focus:ring-orange-500 focus:outline-none pr-12 focus:border-orange-500"
               required

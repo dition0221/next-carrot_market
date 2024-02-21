@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 // LIBS
 import { getImage } from "@/libs/client/utils";
 
@@ -8,7 +9,6 @@ interface IItemProps {
   price: number;
   imageUrl: string | null;
   hearts: number;
-  comments: number;
 }
 
 export default function Item({
@@ -17,7 +17,6 @@ export default function Item({
   price,
   imageUrl,
   hearts,
-  comments,
 }: IItemProps) {
   return (
     <Link
@@ -26,16 +25,20 @@ export default function Item({
     >
       <div className="flex space-x-4">
         {imageUrl ? (
-          <img
+          <Image
             src={getImage(imageUrl, "avatar")}
-            className="w-20 h-20 rounded-md"
+            alt="product image"
+            className="w-20 h-22 rounded-md"
+            width={80}
+            height={80}
+            priority
           />
         ) : (
           <div className="w-20 h-20 bg-gray-400 rounded-md" />
         )}
         <div className="pt-2 flex flex-col">
           <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-          <span className="font-medium mt-1 text-gray-900">${price}</span>
+          <span className="font-medium mt-1 text-gray-900">$ {price}</span>
         </div>
       </div>
 
@@ -56,23 +59,6 @@ export default function Item({
             ></path>
           </svg>
           <span>{hearts}</span>
-        </div>
-        <div className="flex items-center text-sm text-gray-600 space-x-0.5">
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-            ></path>
-          </svg>
-          <span>{comments}</span>
         </div>
       </div>
     </Link>

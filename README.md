@@ -10,7 +10,7 @@
 
 <img src="https://img.shields.io/badge/Next.js-000?style=flat-square&logo=nextdotjs&logoColor=white"/> <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white"/> <img src="https://img.shields.io/badge/Tailwind CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white"/> <img src="https://img.shields.io/badge/React Hook Form-EC5990?style=flat-square&logo=reacthookform&logoColor=white"/>  
 <img src="https://img.shields.io/badge/Prisma-2D3748?style=flat-square&logo=prisma&logoColor=white"/> <img src="https://img.shields.io/badge/PlanetScale-000?style=flat-square&logo=planetscale&logoColor=white"/> <img src="https://img.shields.io/badge/iron&dash;session-18303d?style=flat-square&logoColor=white"/> <img src="https://img.shields.io/badge/SWR-000?style=flat-square&logo=swr&logoColor=white"/>  
-<img src="https://img.shields.io/badge/Twilio-f22f46?style=flat-square&logo=twilio&logoColor=white"/> <img src="https://img.shields.io/badge/Nodemailer-22B573?style=flat-square&logoColor=white"/>
+<img src="https://img.shields.io/badge/Twilio-f22f46?style=flat-square&logo=twilio&logoColor=white"/> <img src="https://img.shields.io/badge/Nodemailer-22B573?style=flat-square&logoColor=white"/> <img src="https://img.shields.io/badge/Cloudflare-F38020?style=flat-square&logo=cloudflare&logoColor=white"/>
 
 ---
 
@@ -1624,7 +1624,7 @@
         - pagination과 select를 사용하는 것을 권장
     - Front-End에서는 state변수와 쿼리파라미터('?')를 사용해 Back-End에 전송
 - **24-02-14 : Infinite scroll pagination (1)**
-  - _ISSUE : [/pages/streams/index.ts] 무한스크롤을 사용한 pagination_
+  - _ISSUE : ✅ [/pages/streams/index.ts] 무한스크롤을 사용한 pagination_
     - ~~고려사항 : react-query 도입? SWR로 잘 되지 않음~~
       - ~~useSWRInfinite()를 사용하자니 isLoading이 바뀌지 않아 runtime error~~
       - ~~useSWR()를 사용하자니, 불분명 원인에 의해 같은 데이터를 2번씩 fetch되는 문제 => key 중복 문제, 게다가 다른 페이지에 갔다가 돌아오면 제대로 동작하지 않음. 이 방법은 아닌듯.~~
@@ -1634,12 +1634,12 @@
     - _'react-infinite-scroller' 패키지가 문제 있는 게 아닐까?_
       - _2년 전부터 패키지 업데이트가 없음 ➡️ 다른 방법 모색_
     - _'react-intersection-observer' 패키지 사용하기_
-  - _ISSUE: 첫 동작, 스크롤 동작 시 2번씩 실행되는 문제_
-    - _FIX: 동작 여부의 boolean 변수를 생성하고, 동작 후 setTimeout()을 사용해 일정시간동안 막아둠_
+  - _ISSUE : ✅ 첫 동작, 스크롤 동작 시 2번씩 실행되는 문제_
+    - _FIX : 동작 여부의 boolean 변수를 생성하고, 동작 후 setTimeout()을 사용해 일정시간동안 막아둠_
     - _<a href="https://www.phpschool.com/gnuboard4/bbs/board.php?bo_table=qna_html&wr_id=216727" target="_blank">참고자료</a>_
-  - _ISSUE: 더 이상 불러올 데이터가 없음에도 불구하고, 계속 시도함_
+  - _ISSUE : ✅ 더 이상 불러올 데이터가 없음에도 불구하고, 계속 시도함_
     - _원인 : `useSWRInfinite()`의 `isLoading`과 `isValidating` 때문_
-    - _FIX: `setSize()`의 조건을 inView와 스크롤가능여부(boolean)만 사용_
+    - _FIX : `setSize()`의 조건을 inView와 스크롤가능여부(boolean)만 사용_
       - _isLoading과 isValidating 제거_
   - 무한스크롤을 사용한 pagination
     - `useSWRInfinite()`을 사용한 데이터 fetch
@@ -1866,12 +1866,60 @@
       - Pad : 비율에 맞춰 이미지의 크기를 맞추며, 남는부분에 흰색 padding 적용
     - 사용법 : 이미지를 가져올 때 `<variant_name>` 부분에서 변수를 사용
 - **24-02-20 : #16.0 ~ #16.1 / NextJS Images (1)**
-  <!-- TODO: #16.2~ -->
+  - NextJS에서의 이미지
+    - HTML &lt;img&gt; 대신 NextJS image component(next/image)를 사용해야 함
+      - 무료로 이미지 최적화를 할 수 있기 때문
+    - 장점
+      1. lazy loading
+         - 사용자는 이미지가 나올 때까지 스크롤하지 않으면, 이미지를 load하지 않음
+           - 모든 이미지를 즉시 download 하지 않음
+      2. placeholder
+         - local 이미지 로딩 시 이미지가 흐리게 보이다가 load 됨
+           - 이미지 로딩 시 블러처리 된 placeholder 이미지를 제공
+  - 이미지 파일 종류
+    - local image : 'public' 폴더 내에 존재하는 이미지 파일
+      - API 응답 전에 framework가 인지하는 이미지
+    - remote image : API 응답으로부터 가져오는 이미지 파일
+      - local image만큼 최적화되지 않음 (파일 시스템에 없기 때문)
+  - Local image의 &lt;Image&gt; 사용법
+    - 기본형
+      ```
+      import Image from "next/image";
+      import 이미지변수 from "public/이미지경로";
+      <Image src={이미지변수} />
+      ```
+    - 옵셔널 프로퍼티
+      - `placeholder=blur` : 로딩 시 블러치리 된 placeholder 이미지를 사용
+      - `quality` : [백분율] 이미지 품질 (기본값 75)
+      - `width` : [px] 이미지 가로크기
+      - `height` : [px] 이미지 세로크기
+    - NextJS가 자동으로 src URL을 만듦 (inspect에서 확인 가능)
+      - 이미지를 압축하기 때문 (\_next/image API handler로 부터)
+      - src URL : '/\_next/image?URL핸들러'
+        - `q` : [백분율] 품질
+    - <a href="https://nextjs.org/docs/pages/building-your-application/optimizing/images#local-images" target="_blank">공식문서</a>
+- **24-02-21 : #16.0 ~ #16.2 / NextJS Images (2)**
+  - _FIX : [무한스크롤] 데이터가 없는 경우, 2번 동작함 해결_
+    - _조건없이 1초 후 `setTimeout()`을 조건부로 변경_
+    ```
+    useEffect(() => {
+      if (data && (data as any)[0].ok)
+        setTimeout(() => setIsScrollLoading(false), 1000);
+    }, [data]);
+    ```
+  - _UPDATE : 모든 &lt;img&gt;태그를 &lt;Image&gt;태그로 변경_
+  <!-- TODO: useUser()의 값을 global 변수에 저장하기 -->
 
 ---
 
-  <!-- TODO: 이미지를 가져오는 커스텀 function 만들기 -->
-
+- Challenge (채팅방 시스템)
+  1. [prisma] model schema 작성하기
+     - 채팅방 / 채팅유저 / 채팅
+  2. [Back-End] 채팅방 생성하기
+     - 상품id, 판매자id, 구매희망자id를 통해 채팅방 특정
+     - 존재여부 확인 후, 해당 채팅방으로 입장
+       - 미 존재 시 채팅방 생성
+       - 존재 시 이미 존재하는 채팅방 반환
 - To-Do
   - useForm register의 검증 옵션 및 error 메시지 추가
     - [/enter] 특정 메일주소만 가입 가능하도록

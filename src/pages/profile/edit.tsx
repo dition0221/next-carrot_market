@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
@@ -122,7 +123,13 @@ export default function EditProfile() {
       <form onSubmit={handleSubmit(onValid)} className="px-4 space-y-4">
         <div className="flex items-center space-x-3">
           {avatarPreview ? (
-            <img src={avatarPreview} className="w-14 h-14 rounded-full" />
+            <Image
+              src={avatarPreview}
+              alt="avatar image"
+              className="w-14 h-14 rounded-full"
+              width={56}
+              height={56}
+            />
           ) : (
             <div className="w-14 h-14 rounded-full bg-slate-500" />
           )}

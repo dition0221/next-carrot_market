@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import useSWR from "swr";
 // LIBS
 import useUser from "@/libs/client/useUser";
@@ -36,9 +37,12 @@ export default function Profile() {
         {/* Profile */}
         <section className="flex items-center space-x-3">
           {user?.avatar ? (
-            <img
+            <Image
               src={`https://imagedelivery.net/kk4YLvIogqMNHpBdH1Y55w/${user?.avatar}/avatar`}
+              alt="avatar image"
               className="w-16 h-16 rounded-full"
+              width={64}
+              height={64}
             />
           ) : (
             <div className="w-16 h-16 bg-slate-400 rounded-full" />

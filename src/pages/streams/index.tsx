@@ -47,8 +47,9 @@ export default function Streams() {
       {/* Infinite scroll */}
       {isLoading ? (
         <p className="text-center italic text-gray-500 text-sm">Loading..</p>
-      ) : null}
-      <div ref={ref} />
+      ) : (
+        <div ref={ref} />
+      )}
 
       <FloatingButton href="/streams/create">
         <svg

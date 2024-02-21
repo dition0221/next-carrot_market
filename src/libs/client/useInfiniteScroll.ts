@@ -18,19 +18,13 @@ import useSWRInfinite from "swr/infinite";
 
 export default function useInfiniteScroll<T = any>(url: string) {
   const [isScrollLoading, setIsScrollLoading] = useState(true);
-  const [isKillScroll, setIsKillScroll] = useState(false);
-
-  // Prevent duplicate runs at the first time
-  // ! 데이터가 없는 경우, 2번 동작함
-  useEffect(() => {
-    setTimeout(() => setIsScrollLoading(false), 1000);
-  }, []);
+  const [isScrollEnd, setIsScrollEnd] = useState(false);
 
   // Fetch data
   const getKey = (pageIndex: number, prevData: T) => {
     // if 'ok: false', Reached the end
     if (prevData && (prevData as any).ok === false) {
-      setIsKillScroll(true);
+      setIsScrollEnd(true);
       return null;
     }
 
@@ -38,15 +32,21 @@ export default function useInfiniteScroll<T = any>(url: string) {
   };
   const { data, setSize, isLoading, isValidating } = useSWRInfinite<T>(getKey);
 
+  // Prevent duplicate runs at the first time
+  useEffect(() => {
+    if (data && (data as any)[0].ok)
+      setTimeout(() => setIsScrollLoading(false), 1000);
+  }, [data]);
+
   // Scroll fn.
   const { ref, inView } = useInView(); // Watch viewport
   useEffect(() => {
-    if (inView && !isScrollLoading && !isKillScroll) {
+    if (inView && !isScrollLoading && !isScrollEnd) {
       setIsScrollLoading(true);
       setSize((prev) => prev + 1);
       setTimeout(() => setIsScrollLoading(false), 1000); // Prevent duplicate runs
     }
-  }, [inView, isScrollLoading, setSize, isKillScroll]);
+  }, [inView, isScrollLoading, setSize, isScrollEnd]);
 
   return { data, ref, isLoading: isLoading || isValidating };
 }

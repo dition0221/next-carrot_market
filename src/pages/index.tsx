@@ -5,8 +5,6 @@ import FloatingButton from "@/components/floating-button";
 import Item from "@/components/item";
 // INTERFACE
 import type { IProductList } from "./api/products";
-// ? lOCAL IMAGE
-import doguri from "@/../public/PC(달력X)ver.png";
 
 export default function Home() {
   // Fetch 'Product' list from DB
@@ -16,17 +14,22 @@ export default function Home() {
     <Layout title="홈" hasTabBar>
       <section className="flex flex-col space-y-5">
         {/* Product List */}
-        {data?.products?.map((product) => (
-          <Item
-            id={product.id}
-            title={product.name}
-            price={product.price}
-            imageUrl={product.imageUrl}
-            hearts={product._count.Records}
-            comments={0}
-            key={product.id}
-          />
-        ))}
+        {data?.products ? (
+          data.products.map((product) => (
+            <Item
+              id={product.id}
+              title={product.name}
+              price={product.price}
+              imageUrl={product.imageUrl}
+              hearts={product._count.Records}
+              key={product.id}
+            />
+          ))
+        ) : (
+          <p className="text-center text-sm text-slate-500">
+            상품이 존재하지 않습니다.
+          </p>
+        )}
       </section>
 
       <FloatingButton href="/products/upload">
