@@ -82,6 +82,8 @@ export default function ProductDetail() {
                 alt="product image"
                 className="object-contain bg-slate-200 rounded-md"
                 fill={true}
+                sizes="480px"
+                priority
               />
             </div>
           ) : (

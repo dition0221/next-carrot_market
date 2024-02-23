@@ -1,15 +1,20 @@
-import { cls, getImage } from "@/libs/client/utils";
 import Image from "next/image";
+// LIBS
+import { cls, formatTime, getImage } from "@/libs/client/utils";
 
 interface IMessageProps {
   text: string;
   avatar: string | null;
+  createdAt: string;
   reversed?: boolean;
 }
 
-// TODO: session으로부터 자기자신의 아바타 이미지 가져오기
-
-export default function Message({ text, avatar, reversed }: IMessageProps) {
+export default function Message({
+  text,
+  avatar,
+  createdAt,
+  reversed,
+}: IMessageProps) {
   return (
     <article
       className={cls(
@@ -23,12 +28,20 @@ export default function Message({ text, avatar, reversed }: IMessageProps) {
           alt="avatar image"
           width={32}
           height={32}
+          className="w-8 h-8 rounded-full border border-slate-300"
         />
       ) : (
         <div className="w-8 h-8 rounded-full bg-slate-400" />
       )}
-      <div className="w-1/2 text-sm text-gray-700 p-2 border border-gray-300 rounded-md">
-        <p>{text}</p>
+      <div className="w-1/2">
+        <p className="w-full text-sm text-gray-700 p-2 border border-gray-300 rounded-md break-words">
+          {text}
+        </p>
+        <p
+          className={cls(reversed ? "text-right" : "", "text-xs text-gray-500")}
+        >
+          {formatTime(createdAt)}
+        </p>
       </div>
     </article>
   );

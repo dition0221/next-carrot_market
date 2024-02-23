@@ -45,6 +45,19 @@ async function handler(
               },
             },
           },
+          Chats: {
+            select: {
+              content: true,
+              createdAt: true,
+            },
+            take: 1,
+            orderBy: {
+              createdAt: "desc",
+            },
+          },
+        },
+        orderBy: {
+          updatedAt: "desc",
         },
       });
       return res.status(200).json({ ok: true, chatRoomList });

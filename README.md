@@ -8,9 +8,11 @@
 - "react-dom": "^18"
 - "next": "14.0.4"
 
-<img src="https://img.shields.io/badge/Next.js-000?style=flat-square&logo=nextdotjs&logoColor=white"/> <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white"/> <img src="https://img.shields.io/badge/Tailwind CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white"/> <img src="https://img.shields.io/badge/React Hook Form-EC5990?style=flat-square&logo=reacthookform&logoColor=white"/>  
-<img src="https://img.shields.io/badge/Prisma-2D3748?style=flat-square&logo=prisma&logoColor=white"/> <img src="https://img.shields.io/badge/PlanetScale-000?style=flat-square&logo=planetscale&logoColor=white"/> <img src="https://img.shields.io/badge/iron&dash;session-18303d?style=flat-square&logoColor=white"/> <img src="https://img.shields.io/badge/SWR-000?style=flat-square&logo=swr&logoColor=white"/>  
-<img src="https://img.shields.io/badge/Twilio-f22f46?style=flat-square&logo=twilio&logoColor=white"/> <img src="https://img.shields.io/badge/Nodemailer-22B573?style=flat-square&logoColor=white"/> <img src="https://img.shields.io/badge/Cloudflare-F38020?style=flat-square&logo=cloudflare&logoColor=white"/>
+Front-End : <img src="https://img.shields.io/badge/Next.js-000?style=flat-square&logo=nextdotjs&logoColor=white"/> <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white"/> <img src="https://img.shields.io/badge/Tailwind CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white"/> <img src="https://img.shields.io/badge/React Hook Form-EC5990?style=flat-square&logo=reacthookform&logoColor=white"/> <img src="https://img.shields.io/badge/SWR-000?style=flat-square&logo=swr&logoColor=white"/>  
+Back-End : <img src="https://img.shields.io/badge/Prisma-2D3748?style=flat-square&logo=prisma&logoColor=white"/> <img src="https://img.shields.io/badge/PlanetScale-000?style=flat-square&logo=planetscale&logoColor=white"/> <img src="https://img.shields.io/badge/iron&dash;session-18303d?style=flat-square&logoColor=white"/>  
+3rd party : <img src="https://img.shields.io/badge/Twilio-f22f46?style=flat-square&logo=twilio&logoColor=white"/> <img src="https://img.shields.io/badge/Nodemailer-22B573?style=flat-square&logoColor=white"/> <img src="https://img.shields.io/badge/Cloudflare-F38020?style=flat-square&logo=cloudflare&logoColor=white"/>  
+etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observer
+-000?style=flat-square&logoColor=white"/> <img src="https://img.shields.io/badge/timeago.js-000?style=flat-square&logoColor=white"/>
 
 ---
 
@@ -1898,9 +1900,9 @@
       - src URL : '/\_next/image?URL핸들러'
         - `q` : [백분율] 품질
     - <a href="https://nextjs.org/docs/pages/building-your-application/optimizing/images#local-images" target="_blank">공식문서</a>
-- **24-02-21 : #16.0 ~ #16.2 / NextJS Images (2)**
+- **24-02-21 : #16.0 ~ #16.2 / NextJS Images (2) + [Challenge] Chat system (1)**
   - _FIX : [무한스크롤] 데이터가 없는 경우, 2번 동작함 해결_
-    - _조건없이 1초 후 `setTimeout()`을 조건부로 변경_
+    - _조건없는 1초 후 `setTimeout()`을 조건부로 변경_
     ```
     useEffect(() => {
       if (data && (data as any)[0].ok)
@@ -1908,7 +1910,79 @@
     }, [data]);
     ```
   - _UPDATE : 모든 &lt;img&gt;태그를 &lt;Image&gt;태그로 변경_
-  <!-- TODO: useUser()의 값을 global 변수에 저장하기 -->
+  - Remote image의 &lt;Image&gt; 사용법
+    1. [설정] 이미지를 가져오는 API의 `hostname` 도메인을 추가하기
+       - `next.config.js` 파일에서 구성
+       - 기본형
+         ```
+         const nextConfig = {
+           images: {
+             remotePatterns: [
+               {
+                 protocol: 프로토콜,
+                 hostname: 호스트명,
+                 port: 포트,
+                 pathname: 경로명,
+               },
+             ],
+           },
+         };
+         module.exports = nextConfig;
+         ```
+       - ex.
+         ```
+         const nextConfig = {
+           reactStrictMode: true,
+           images: {
+             remotePatterns: [
+               {
+                 protocol: "https",
+                 hostname: "imagedelivery.net",
+                 port: "",
+                 pathname: "/<path_name>/**",
+               },
+             ],
+           },
+         };
+         ```
+    2. 이미지 크기를 명시하기
+       - `width`, `height` 프로퍼티를 사용
+         - lazy loading을 하기 위해 필요함
+         - 실제 이미지 크기가 아닌, 보여지길 원하는 크기를 명시
+       - 이미지의 크기를 제대로 모를 때 `fill={true}` 프로퍼티를 사용
+         - 화면에 꽉 차는 absolute 이미지를 가지므로, relative 컨테이너와 함께 사용
+         - `object-fit` CSS 프로퍼티와 함께 사용하는 것을 권장
+           - 컨터이너의 내부 이미지가 보여지는 방식을 설정
+         - ex.
+           ```
+           <div className="relative w-full h-96">
+             <Image
+               src={getImage(data.product.imageUrl, "public")}
+               alt="product image"
+               className="object-contain"
+               fill={true}
+             />
+           </div>
+           ```
+       - 이미지 소스는 실제 이미지가 아닌, NextJS가 만든 이미지
+    - <a href="https://nextjs.org/docs/pages/building-your-application/optimizing/images#remote-images" target="_blank">공식문서</a>
+  - remote image의 blur placeholder
+    - blur placeholder는 local image에 대해서만 제공함
+    - remote image 사용 시 blur image를 가지고 있다면, `blurDataURL` 프로퍼티를 사용
+      - `placeholder="blur"`와 결합하여 사용한 경우에만 적용됨
+      - base64로 인코딩된 이미지여야 함
+      - 확대하여 흐려지므로, 10px 이하를 권장
+        - 더 큰 이미지를 사용 시 App 성능이 저하될 수 있음
+  - _[Challenge] 채팅방_
+    1. _[prisma] model schema 작성하기_
+       - _채팅방, 채팅유저, 채팅_
+    2. _[Back-End] 채팅방 생성하기_
+       - _상품id, 판매자id, 구매희망자id를 통해 채팅방을 특정_
+       - _존재여부 확인 후, 채팅방으로 입장_
+         - _미 존재 시 채팅방 생성 후 입장_
+           - _DB생성 : 채팅방, 채팅유저1, 채팅유저2_
+         - _존재 시 이미 존재하는 채팅방 입장_
+- **24-02-23 : [Challenge] Chat system (2)**
 
 ---
 
@@ -1919,7 +1993,17 @@
      - 상품id, 판매자id, 구매희망자id를 통해 채팅방 특정
      - 존재여부 확인 후, 해당 채팅방으로 입장
        - 미 존재 시 채팅방 생성
+         - DB생성 : 채팅방, 채팅유저1, 채팅유저2
        - 존재 시 이미 존재하는 채팅방 반환
+  3. 개인방
+     - 가장 최근 채팅 10개 씩 pagination
+       - 버튼 클릭 시 데이터를 더 불러오고, 불러올 데이터가 없을 시 버튼 숨김
+     - 채팅 입력 시 `mutate()`를 사용해 즉시 UI에 보여줌
+     <!-- TODO: [권한] 내가 포함된 채팅방만 볼 수 있게 + 채팅방명(상대방명) = 하나의 새로운 DB fetch (getServerSideProps) ? -->
+  4. 채팅방 리스트
+     - 가장 최신 채팅방을 위로 정렬
+     - 가장 최신 채팅과 시간을 미리 보여줌
+     <!-- TODO : 무한스크롤 pagination -->
 - To-Do
   - useForm register의 검증 옵션 및 error 메시지 추가
     - [/enter] 특정 메일주소만 가입 가능하도록

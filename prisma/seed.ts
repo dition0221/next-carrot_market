@@ -3,8 +3,8 @@ import { PrismaClient } from "@prisma/client";
 const prismaClient = new PrismaClient();
 
 async function main() {
-  [...Array.from(Array(500).keys())].forEach(async (item) => {
-    const stream = await prismaClient.stream.create({
+  [...Array.from(Array(20).keys())].forEach(async (item) => {
+    await prismaClient.stream.create({
       data: {
         name: String(item),
         description: String(item),
