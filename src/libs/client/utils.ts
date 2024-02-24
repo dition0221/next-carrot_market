@@ -32,3 +32,10 @@ export function formatTime(dateTime: string, isTimeAgo = false) {
 
   return formattedTime;
 }
+
+// Scroll to down fn.
+export function scrollToDown() {
+  window.scrollTo({
+    top: document.documentElement.scrollHeight,
+  });
+}

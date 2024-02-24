@@ -5,9 +5,11 @@ import useSWRInfinite from "swr/infinite";
 // LIBS
 import useMutation from "@/libs/client/useMutation";
 import useUser from "@/libs/client/useUser";
+import { scrollToDown } from "@/libs/client/utils";
 // COMPONENTS
 import Layout from "@/components/layout";
 import Message from "@/components/message";
+import useSWR from "swr";
 
 export interface IWriteChatForm {
   chat: string;
@@ -28,17 +30,30 @@ interface IChatsResponse {
   chats?: IChats[];
 }
 
+interface ICheckChatRoom {
+  ok: boolean;
+  chatRoom?: {
+    id: number;
+    ChatRoomUsers: {
+      user: {
+        name: string;
+      };
+    }[]; // [0] (상대방)만 사용할 것
+  };
+  error?: any;
+}
+
 export default function ChatDetail() {
   const { user } = useUser();
 
   const router = useRouter();
   const { id } = router.query;
 
-  // Scroll fn.
-  const scrollToDown = () =>
-    window.scrollTo({
-      top: document.documentElement.scrollHeight,
-    });
+  // Check authorization of chat room
+  const { data: chatRoomData } = useSWR<ICheckChatRoom>(
+    id ? `/api/chats/${id}` : null
+  );
+  if (chatRoomData && !chatRoomData.ok) router.replace("/chats");
 
   /* GET: Read chats */
   const [isMoreEnd, setIsMoreEnd] = useState(false);
@@ -48,7 +63,7 @@ export default function ChatDetail() {
       setIsMoreEnd(true);
       return null;
     }
-    return id ? `/api/chats/${id}?page=${pageIndex}` : null;
+    return id ? `/api/chats/${id}/chats?page=${pageIndex}` : null;
   };
   const { data, size, setSize, isLoading, isValidating, mutate } =
     useSWRInfinite<IChatsResponse>(getKey);
@@ -61,7 +76,7 @@ export default function ChatDetail() {
 
   /* POST: Write a chat */
   const [postChat, { isLoading: isWriteLoading }] = useMutation(
-    `/api/chats/${id}`
+    `/api/chats/${id}/chats`
   );
   const { register, handleSubmit, reset } = useForm<IWriteChatForm>();
   const onValid = (formData: IWriteChatForm) => {
@@ -95,7 +110,10 @@ export default function ChatDetail() {
   };
 
   return (
-    <Layout canGoBack>
+    <Layout
+      canGoBack
+      title={chatRoomData?.chatRoom?.ChatRoomUsers?.[0].user.name}
+    >
       {/* Chats */}
       <section className="pb-32 px-4 space-y-4">
         {data &&
