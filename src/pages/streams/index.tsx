@@ -22,7 +22,7 @@ export default function Streams() {
     <Layout title="라이브 스트리밍" hasTabBar>
       {/* Stream list */}
       <section className="divide-y-[1px] space-y-4">
-        {data && !data[0].ok ? (
+        {data?.[0].ok === false ? (
           <p className="text-center text-base italic text-gray-600">
             현재 라이브가 없습니다.
           </p>

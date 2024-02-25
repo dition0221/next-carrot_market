@@ -2000,6 +2000,9 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
       - _채팅방 번호가 존재하고, 해당 채팅방에 본인이 포함되어 있는지 검사_
     - _권한과 상대방의 이름을 같이 가져와서 사용_
       - _미 권한 시 채팅방 리스트로 replace_
+- **24-02-25 : [Challenge] Chat system (4)**
+  - _채팅방 목록에 대한 무한스크롤 pagination 구현_
+    <!-- TODO: Test -->
 
 ---
 
@@ -2020,7 +2023,7 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
   4. 채팅방 리스트
      - 가장 최신 채팅방을 위로 정렬
      - 가장 최신 채팅과 시간을 미리 보여줌
-     <!-- TODO : 무한스크롤 pagination -->
+     - 무한스크롤 pagination
 - To-Do
   - useForm register의 검증 옵션 및 error 메시지 추가
     - [/enter] 특정 메일주소만 가입 가능하도록

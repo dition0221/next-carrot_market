@@ -19,6 +19,12 @@ async function handler(
 
   /* GET: Chat room of list */
   if (req.method === "GET") {
+    const { page } = req.query;
+    if (typeof page !== "string")
+      return res
+        .status(400)
+        .json({ ok: false, error: "Only one 'page' parameter is allowed" });
+
     try {
       const chatRoomList = await prismaClient.chatRoom.findMany({
         where: {
@@ -59,7 +65,12 @@ async function handler(
         orderBy: {
           updatedAt: "desc",
         },
+        take: 10,
+        skip: +page * 10,
       });
+      if (chatRoomList.length === 0)
+        return res.status(404).json({ ok: false, error: "Not Found" });
+
       return res.status(200).json({ ok: true, chatRoomList });
     } catch (error) {
       console.log(error);

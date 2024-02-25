@@ -2,6 +2,7 @@ import { useRouter } from "next/router";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import useSWRInfinite from "swr/infinite";
+import useSWR from "swr";
 // LIBS
 import useMutation from "@/libs/client/useMutation";
 import useUser from "@/libs/client/useUser";
@@ -9,7 +10,6 @@ import { scrollToDown } from "@/libs/client/utils";
 // COMPONENTS
 import Layout from "@/components/layout";
 import Message from "@/components/message";
-import useSWR from "swr";
 
 export interface IWriteChatForm {
   chat: string;

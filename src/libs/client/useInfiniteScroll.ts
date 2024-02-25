@@ -12,8 +12,7 @@ import useSWRInfinite from "swr/infinite";
   <section>
     {데이터.map() ......}
   </section>
-  {isLoading ? <div>Loading..</div> : null}
-  <div ref={ref} /> // Trigger
+  {isLoading ? <div>Loading..</div> : <div ref={ref} />} // Trigger
 */
 
 export default function useInfiniteScroll<T = any>(url: string) {
@@ -25,6 +24,7 @@ export default function useInfiniteScroll<T = any>(url: string) {
     // if 'ok: false', Reached the end
     if (prevData && (prevData as any).ok === false) {
       setIsScrollEnd(true);
+      console.log("isScrollEnd", isScrollEnd); // !!!
       return null;
     }
 

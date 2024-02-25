@@ -49,6 +49,9 @@ async function handler(
       const streams = await prismaClient.stream.findMany({
         take: 3,
         skip: offset * 3,
+        orderBy: {
+          createdAt: "desc",
+        },
       });
       if (streams.length === 0)
         return res.status(404).json({ ok: false, error: "Not Found" });
