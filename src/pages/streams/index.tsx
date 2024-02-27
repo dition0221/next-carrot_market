@@ -32,7 +32,7 @@ export default function Streams() {
               <Link
                 href={`/streams/${stream.id}`}
                 key={stream.id}
-                className="block pt-4 px-4"
+                className="block pt-4 px-4 rounded-lg hover:bg-slate-100 transition-colors"
               >
                 <div className="w-full bg-slate-500 aspect-video rounded-md shadow-sm" />
                 <h1 className="text-2xl mt-2 font-bold text-gray-900">

@@ -45,7 +45,7 @@ export default function CreateStream() {
   // Success: push to streaming page
   useEffect(() => {
     if (data?.ok) {
-      router.push(`/streams/${data.stream?.id}`);
+      router.replace(`/streams/${data.stream?.id}`);
     }
   }, [data?.ok, data?.stream?.id, router]);
 

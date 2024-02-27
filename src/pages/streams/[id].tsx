@@ -103,7 +103,9 @@ export default function Stream() {
                 <Message
                   key={msg.id}
                   text={msg.message}
+                  avatar={msg.user.avatar}
                   reversed={msg.user.id === user?.id ? true : false}
+                  createdAt={null}
                 />
               ))}
             </div>

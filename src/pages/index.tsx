@@ -12,24 +12,23 @@ export default function Home() {
 
   return (
     <Layout title="홈" hasTabBar>
-      <section className="flex flex-col space-y-5">
+      <section className="flex flex-col">
         {/* Product List */}
-        {data?.products ? (
-          data.products.map((product) => (
-            <Item
-              id={product.id}
-              title={product.name}
-              price={product.price}
-              imageUrl={product.imageUrl}
-              hearts={product._count.Records}
-              key={product.id}
-            />
-          ))
-        ) : (
+        {data?.ok === false ? (
           <p className="text-center text-sm text-slate-500">
             상품이 존재하지 않습니다.
           </p>
-        )}
+        ) : null}
+        {data?.products?.map((product) => (
+          <Item
+            id={product.id}
+            title={product.name}
+            price={product.price}
+            imageUrl={product.imageUrl}
+            hearts={product._count.Records}
+            key={product.id}
+          />
+        ))}
       </section>
 
       <FloatingButton href="/products/upload">

@@ -40,6 +40,7 @@ export default function Layout({
             </svg>
           </button>
         ) : null}
+
         {title ? <span className="text-orange-500">{title}</span> : null}
       </header>
 

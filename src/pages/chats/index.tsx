@@ -6,9 +6,6 @@ import useInfiniteScroll from "@/libs/client/useInfiniteScroll";
 import Layout from "@/components/layout";
 import Image from "next/image";
 
-// TODO: 무한스크롤 적용하기
-// TODO: 최근 채팅이 있는 채팅방 순서대로 리스트 정렬하기
-
 interface IChatRoomUser {
   user: {
     avatar: string | null;
@@ -31,8 +28,6 @@ export default function Chats() {
   const { data, ref, isLoading } =
     useInfiniteScroll<IChatRoomList>("/api/chats");
 
-  console.log("data", data); // !!!
-
   return (
     <Layout title="채팅" hasTabBar>
       {/* Chat list */}
@@ -42,12 +37,13 @@ export default function Chats() {
             현재 채팅방이 없습니다.
           </p>
         ) : null}
+
         {data?.map((page) =>
           page.chatRoomList?.map((chatRoom) => (
             <Link
               href={`/chats/${chatRoom.id}`}
               key={chatRoom.id}
-              className="px-4 py-3 space-x-3 border-b-[1px] flex items-center "
+              className="px-4 py-3 space-x-3 border-b-[1px] flex items-center rounded-lg hover:bg-slate-100 transition-colors"
             >
               {chatRoom.ChatRoomUsers[0].user.avatar ? (
                 <Image

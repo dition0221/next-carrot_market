@@ -2,9 +2,10 @@ import { useRouter } from "next/router";
 import useSWR from "swr";
 import { useForm } from "react-hook-form";
 import { useEffect } from "react";
+import Image from "next/image";
 // LIBS
 import useMutation from "@/libs/client/useMutation";
-import { cls } from "@/libs/client/utils";
+import { cls, formatTime, getImage } from "@/libs/client/utils";
 // COMPONENTS
 import Button from "@/components/button";
 import Layout from "@/components/layout";
@@ -115,18 +116,22 @@ export default function CommunityDetail() {
       </span>
 
       {/* Profile */}
-      <section className="flex px-4 py-3 mb-3 border-b items-center space-x-3">
-        <div className="w-10 h-10 rounded-full bg-slate-300" />
+      <section className="px-4 py-3 mb-3 border-b">
         <LinkProfile
+          avatar={data?.post?.user.avatar}
           userName={data?.post?.user.name}
           href={`/users/profiles/${data?.post?.userId}`}
+          px={40}
         />
       </section>
 
       <section>
         <div className="mt-2 px-4 text-gray-700">
           <span className="text-orange-500 font-medium">Q.&nbsp;</span>
-          {data?.post?.question}
+          <span>{data?.post?.question}</span>
+          <p className="mt-2 text-xs text-gray-500">
+            {formatTime(data?.post?.updatedAt + "", true)}
+          </p>
         </div>
         <div className="flex px-4 space-x-6 mt-3 text-gray-700 py-2.5 border-t border-b-2 w-full">
           <button
@@ -177,13 +182,23 @@ export default function CommunityDetail() {
         <section className="px-4 my-5 space-y-5">
           {data?.post?.Answers.map((answer) => (
             <div className="flex items-start space-x-3" key={answer.id}>
-              <div className="w-8 h-8  bg-slate-400 rounded-full" />
+              {answer.user.avatar ? (
+                <Image
+                  src={getImage(answer.user.avatar, "avatar")}
+                  alt="answer avatar"
+                  width={32}
+                  height={32}
+                  className="rounded-full"
+                />
+              ) : (
+                <div className="w-8 h-8  bg-slate-400 rounded-full" />
+              )}
               <div>
-                <span className="text-sm block font-medium text-gray-700">
+                <span className="text-sm block font-medium text-gray-800">
                   {answer.user.name}
                 </span>
-                <span className="text-xs text-gray-500 block">
-                  {answer.createdAt}
+                <span className="text-xs font-normal text-gray-500 block">
+                  {formatTime(answer.createdAt, true)}
                 </span>
                 <p className="text-gray-700 mt-2">{answer.answer}</p>
               </div>
@@ -193,7 +208,10 @@ export default function CommunityDetail() {
       ) : null}
 
       {/* Reply Form */}
-      <form onSubmit={handleSubmit(onValid)} className="px-4 space-y-2 mt-2">
+      <form
+        onSubmit={handleSubmit(onValid)}
+        className="px-4 space-y-2 mt-2 border-t-2 pt-2"
+      >
         <Textarea
           register={register("answer", {
             required: "답변을 적어주세요.",

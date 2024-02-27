@@ -6,12 +6,12 @@ import { NextApiRequest, NextApiResponse } from "next";
   기본형 : const 세션명 = await getSession(req, res);
 */
 
-const sessionOptions: SessionOptions = {
-  password: process.env.SESSION_PW!,
+export const sessionOptions: SessionOptions = {
   cookieName: "carrot-session",
+  password: process.env.SESSION_PW!,
 };
 
-interface IIronSessionData {
+export interface IIronSessionData {
   user?: {
     id: number; // USER id
   };

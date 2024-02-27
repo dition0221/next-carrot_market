@@ -1,8 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import useSWR from "swr";
 import { useEffect } from "react";
+import useSWR from "swr";
 // LIBS
 import useMutation from "@/libs/client/useMutation";
 import { cls, getImage } from "@/libs/client/utils";
@@ -40,10 +40,14 @@ export default function ProductDetail() {
   const { id } = router.query;
 
   // Fetch 'Product'
-  // TODO: isLoading 화면, 데이터가 없는 경우 구현하기
+  // TODO: isLoading 화면구현하기 (w. skeleton)
   const { data, mutate: boundMutate } = useSWR<IProductDetailResponse>(
     id ? `/api/products/${id}` : null
   );
+  useEffect(() => {
+    // If not data
+    if (data?.ok === false) router.replace("/");
+  }, [data?.ok, router]);
 
   // Click 'Favorite'
   const [toggleFav, { isLoading: isToggleLoading }] = useMutation(
@@ -72,11 +76,11 @@ export default function ProductDetail() {
 
   return (
     <Layout canGoBack>
-      <main className="px-4">
+      <div className="px-4">
         <section className="mb-8">
           {/* Product image */}
           {data?.product?.imageUrl ? (
-            <div className="relative w-full h-96">
+            <article className="mb-3 relative w-full h-96">
               <Image
                 src={getImage(data.product.imageUrl, "public")}
                 alt="product image"
@@ -85,32 +89,21 @@ export default function ProductDetail() {
                 sizes="480px"
                 priority
               />
-            </div>
+            </article>
           ) : (
-            <div className="w-full h-96 bg-slate-300 rounded-md" />
+            <article className="mb-3 w-full h-96 bg-slate-300 rounded-md" />
           )}
 
           {/* Seller's profile */}
-          <article className="flex py-3 border-b items-center space-x-3">
-            {data?.product?.user.avatar ? (
-              <Image
-                src={getImage(data.product.user.avatar, "avatar")}
-                className="w-12 h-12 rounded-full"
-                alt="avatar image"
-                width={48}
-                height={48}
-              />
-            ) : (
-              <div className="w-12 h-12 rounded-full bg-slate-300" />
-            )}
-            <LinkProfile
-              userName={data?.product?.user.name}
-              href={`/users/profiles/${data?.product?.userId}`}
-            />
-          </article>
+          <LinkProfile
+            avatar={data?.product?.user.avatar}
+            userName={data?.product?.user.name}
+            href={`/users/profiles/${data?.product?.userId}`}
+            px={48}
+          />
 
           {/* Product profile */}
-          <div className="mt-5">
+          <article className="mt-3 pt-5 border-t">
             <h1 className="text-3xl font-bold text-gray-900">
               {data?.product?.name}
             </h1>
@@ -150,7 +143,7 @@ export default function ProductDetail() {
                 </svg>
               </button>
             </div>
-          </div>
+          </article>
         </section>
 
         {/* Similar Items */}
@@ -183,7 +176,7 @@ export default function ProductDetail() {
             </div>
           </section>
         ) : null}
-      </main>
+      </div>
     </Layout>
   );
 }

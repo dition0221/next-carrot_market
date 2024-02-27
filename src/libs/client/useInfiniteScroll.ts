@@ -24,7 +24,6 @@ export default function useInfiniteScroll<T = any>(url: string) {
     // if 'ok: false', Reached the end
     if (prevData && (prevData as any).ok === false) {
       setIsScrollEnd(true);
-      console.log("isScrollEnd", isScrollEnd); // !!!
       return null;
     }
 

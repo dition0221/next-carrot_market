@@ -11,8 +11,7 @@
 Front-End : <img src="https://img.shields.io/badge/Next.js-000?style=flat-square&logo=nextdotjs&logoColor=white"/> <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white"/> <img src="https://img.shields.io/badge/Tailwind CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white"/> <img src="https://img.shields.io/badge/React Hook Form-EC5990?style=flat-square&logo=reacthookform&logoColor=white"/> <img src="https://img.shields.io/badge/SWR-000?style=flat-square&logo=swr&logoColor=white"/>  
 Back-End : <img src="https://img.shields.io/badge/Prisma-2D3748?style=flat-square&logo=prisma&logoColor=white"/> <img src="https://img.shields.io/badge/PlanetScale-000?style=flat-square&logo=planetscale&logoColor=white"/> <img src="https://img.shields.io/badge/iron&dash;session-18303d?style=flat-square&logoColor=white"/>  
 3rd party : <img src="https://img.shields.io/badge/Twilio-f22f46?style=flat-square&logo=twilio&logoColor=white"/> <img src="https://img.shields.io/badge/Nodemailer-22B573?style=flat-square&logoColor=white"/> <img src="https://img.shields.io/badge/Cloudflare-F38020?style=flat-square&logo=cloudflare&logoColor=white"/>  
-etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observer
--000?style=flat-square&logoColor=white"/> <img src="https://img.shields.io/badge/timeago.js-000?style=flat-square&logoColor=white"/>
+etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observer-000?style=flat-square&logoColor=white"/> <img src="https://img.shields.io/badge/timeago.js-000?style=flat-square&logoColor=white"/>
 
 ---
 
@@ -1900,7 +1899,7 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
       - src URL : '/\_next/image?URL핸들러'
         - `q` : [백분율] 품질
     - <a href="https://nextjs.org/docs/pages/building-your-application/optimizing/images#local-images" target="_blank">공식문서</a>
-- **24-02-21 : #16.0 ~ #16.2 / NextJS Images (2) + [Challenge] Chat system (1)**
+- **24-02-21 : #16.2 ~ #16.4 / NextJS Images (2) + [Challenge] Chat system (1)**
   - _FIX : [무한스크롤] 데이터가 없는 경우, 2번 동작함 해결_
     - _조건없는 1초 후 `setTimeout()`을 조건부로 변경_
     ```
@@ -2002,48 +2001,37 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
       - _미 권한 시 채팅방 리스트로 replace_
 - **24-02-25 : [Challenge] Chat system (4)**
   - _채팅방 목록에 대한 무한스크롤 pagination 구현_
-    <!-- TODO: Test -->
+- **24-02-27 : #19.0 ~ #19.5 / NextJS deep dive (1)**
+  - _FIX_
+    - _[community] timeago 시간 및 아바타 이미지 설정_
+    - _[link-profile.tsx] 아바타 이미지 추가_
 
 ---
 
-- Challenge (채팅방 시스템)
-  1. [prisma] model schema 작성하기
-     - 채팅방 / 채팅유저 / 채팅
-  2. [Back-End] 채팅방 생성하기
-     - 상품id, 판매자id, 구매희망자id를 통해 채팅방 특정
-     - 존재여부 확인 후, 해당 채팅방으로 입장
-       - 미 존재 시 채팅방 생성
-         - DB생성 : 채팅방, 채팅유저1, 채팅유저2
-       - 존재 시 이미 존재하는 채팅방 반환
-  3. 개인방
-     - 가장 최근 채팅 10개 씩 pagination
-       - 내림차순으로 정렬
-       - 더보기 버튼 클릭 시 데이터를 더 불러오고, 불러올 데이터가 없을 시 버튼 숨김
-     - 채팅 입력 시 `mutate()`를 사용해 즉시 UI에 보여줌
-  4. 채팅방 리스트
-     - 가장 최신 채팅방을 위로 정렬
-     - 가장 최신 채팅과 시간을 미리 보여줌
-     - 무한스크롤 pagination
 - To-Do
   - useForm register의 검증 옵션 및 error 메시지 추가
     - [/enter] 특정 메일주소만 가입 가능하도록
-    - 기타 등등
+    - .etc
   - [Token] 한 계정이 token을 여러 개 생성 시 최신 하나만 유지하도록 하기
     - 토큰의 유효기간을 짧게 설정하기 (기본값 14일) (ex. 3분)
     - 유효기간 만료 or 토큰 인증 시 토큰 삭제
     - 토큰이 존재하는 경우, 토큰 재생성 못하게 막기
   - [Token] payload(난수)가 겹칠 수 있는 문제 해결
   - [Token] 다른 계정의 token을 사용하는 문제 해결 (자신의 token만 사용하도록 하기)
-  - [/products/upload.tsx], [/api/products/index.tsx] 추후 'imageUrl' 추가하기
   - isLoading, 데이터가 없는 경우의 화면 구현하기
-    - ? getServerSideProps()
+    - `react-loading-skeleton` 패키지 사용
     - [/products/[id].tsx]
     - [/community/[id].tsx]
     - [/profile/index.tsx]
+    - .etc
   - 404페이지 만들기 (data가 없을 시)
     - [/products/[id].tsx]
     - [/community/[id].tsx]
-  - [/community/[id].tsx] 답변의 시간 재설정하기
   - useSWR()의 error 핸들링하기
-  - [무한스크롤] 홈, 동네생활, 채팅, 판매내역, 구매내역, 관심목록에 적용하기
+  - [무한스크롤] 홈, 동네생활, 판매내역, 구매내역, 관심목록에 적용하기
   - [/api/users/me/index.ts] POST부분 리팩토링
+  - 사용자 프로필 페이지 생성하기
+  - [stream] 이미지 추가하기
+  - [채팅방] 채팅방 삭제 및 물건 post 삭제 기능 구현하기
+  - [middleware] 특정 지역 차단하기
+  - [SEO] 모든 페이지에 &lt;title&gt; 적기

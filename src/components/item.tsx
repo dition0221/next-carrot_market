@@ -21,7 +21,7 @@ export default function Item({
   return (
     <Link
       href={`/products/${id}`}
-      className="flex justify-between border-b px-4 pb-4 cursor-pointer"
+      className="flex justify-between border-b p-4 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"
     >
       <div className="flex space-x-4">
         {imageUrl ? (

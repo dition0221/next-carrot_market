@@ -5,7 +5,7 @@ import { cls, formatTime, getImage } from "@/libs/client/utils";
 interface IMessageProps {
   text: string;
   avatar: string | null;
-  createdAt: string;
+  createdAt: string | null;
   reversed?: boolean;
 }
 
@@ -37,11 +37,16 @@ export default function Message({
         <p className="w-full text-sm text-gray-700 p-2 border border-gray-300 rounded-md break-words">
           {text}
         </p>
-        <p
-          className={cls(reversed ? "text-right" : "", "text-xs text-gray-500")}
-        >
-          {formatTime(createdAt)}
-        </p>
+        {createdAt ? (
+          <p
+            className={cls(
+              reversed ? "text-right" : "",
+              "text-xs text-gray-500"
+            )}
+          >
+            {formatTime(createdAt)}
+          </p>
+        ) : null}
       </div>
     </article>
   );

@@ -3,7 +3,7 @@ import Image from "next/image";
 import useSWR from "swr";
 // LIBS
 import useUser from "@/libs/client/useUser";
-import { cls } from "@/libs/client/utils";
+import { cls, getImage } from "@/libs/client/utils";
 // COMPONENTS
 import Layout from "@/components/layout";
 import LinkProfile from "@/components/link-profile";
@@ -35,24 +35,17 @@ export default function Profile() {
     <Layout title="나의 캐럿" hasTabBar>
       <div className="px-4">
         {/* Profile */}
-        <section className="flex items-center space-x-3">
-          {user?.avatar ? (
-            <Image
-              src={`https://imagedelivery.net/kk4YLvIogqMNHpBdH1Y55w/${user?.avatar}/avatar`}
-              alt="avatar image"
-              className="w-16 h-16 rounded-full"
-              width={64}
-              height={64}
-            />
-          ) : (
-            <div className="w-16 h-16 bg-slate-400 rounded-full" />
-          )}
-          <LinkProfile userName={user?.name} href="/profile/edit" isEdit />
-        </section>
+        <LinkProfile
+          avatar={user?.avatar}
+          userName={user?.name}
+          href="/profile/edit"
+          px={64}
+          isEdit
+        />
 
         <section className="mt-10 flex justify-around">
           <Link href="/profile/sold" className="flex flex-col items-center">
-            <div className="w-14 h-14 text-white bg-orange-500 rounded-full flex items-center justify-center">
+            <div className="w-14 h-14 text-white bg-orange-500 rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
               <svg
                 className="w-6 h-6"
                 fill="none"
@@ -73,7 +66,7 @@ export default function Profile() {
             </span>
           </Link>
           <Link href="/profile/bought" className="flex flex-col items-center">
-            <div className="w-14 h-14 text-white bg-orange-500 rounded-full flex items-center justify-center">
+            <div className="w-14 h-14 text-white bg-orange-500 rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
               <svg
                 className="w-6 h-6"
                 fill="none"
@@ -94,7 +87,7 @@ export default function Profile() {
             </span>
           </Link>
           <Link href="/profile/loved" className="flex flex-col items-center">
-            <div className="w-14 h-14 text-white bg-orange-500 rounded-full flex items-center justify-center">
+            <div className="w-14 h-14 text-white bg-orange-500 rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
               <svg
                 className="w-6 h-6"
                 fill="none"
@@ -122,7 +115,17 @@ export default function Profile() {
             {reviewData?.reviews?.map((review) => (
               <article key={review.id}>
                 <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 rounded-full bg-slate-400" />
+                  {review.createdBy.avatar ? (
+                    <Image
+                      src={getImage(review.createdBy.avatar, "avatar")}
+                      alt="reviewer's avatar"
+                      width={48}
+                      height={48}
+                      className="border rounded-full"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-slate-400" />
+                  )}
                   <div>
                     <h4 className="text-sm font-bold text-gray-800">
                       {review.createdBy.name}
