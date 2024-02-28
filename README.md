@@ -2005,9 +2005,135 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
   - _FIX_
     - _[community] timeago 시간 및 아바타 이미지 설정_
     - _[link-profile.tsx] 아바타 이미지 추가_
+  - Middlewares
+    - 요청(request)과 종착지 중간에 있는 함수
+      - API Route에서도 작동함
+    - 사용법
+      1. middleware 파일 생성하기
+         - `/middleware.ts` 또는 `/src/middleware.ts` 파일을 생성
+      2. middleware 작성하기
+         - 기본형
+           ```
+           import type { NextRequest, NextFetchEvent } from "next/server";
+           export function middleware(req: NextRequest, ev: NextFetchEvent) {
+             ......
+           }
+           ```
+    - NextJS의 middleware는 모든 요청에서 발생하지만, 페이지 하나를 불러올 때 마다 발생되는 관련 static파일 요청들이 있음
+      - 매칭되는 URL에서만 middleware를 발생시키는 방법
+        ```
+        export const config = {
+          matcher: ["/((?!api|_next/static|favicon.ico).*)"],
+        };
+        ```
+    - 특정 페이지에서만 작동하는 방법
+      - 기본형 : `if (request.nextUrl.pathname.statsWith("경로")) { ... }`
+    - 사용자 기기정보
+      - 기본형
+        ```
+        import { userAgent } from "next/server";
+        const 변수명 = userAgent(요청변수);
+        ```
+      - 브라우저, 사용기기, 운영체제, CPU, Bot유무 등을 알 수 있음
+      - ex.
+        ```
+        // Bot인 경우, 접속을 차단하고 해당 문구를 보여줌
+        if (userAgent(req).isBot) {
+          return new Response("No bot", { status: 403 });
+        }
+        ```
+    - `NextResponse` 변수를 통해 `.redirect()`, `.rewrite()`, `.json()` 등 반환 가능
+      - 현재 URL 정보를 복사(`req.nextUrl.clone()`)한 후 사용해야 함
+      - 항상 return문에서 사용할 것
+    - 사용자의 쿠키를 확인하는 방법
+      - 기본형 : `req.cookie`
+      - 특정 쿠키를 가져오는 방법 : `req.cookie.has(쿠키명)` [Boolean]
+      - 'iron-session'의 `getIronSession()`을 통해 세션쿠키를 가져올 수 있음
+      - ex.
+        ```
+        // Check logged-in user using session
+        const isCookie = req.cookie.has("carrot-session");
+        const { user } = getIronSession<IIronSessionData>(
+          req,
+          NextResponse.next(), // res
+          sessionOptions
+        );
+        const isUser = Boolean(isCookie && user);
+        if (!isUser && !req.nextUrl.pathname.startsWith("/enter")) {
+          const url = req.nextUrl.clone();
+          url.pathname = "/enter";
+          return NextResponse.rewrite(url);
+        }
+        ```
+    - `req.geo`를 통해 사용자의 위치정보를 얻을 수 있음
+      - 특정 지역을 차단하거나 허용 가능
+    - <a href="https://nextjs.org/docs/app/building-your-application/routing/middleware" target="_blank">공식문서</a>
+  - Dynamic imports
+    - import문을 최상단에서 선언한다면, 해당 컴포넌트를 즉시 사용여부와 상관없이 download 함
+    - 즉시 사용하지 않는 컴포넌트는 사용할 때 download하여, App의 로딩시간을 최적화
+      - NextJS의 Dynamic imports를 이용해 사용 가능
+      - Lazy loading
+    - 사용법
+      ```
+      import dynamic from "next/dynamic";
+      const 컴포넌트명 = dynamic(() => import(경로), { ?옵션 });
+      ```
+      - 옵션
+        - `srr` : 서버단에서의 로딩 유무를 설정
+          - 몇몇 라이브러리나 패키지는 서바단에서 로딩하는 게 불가능 (에러)
+        - `loading` : 로딩 중에는 보여지는 커스텀 컴포넌트
+          - 사용법 : `loading: () => 컴포넌트`
+        - `suspense: true` : React 18에서 지원하는 로딩 중 보여지는 커스텀 컴포넌트
+          - 사용법
+            ```
+            <Suspense fallback={로딩 중에 보여줄 것}>
+              <다이나믹컴포넌트 />
+            </Suspense>
+            ```
+        - `loading` 또는 `suspense`(선호)를 사용
+    - 주의 사항
+      - 모든 컴포넌트를 dynamic 하지는 말 것 (App을 다 만든 후, 최적화 시 사용할 것)
+      - 컴포넌트의 크기가 크고 사용자의 인터넷이 느리다면, 다운로드 시간이 많이 걸릴 것
+  - 커스텀 document 컴포넌트 (`_document.tsx`)
+    - NextJS App의 HTML 뼈대를 만드는 역할
+      - 서버에서 한 번만 실행
+      - `_app.tsx`는 App의 청사진이며, 사용자가 페이지를 불러올 때마다 브라우저에서 실행됨
+    - &lt;html /&gt;, 폰트, SEO 등 설정 가능
+    - 파일명 : `/src/_document.tsx`
+    - 기본형 (필수 컴포넌트)
+      ```
+      import { Html, Head, Main, NextScript } from "next/document";
+      export default function Document() {
+        return (
+          <Html lang="ko">
+            <Head />
+            <body>
+              <Main />
+              <NextScript />
+            </body>
+          </Html>
+        )
+      }
+      ```
+      - `<Main />` : App 컴포넌트를 rendering 함
+    - 폰트 최적화 방법
+      - 'google fonts'에서 원하는 폰트의 &lt;link&gt;를 &lt;Head&gt; 내에 입력하기
+        - 'google fonts'에서 제공하는 폰트를 기반으로 NextJS 폰트 최적화가 가능
+        - build 시 자동으로 최적화 (개발단계에서는 최적화 x)
+          - 사용자가 다운받아야할 파일을 `@font-face`로 만들어 주므로, 사용자가 다운받을 필요 x
+    - 외부 script를 추가하는 방법
+      - 기본형: `<Script src="경로" />`
+      - `strategy` 프로퍼티 : script를 불러올 타이밍을 정할 수 있음
+        - `beforeInteractive` : 페이지를 다 불러와서 상호작용을 하기 전에 script를 불러옴
+        - `afterInteractive` : [기본값] 페이지를 다 불러온 후, script를 불러옴 (대부분의 경우)
+        - `lazyOnLoad` : 다른 모든 데이터나 소스들을 불러오고 나서야 script를 불러옴
+      - `onLoad` 프로퍼티 : script를 불러온 후, 실행되는 콜백함수
+    - <a href="https://nextjs.org/docs/pages/building-your-application/routing/custom-document" target="_blank">공식문서</a>
+- **24-02-28 : #19.6 ~ #19.15 / NextJS deep dive (2)**
 
 ---
 
+- **24-02-29 : #20.0 ~ #20.7 / Incremental site regeneration**
 - To-Do
   - useForm register의 검증 옵션 및 error 메시지 추가
     - [/enter] 특정 메일주소만 가입 가능하도록

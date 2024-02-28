@@ -19,6 +19,15 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
+/* Style "/blog" */
+.blog-post-content h1 {
+  @apply mb-5 text-red-500;
+}
+
+.blog-post-content p {
+  @apply mb-1 text-gray-700;
+}
+
 /* :root {
   --foreground-rgb: 0, 0, 0; 
   --background-start-rgb: 214, 219, 220;

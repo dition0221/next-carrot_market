@@ -1,14 +1,21 @@
 import Link from "next/link";
 import Image from "next/image";
-import useSWR from "swr";
+import useSWR, { SWRConfig } from "swr";
+import { getIronSession } from "iron-session";
 // LIBS
 import useUser from "@/libs/client/useUser";
 import { cls, getImage } from "@/libs/client/utils";
+import prismaClient from "@/libs/server/prismaClient";
+import {
+  type IIronSessionData,
+  sessionOptions,
+} from "@/libs/server/getSession";
 // COMPONENTS
 import Layout from "@/components/layout";
 import LinkProfile from "@/components/link-profile";
 // INTERFACE
 import type { Review } from "@prisma/client";
+import type { NextPageContext } from "next";
 
 interface ReviewWithUser extends Review {
   createdBy: {
@@ -24,7 +31,7 @@ interface IReviewList {
   error?: any;
 }
 
-export default function Profile() {
+function Profile() {
   // Profile
   const { user } = useUser();
 
@@ -35,13 +42,15 @@ export default function Profile() {
     <Layout title="나의 캐럿" hasTabBar>
       <div className="px-4">
         {/* Profile */}
-        <LinkProfile
-          avatar={user?.avatar}
-          userName={user?.name}
-          href="/profile/edit"
-          px={64}
-          isEdit
-        />
+        {user ? (
+          <LinkProfile
+            avatar={user?.avatar}
+            userName={user?.name}
+            href="/profile/edit"
+            px={64}
+            isEdit
+          />
+        ) : null}
 
         <section className="mt-10 flex justify-around">
           <Link href="/profile/sold" className="flex flex-col items-center">
@@ -159,4 +168,55 @@ export default function Profile() {
       </div>
     </Layout>
   );
+}
+
+export default function Page({ data }: { data: IReviewList }) {
+  return (
+    <SWRConfig
+      value={{
+        fallback: {
+          "/api/users/me": data,
+        },
+      }}
+    >
+      <Profile />
+    </SWRConfig>
+  );
+}
+
+export async function getServerSideProps({ req, res }: NextPageContext) {
+  try {
+    // Get user data
+    const { user } = await getIronSession<IIronSessionData>(
+      req!,
+      res!,
+      sessionOptions
+    );
+    if (!user) throw new Error("Please log-in");
+    const profile = await prismaClient.user.findUnique({
+      where: {
+        id: user?.id,
+      },
+    });
+    if (!profile) throw new Error("Not found profile");
+
+    return {
+      props: {
+        userData: {
+          ok: true,
+          profile: JSON.parse(JSON.stringify(profile)),
+        },
+      },
+    };
+  } catch (error) {
+    console.log(error);
+    return {
+      props: {
+        userData: {
+          ok: false,
+          error: (error as Error).message || error,
+        },
+      },
+    };
+  }
 }

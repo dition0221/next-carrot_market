@@ -1,12 +1,14 @@
-import useSWR from "swr";
+import useSWR, { SWRConfig } from "swr";
+// LIBS
+import prismaClient from "@/libs/server/prismaClient";
 // COMPONENTS
 import Layout from "@/components/layout";
 import FloatingButton from "@/components/floating-button";
 import Item from "@/components/item";
 // INTERFACE
-import type { IProductList } from "./api/products";
+import type { IProductList } from "@/pages/api/products";
 
-export default function Home() {
+function Home() {
   // Fetch 'Product' list from DB
   const { data } = useSWR<IProductList>("/api/products");
 
@@ -25,7 +27,7 @@ export default function Home() {
             title={product.name}
             price={product.price}
             imageUrl={product.imageUrl}
-            hearts={product._count.Records}
+            hearts={product._count?.Records ?? 0}
             key={product.id}
           />
         ))}
@@ -50,4 +52,55 @@ export default function Home() {
       </FloatingButton>
     </Layout>
   );
+}
+
+export default function Page({ data }: { data: IProductList }) {
+  return (
+    <SWRConfig
+      value={{
+        fallback: {
+          "/api/products": data,
+        },
+      }}
+    >
+      <Home />
+    </SWRConfig>
+  );
+}
+
+export async function getServerSideProps() {
+  try {
+    const products = await prismaClient.product.findMany({
+      include: {
+        _count: {
+          select: {
+            Records: {
+              where: {
+                kind: "Favorite",
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return {
+      props: {
+        data: {
+          ok: true,
+          products: JSON.parse(JSON.stringify(products)),
+        },
+      },
+    };
+  } catch (error) {
+    console.log(error);
+    return {
+      props: {
+        data: {
+          ok: false,
+          error,
+        },
+      },
+    };
+  }
 }
