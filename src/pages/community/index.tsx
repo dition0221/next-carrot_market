@@ -2,6 +2,7 @@ import useSWR from "swr";
 // LIBS
 import useCoords from "@/libs/client/useCoords";
 import { formatTime } from "@/libs/client/utils";
+import prismaClient from "@/libs/server/prismaClient";
 // COMPONENTS
 import FloatingButton from "@/components/floating-button";
 import Layout from "@/components/layout";
@@ -27,8 +28,8 @@ interface IPostList {
   error?: any;
 }
 
-export default function Community() {
-  // Get user's coordination
+export default function Community({ ok, posts, error }: IPostList) {
+  /* // Get user's coordination
   const { latitude, longitude } = useCoords();
 
   // Get 'post' list
@@ -36,16 +37,18 @@ export default function Community() {
     latitude && longitude
       ? `/api/posts?latitude=${latitude}&longitude=${longitude}`
       : null
-  );
+  ); */
+
+  //
 
   return (
     <Layout title="동네생활" hasTabBar>
-      <section className="space-y-8">
-        {data?.posts?.map((post) => (
+      <section>
+        {posts?.map((post) => (
           <Link
             key={post.id}
             href={`/community/${post.id}`}
-            className="flex flex-col items-start cursor-pointer rounded-lg hover:bg-slate-50 transition-colors"
+            className="flex flex-col items-start pt-4 cursor-pointer rounded-lg hover:bg-slate-50 transition-colors"
           >
             <span className="flex ml-4 items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
               동네질문
@@ -116,4 +119,45 @@ export default function Community() {
       </section>
     </Layout>
   );
+}
+
+export async function getStaticProps() {
+  try {
+    const posts = await prismaClient.post.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+          },
+        },
+        _count: {
+          select: {
+            Wonderings: true,
+            Answers: true,
+          },
+        },
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+    });
+    if (posts.length === 0) throw new Error("Not Found");
+
+    return {
+      props: {
+        ok: true,
+        posts: JSON.parse(JSON.stringify(posts)),
+      },
+    };
+  } catch (error) {
+    console.log(error);
+    return {
+      props: {
+        ok: false,
+        error: (error as Error).message || error,
+      },
+    };
+  }
 }

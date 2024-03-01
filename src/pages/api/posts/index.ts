@@ -33,6 +33,7 @@ async function handler(
           },
         },
       });
+      res.revalidate("/community"); // ODR
       return res.status(200).json({ ok: true, post });
     } catch (error) {
       console.log(error);
@@ -81,6 +82,9 @@ async function handler(
               longitude: null,
             },
           ],
+        },
+        orderBy: {
+          updatedAt: "desc",
         },
       });
       return res.status(200).json({ ok: true, posts });

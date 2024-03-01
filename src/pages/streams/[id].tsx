@@ -7,7 +7,7 @@ import useUser from "@/libs/client/useUser";
 // COMPONENTS
 import Layout from "@/components/layout";
 import Message from "@/components/message";
-import NotFound from "@/components/404";
+import NotFound from "@/components/404-message";
 // INTERFACE
 import type { Stream } from "@prisma/client";
 

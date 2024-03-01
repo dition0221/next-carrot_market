@@ -1,4 +1,4 @@
-import type { GetStaticPropsContext } from "next";
+import type { GetStaticPaths, GetStaticPropsContext } from "next";
 import { readdirSync } from "fs";
 import matter from "gray-matter";
 import { unified } from "unified";
@@ -26,17 +26,12 @@ export default function Post({ data, post }: IPostProps) {
   );
 }
 
-export function getStaticPaths() {
-  const files = readdirSync("src/posts").map((file) => {
-    const [name, _] = file.split(".");
-    return { params: { slug: name } };
-  });
-
+export const getStaticPaths: GetStaticPaths = () => {
   return {
-    paths: files,
-    fallback: false,
+    paths: [],
+    fallback: "blocking",
   };
-}
+};
 
 export async function getStaticProps(ctx: GetStaticPropsContext) {
   const { data, content } = matter.read(`src/posts/${ctx.params?.slug}.md`);

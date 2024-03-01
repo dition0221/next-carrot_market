@@ -43,7 +43,7 @@ export default function CommunityWrite() {
   // Succeed post => Go this post
   useEffect(() => {
     if (data?.post) {
-      router.push(`/community/${data.post.id}`);
+      router.replace(`/community/${data.post.id}`);
     }
   }, [data?.post, router]);
 

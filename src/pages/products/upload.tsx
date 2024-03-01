@@ -96,7 +96,7 @@ export default function ProductUpload() {
   // When finish uploading, Go to 'product detail' page
   useEffect(() => {
     if (data?.ok && data.product) {
-      router.push(`/products/${data.product.id}`);
+      router.replace(`/products/${data.product.id}`);
     }
   }, [data, router]);
 

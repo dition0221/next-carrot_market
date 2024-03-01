@@ -2130,12 +2130,287 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
       - `onLoad` 프로퍼티 : script를 불러온 후, 실행되는 콜백함수
     - <a href="https://nextjs.org/docs/pages/building-your-application/routing/custom-document" target="_blank">공식문서</a>
 - **24-02-28 : #19.6 ~ #19.15 / NextJS deep dive (2)**
+  - getServerSideProps (SSR)
+    - 페이지 컴포넌트가 서버단에서만 rendering 됨
+      - `getServerSideProps`에서 반환된 데이터를 사용하여, 각 요청에서 이 페이지를 미리 rendering 함
+    - 사용자의 요청이 발생할 때 마다 동작
+    - 기본형
+      ```
+      export async function getServerSideProps(ctx: NextPageContext) {
+        return {
+          props: {}, // 페이지 컴포넌트에 props로 전송
+        }
+      }
+      ```
+    - 장점
+      1. 로딩 상태를 보여주지 않음
+      2. 소스코드 내부에 정보가 담김
+      3. GET 요청 API handler를 굳이 만들지 않아도 됨 (DB 직접 사용 가능)
+    - 단점
+      - 페이지를 알아서 새로고침 해주는 패키지(SWR 등)를 사용 불가
+        - static optimization 이나 cache 등을 사용 불가
+      - error 시 사용자는 UI를 볼 수 없음
+    - `Date` 타입 등을 읽지 못하는 경우, `JSON.parse(JSON.stringify(변수명))`을 사용해 반환
+    - <a href="https://nextjs.org/docs/pages/building-your-application/data-fetching/get-server-side-props" target="_blank">공식문서</a>
+  - SSR + SWR 패키지
+    - `useSWR()` 실행 전 미리 cache를 제공하여, cache가 있는 상태로 시작
+      - client에서는 `useSWR()`을 그대로 사용 가능
+    - export default인 컴포넌트로 getServerSideProps의 props가 전달 됨
+    - 기본형
+      ```
+      function 페이지컴포넌트() { ... }
+      export default function 컴포넌트명(SSR로부터받는props) {
+        return (
+          <SWRConfig
+            value={{
+              fallback: {
+                "경로1": 데이터값1,
+                "경로2": 데이터값2,
+              },
+            }}
+          >
+            <페이지컴포넌트 />
+          </SWRConfig>
+        )
+      }
+      export function getServerSideProps() { ... }
+      ```
+    - ex.
+      ```
+      function Home() {
+        const { data } = useSWR<IProductList>("/api/products");
+        ......
+      }
+      export default function Page({ data }: { data: IProductList }) {
+        return (
+          <SWRConfig
+            value={{
+              fallback: {
+                "/api/products": data,
+              },
+            }}
+          >
+            <Home />
+          </SWRConfig>
+        )
+      }
+      export async function getServerSideProps() {
+        try {
+          const products = await prismaClient.product.findMany({});
+          return {
+            props: {
+              data: {
+                ok: true,
+                products: JSON.parse(JSON.stringify(products)),
+              },
+            },
+          };
+        } catch (error) {
+          console.log(error);
+          return {
+            props: {
+              data: {
+                ok: false,
+                error,
+              },
+            },
+          };
+        }
+      }
+      ```
+    - <a href="https://github.com/helious23/max-market/blob/5ed8d03e3ed9b5fb0e898f16a7558b778434618b/pages/index.tsx#L59" target="_blank">무한스크롤 참고용</a>
+  - SSR + Authentication
+    - `getServerSideProps()`의 인자로부터 `context` 값을 가져올 수 있음
+      - 타입 : `NextPageContext`
+      - ex.
+        ```
+        import { getIronSession } from "iron-session";
+        export async function getServerSideProps({ req, res }: NexPageContext) {
+          const session = await getIronSession<제네릭>(
+            req!,
+            res!,
+            세션옵션
+          );
+          ......
+        }
+        ```
+    - 개인화된 사용자 데이터 또느 요청 시에만 알 수 있는 정보에 의존하는 페이지를 렌더링해야 하는 경우, `getServerSideProps`를 사용해야 함
+      - ex. 승인 헤더 또는 위치 정보
+    - 요청 시 데이터를 가져올 필요가 없거나 데이터와 미리 렌더링된 HTML을 캐시하기를 선호하는 경우, `getStaticProps`를 사용하느 것이 좋음
+  - getStaticProps (SSG)
+    - 정적(static) 웹사이트를 만들어주게 하는 기능
+      - 정적(static) : 데이터가 바뀌지 않는 것 (API fetch x)
+    - `getStaticProps`를 사용해야하는 상황
+      - 페이지를 rendering하는 데 필요한 데이터는 사용자의 request보다 먼저 build 타임에서 이용가능해야 함
+      - 데이터는 헤드리스 CMS에서 가져옴
+      - 데이터를 공개적으로 cache 가능
+      - 페이지는 SEO를 위해 미리 렌더링되어야 하고, 매우 빨라야 함
+      - `getStaticProps`는 성능을 위해 CDN에서 cache할 수 있는 HTML 및 JSON 파일을 생성함
+    - `getServerSideProps`는 사용자의 요청이 발생할 때 마다 동작하지만, `getStaticProps`는 딱 한 번만 실행됨
+      - build 시 페이지를 export한 후 일반 HTML이 될 때
+    - DB 또는 .md 파일 등을 이용해 정적 페이지 생성 가능
+    - 기본형
+      ```
+      export async function getStaticProps(ctx: GetStaticPropsContext) {
+        return {
+          props: {},
+        },
+      }
+      ```
+  - gray-matter 패키지
+    - .md파일의 front-matter를 파싱하는 패키지
+    - front-matter : .md파일의 최상단에 위치한 메타데이터 블록
+      - 기본형
+        ```
+        ---
+        원하는키명: 원하는값
+        ---
+        ```
+    - 설치법 : `npm i gray-matter -D`
+    - 기본형
+      ```
+      import matter from "gray-matter";
+      matter(파일변수, { ?옵션 });
+      ```
+    - 데이터 형태
+      ```
+      {
+        content: 내용,
+        data: {
+          키명: 값,
+        }
+        isEmpty: 불리안값,
+        excerpt: 값,
+      }
+      ```
+    - `getStaticProps`와 함께 사용해 .md파일을 이용한 정적페이지를 생성 가능
+      - ex.
+        ```
+        interface IBlogProps {
+          posts: {
+            title: string;
+            date: string;
+            category: string;
+          }[];
+        }
+        export default function Blog({ posts }: IBlogProps) {
+          return (
+            <h1>Latest Posts :</h1>
+            <ul>
+              {posts.map((post, idx) => (
+                <li key={idx}>
+                  <p>{post.title}</p>
+                  <span>{post.date} / {post.category}</span>
+                </li>
+              ))}
+            </ul>
+          );
+        }
+        export async function getStaticProps() {
+          // normal node.js
+          const blogPosts = readdirSync("src/posts").map((file) => {
+            const content = readFileSync(`src/posts/${file}`, "utf-8");
+            return matter(content).data;
+          });
+          return {
+            props: {
+              posts: blogPosts,
+            },
+          };
+        }
+        ```
+    - <a href="https://www.npmjs.com/package/gray-matter" target="_blank">공식문서</a>
+  - getStaticPaths
+    - 정적 경로(static path)를 생성하기 위해 사용되는 메서드
+      - 동적인 URL을 갖는 페이지에서 `getStaticProps`를 사용할 때 필요함
+    - dynamic params는 동적인 페이지라서 변수의 값이 무한하지만, 정적인 페이지에서는 따로 유한한 값(몇 개의 페이지를 갖는지)을 명시해야 함
+      - 미리 HTML 페이지를 생성해야하기 때문
+    - 기본형
+      ```
+      export function getStaticPaths() {
+        return {
+          paths: 배열값,
+          fallback: 불리안값,
+        };
+      }
+      ```
+      - `path` : `{ params: { 동적변수: 값 } }[]` 형태이어야 함
+      - `fallback` : 미리 build된 페이지가 없는 경우, NextJS가 동적 페이지를 생성하는 방법을 제어하는 옵션
+        - false : 미리 정의된 경로 이외의 요청은 404 페이지를 반환
+        - true : 미리 정의된 경로 이외의 쵸엉에 대해 동적으로 페이지를 생성하고, 해당 페이지를 캐싱함
+          - 사용자가 요청한 페이지에 대해 동적으로 생성된 페이지를 제공 가능
+        - "blocking" : 미리 정의된 경로 이외의 요청에 대해 동적으로 페이지를 생성하지만, 요청이 발생할 때까지 build를 차단함
+          - 장점 : 요청에 대한 응답을 기다리지 않고 미리 정의된 경로에 대한 페이지를 build할 수 있음
+          - 단점: 많은 양의 동적 페이지가 있는 경우 서버 부하를 초래함
+    - `getStaticProps()`의 `context`가 `getStaticPaths()`가 return하는 각각의 `path`들을 호출함
+      - 기본형 : `ctx.params?.동적변수명`
+  - remark-html 패키지
+    - Markdown을 파싱하고 HTML로 변환하는 패키지
+    - 설치법 : `npm i remark-html remark-parse unified`
+    - 기본형
+      ```
+      import remarkHtml from "remark-html";
+      import remarkParse from "remark-parse";
+      import { unified } from "unified";
+      const 파일변수 = await unified()
+        .use(remarkParse)
+        .use(remarkHtml)
+        .process(md파일내용);
+      ```
+    - ex.
+      ```
+      // [slug].tsx
+      interface IPostProps {
+        post: string;
+      }
+      export default function Post({ post }: IPostProps) {
+        return <div>{post}</div>;
+      }
+      export function getStaticPaths() {
+        const files = readdirSync("src/posts").map((file) => {
+          const [name, _] = file.split(".");
+          return { params: { slug: name } };
+        });
+        return {
+          paths: files,
+          fallback: false,
+        };
+      }
+      export async function getStaticProps(ctx: GetStaticPropsContext) {
+        const { content } = matter.read(`src/posts/${ctx.params?.slug}.md`);
+        const { value } = await unified()
+          .use(remarkParse)
+          .use(remarkHtml)
+          .process(content);
+        return {
+          props: {
+            post: value,
+          },
+        };
+      }
+      ```
+    - <a href="https://www.npmjs.com/package/remark-html" target="_blank">공식문서</a>
+  - InnerHTML
+    - React가 자동으로 텍스트가 HTML 코드라면 실행시키지 않음
+    - 신뢰할 수 있는 데이터(변수)를 HTML로 바꾸는 방법
+      - 요소에서 `dangerouslySetInnerHTML={{ __html: 변수 }}`
+      - style 적용이 안 되어있기 때문에 CSS 스타일링을 해야함
+    - 일반 CSS에서 Tailwind를 사용하는 방법
+      - 기본형 : `선택자 { @apply Tailwind문법 }`
+      - ex.
+        ```
+        .blog-post-content h1 {
+          @apply mb-5 text-red-500;
+        }
+        <div className="blog-post-content" />
+        ```
+- **24-02-29 : #20.0 ~ #20.7 / Incremental site regeneration**
+  <!-- TODO: [/community/[id].tsx] 정적페이지로 만들기 -->
 
 ---
 
-- **24-02-29 : #20.0 ~ #20.7 / Incremental site regeneration**
 - To-Do
-  - useForm register의 검증 옵션 및 error 메시지 추가
+  - [form] useForm register의 검증 옵션 및 error 메시지 추가
     - [/enter] 특정 메일주소만 가입 가능하도록
     - .etc
   - [Token] 한 계정이 token을 여러 개 생성 시 최신 하나만 유지하도록 하기
@@ -2144,20 +2419,21 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
     - 토큰이 존재하는 경우, 토큰 재생성 못하게 막기
   - [Token] payload(난수)가 겹칠 수 있는 문제 해결
   - [Token] 다른 계정의 token을 사용하는 문제 해결 (자신의 token만 사용하도록 하기)
-  - isLoading, 데이터가 없는 경우의 화면 구현하기
+  - [skeleton] isLoading, 데이터가 없는 경우의 화면 구현하기
     - `react-loading-skeleton` 패키지 사용
     - [/products/[id].tsx]
     - [/community/[id].tsx]
     - [/profile/index.tsx]
     - .etc
-  - 404페이지 만들기 (data가 없을 시)
+  - [404] 404페이지 만들기 (data가 없을 시)
     - [/products/[id].tsx]
     - [/community/[id].tsx]
-  - useSWR()의 error 핸들링하기
+  - [error] useSWR()의 error 핸들링하기
   - [무한스크롤] 홈, 동네생활, 판매내역, 구매내역, 관심목록에 적용하기
   - [/api/users/me/index.ts] POST부분 리팩토링
-  - 사용자 프로필 페이지 생성하기
+  - [/user/profile/[id].tsx]사용자 프로필 페이지 생성하기
   - [stream] 이미지 추가하기
   - [채팅방] 채팅방 삭제 및 물건 post 삭제 기능 구현하기
   - [middleware] 특정 지역 차단하기
   - [SEO] 모든 페이지에 &lt;title&gt; 적기
+  - [render] 모든 페이지에 렌더링 방식 재설정

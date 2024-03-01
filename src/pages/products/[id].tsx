@@ -40,7 +40,6 @@ export default function ProductDetail() {
   const { id } = router.query;
 
   // Fetch 'Product'
-  // TODO: isLoading 화면구현하기 (w. skeleton)
   const { data, mutate: boundMutate } = useSWR<IProductDetailResponse>(
     id ? `/api/products/${id}` : null
   );
