@@ -2334,7 +2334,7 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
         };
       }
       ```
-      - `path` : `{ params: { 동적변수: 값 } }[]` 형태이어야 함
+      - `paths` : `{ params: { 동적변수: 값 } }[]` 형태이어야 함
       - `fallback` : 미리 build된 페이지가 없는 경우, NextJS가 동적 페이지를 생성하는 방법을 제어하는 옵션
         - false : 미리 정의된 경로 이외의 요청은 404 페이지를 반환
         - true : 미리 정의된 경로 이외의 쵸엉에 대해 동적으로 페이지를 생성하고, 해당 페이지를 캐싱함
@@ -2404,8 +2404,85 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
         }
         <div className="blog-post-content" />
         ```
-- **24-02-29 : #20.0 ~ #20.7 / Incremental site regeneration**
-  <!-- TODO: [/community/[id].tsx] 정적페이지로 만들기 -->
+- **24-03-01 : #20.0 ~ #20.7 / ISR (Incremental Static Regeneration)**
+  - ISR (Incremental Static Regeneration; 단계적 정적 재생성)
+    - 데이터가 포함된 페이지를 불러올 때 CSR 또는 SSR 방식을 택해야 함
+    - ISR 방식은 `getStaticProps`처럼 페이지를 미리 정적인 상태로 변환시키나, build 시에만 적용되는 단점을 개선한 방식
+      - 정적 페이지를 백그라운드에서 개별적으로 몇 번이고 다시 생성시킬 수 있음
+      - Front단에서 ReactJS코드(fetch)가 필요하지 x
+    - 장점
+      1. 페이지 로딩 상태가 전혀 나타나지 않음
+      2. 서버단에서 페이지를 rendering하지 않아도 됨
+         - 사용자가 요청할 때 마다 서버단에서 실행 x
+      3. 표시되는 데이터는 가장 최신 데이터
+         - 사실은 백그라운드에서 생성한 캐싱된 HTML 페이지를 표시
+    - 기본형
+      ```
+      export async function getStaticProps() {
+        return {
+          props: {},
+          revalidate: 초단위,
+        }
+      }
+      ```
+      - `revalidate` : [초단위] 정적 페이지의 재생성 주기
+    - 사용자가 아닌 웹사이트가 기준이며, 주기적으로 데이터를 업데이트하여 static 페이지를 제공
+    - 일반적으로 ISR이 SSR 보다 DB를 적게 사용함
+      - ISR이 캐싱된 정적 페이지를 제공하는 동안 DB에 접근할 필요가 없기 때문
+    - <a href="https://nextjs.org/docs/pages/building-your-application/data-fetching/incremental-static-regeneration" target="_blank">공식문서</a>
+  - ODR (On-Demand Revalidation)
+    - 수동(사용자 요청)으로 `getStaticProps`를 API handler로 작동 가능
+      - 모든 페이지를 HTML로 제작 가능
+    - 기존의 ISR에서 정적 페이지를 재생성할 수 있는 방법은 사용자가 `revalidate` 시간 이후에 페이지를 방문하는 것
+    - 기본형 : API handler에서 `await res.revalidate(URL경로)`
+      - ODR 사용 시 ISR의 `revalidate`는 사용하지 않아도 됨
+    - 무분별하게 ODR을 실행하는 것을 막기위해 ODR API에 비밀 token을 추가하여 사용할 것
+      - `rewrites()`를 사용해 Front단에서 token을 가림
+    - <a href="https://nextjs.org/docs/pages/building-your-application/data-fetching/incremental-static-regeneration#on-demand-revalidation" target="_blank">공식문서</a>
+  - 동적 경로(dynamic params)에서의 ISR 사용
+    - 미리 알 수 없는 params에 대해 정적 페이지를 설정하여 사용
+    - 사용법
+      1. 동적 페이지를 정적 페이지(getStaticProps)로 바꾸기
+      2. 정적 경로(getStaticPaths) 설정하기
+         - build 시 모든 DB의 데이터를 가져오는 것은 좋은 방법이 아님
+         - `getStaticPaths`에서 빈 배열의 경로들을 반환하고, 사용자의 요청에 따라 미리 만들도록 함
+         - 기본형
+           ```
+           export function getStaticPaths() {
+             return {
+               paths: [],
+               fallback: "blocking",
+             }
+           }
+           ```
+           - `fallback: "blocking"` : getStaticPaths를 가지는 페이지에 방문 시 해당 HTML파일이 없다면, 사용자를 잠시 기다리게 한 뒤 백그라운드에서 페이지를 생성한 후 보여줌
+             - 서버단에서 실행되며, 첫 실행 시 딱 한 번만 일어남
+           - `fallback: true` : "blocking"처럼 작동하지만, 로딩 중에도 화면을 보여줌
+             - `useRouter().isFallback` 조건문을 통해 로딩 중 화면을 보여줄 수 있음
+- **24-03-04 : [Challenge] ISR (Incremental Static Regeneration)**
+  - [Challenge] `/community/[id].tsx`를 정적 페이지로 만들기
+    - `getStaticProps`(SSG)를 사용해 대부분의 데이터를 가져옴
+      - 궁금해요, 댓글 데이터 변경 시 `await res.revalidate(경로)`를 실행하여, 정적 페이지 갱신
+      - 동적 URL에 대해 `getStaticPaths` 사용
+        ```
+        export const getStaticPaths: GetStaticPaths = () => {
+          return {
+            paths: [],
+            fallback: "blocking",
+          };
+        };
+        ```
+    - `isWondering` 부분은 사용자(session)마다 값이 다르므로, 이것만 CSR 방식으로 가져옴
+      - 정적 페이지에서는 req, res, session 등 사용 불가
+    - mutate
+      - 궁금해요 : `useSWR()`의 mutate 사용
+      - 댓글 : 댓글배열.push()
+    - ISSUE : 상대시간(timeago.js 등)에 대해 client와 server간 콘텐츠 불일치 에러 발생
+      - <a href="https://nextjs.org/docs/messages/react-hydration-error" target="_blank">공식문서</a>
+    - 궁금해요, 댓글 등 상호작용 요소가 많기 때문에 정적페이지 사용이 별로인 것 같음
+      - 오히려 DB 사용량이 더 많은 것 같음
+        - 요청 시 마다 '궁금해요' DB를 사용함
+        - 댓글, 궁금해요 POST 시 DB 사용 및 `res.revalidate()`
 
 ---
 
@@ -2430,6 +2507,7 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
     - [/community/[id].tsx]
   - [error] useSWR()의 error 핸들링하기
   - [무한스크롤] 홈, 동네생활, 판매내역, 구매내역, 관심목록에 적용하기
+    - [DB] take, skip 사용하기
   - [/api/users/me/index.ts] POST부분 리팩토링
   - [/user/profile/[id].tsx]사용자 프로필 페이지 생성하기
   - [stream] 이미지 추가하기

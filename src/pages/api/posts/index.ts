@@ -33,7 +33,8 @@ async function handler(
           },
         },
       });
-      res.revalidate("/community"); // ODR
+
+      await res.revalidate("/community"); // ODR
       return res.status(200).json({ ok: true, post });
     } catch (error) {
       console.log(error);

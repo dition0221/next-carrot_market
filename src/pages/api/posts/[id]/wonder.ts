@@ -63,6 +63,11 @@ async function handler(
         },
       });
     }
+
+    // ODR (On-Demand Revalidation)
+    await res.revalidate(`/community/${id}`);
+    await res.revalidate("/community");
+
     return res.status(200).json({ ok: true });
   } catch (error) {
     console.log(error);

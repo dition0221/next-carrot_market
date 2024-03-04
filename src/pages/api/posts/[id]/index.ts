@@ -20,41 +20,41 @@ async function handler(
   if (!user) return res.status(401).json({ ok: false, error: "Please log-in" });
 
   // Get 'post' from DB
-  const post = await prismaClient.post.findUnique({
-    where: {
-      id: +id,
-    },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          avatar: true,
-        },
-      },
-      Answers: {
-        select: {
-          id: true,
-          answer: true,
-          createdAt: true,
-          user: {
-            select: {
-              id: true,
-              name: true,
-              avatar: true,
-            },
-          },
-        },
-      },
-      _count: {
-        select: {
-          Answers: true,
-          Wonderings: true,
-        },
-      },
-    },
-  });
-  if (!post) return res.status(404).json({ ok: false, error: "404 Not Found" });
+  // const post = await prismaClient.post.findUnique({
+  //   where: {
+  //     id: +id,
+  //   },
+  //   include: {
+  //     user: {
+  //       select: {
+  //         id: true,
+  //         name: true,
+  //         avatar: true,
+  //       },
+  //     },
+  //     Answers: {
+  //       select: {
+  //         id: true,
+  //         answer: true,
+  //         createdAt: true,
+  //         user: {
+  //           select: {
+  //             id: true,
+  //             name: true,
+  //             avatar: true,
+  //           },
+  //         },
+  //       },
+  //     },
+  //     _count: {
+  //       select: {
+  //         Answers: true,
+  //         Wonderings: true,
+  //       },
+  //     },
+  //   },
+  // });
+  // if (!post) return res.status(404).json({ ok: false, error: "404 Not Found" });
 
   const isWondering = Boolean(
     await prismaClient.wondering.findFirst({
@@ -68,7 +68,7 @@ async function handler(
     })
   );
 
-  return res.status(200).json({ ok: true, post, isWondering });
+  return res.status(200).json({ ok: true, isWondering });
 }
 
 export default withHandler({
