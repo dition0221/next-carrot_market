@@ -34,7 +34,6 @@ async function handler(
         },
       });
 
-      await res.revalidate("/community"); // ODR
       return res.status(200).json({ ok: true, post });
     } catch (error) {
       console.log(error);

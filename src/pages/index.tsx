@@ -54,12 +54,16 @@ function Home() {
   );
 }
 
-export default function Page({ data }: { data: IProductList }) {
+export default function Page({ ok, products, error }: IProductList) {
   return (
     <SWRConfig
       value={{
         fallback: {
-          "/api/products": data,
+          "/api/products": {
+            ok,
+            products,
+            error,
+          },
         },
       }}
     >
@@ -86,20 +90,16 @@ export async function getServerSideProps() {
 
     return {
       props: {
-        data: {
-          ok: true,
-          products: JSON.parse(JSON.stringify(products)),
-        },
+        ok: true,
+        products: JSON.parse(JSON.stringify(products)),
       },
     };
   } catch (error) {
     console.log(error);
     return {
       props: {
-        data: {
-          ok: false,
-          error,
-        },
+        ok: false,
+        error,
       },
     };
   }

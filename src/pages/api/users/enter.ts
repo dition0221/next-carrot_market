@@ -23,6 +23,14 @@ async function handler(
   const payload = Math.floor(100000 + Math.random() * 900000) + "";
 
   try {
+    // First, Delete all tokens of user
+    await prismaClient.token.deleteMany({
+      where: {
+        user: {
+          ...method,
+        },
+      },
+    });
     // Create token & if user doesn't exist, Create user
     const token = await prismaClient.token.create({
       data: {
@@ -67,7 +75,7 @@ async function handler(
     }
     */
 
-    return res.status(200).json({ ok: true });
+    return res.status(200).json({ ok: true, ...method });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ ok: false, error });

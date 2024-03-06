@@ -141,9 +141,13 @@ export default function EditProfile() {
             <input
               {...register("avatar", {
                 validate: {
-                  isImage: (value) =>
-                    (value && value[0].type.includes("image")) ||
-                    "이미지 파일만 업로드 가능합니다.",
+                  isImage: (value) => {
+                    if (!value?.[0]) return true;
+                    return (
+                      (value && value[0]?.type.includes("image")) ||
+                      "이미지 파일만 업로드 가능합니다."
+                    );
+                  },
                 },
               })}
               id="avatar"

@@ -1,22 +1,24 @@
 import { useRouter } from "next/router";
-import useSWR, { SWRConfig, unstable_serialize } from "swr";
+import useSWR, { SWRConfig } from "swr";
 import { useForm } from "react-hook-form";
-import { useEffect, useState } from "react";
 import Image from "next/image";
+import { getIronSession } from "iron-session";
+import { useEffect } from "react";
 // LIBS
 import useMutation from "@/libs/client/useMutation";
 import { cls, formatTime, getImage } from "@/libs/client/utils";
-import useUser from "@/libs/client/useUser";
 import prismaClient from "@/libs/server/prismaClient";
+import { IIronSessionData, sessionOptions } from "@/libs/server/getSession";
 // COMPONENTS
 import Button from "@/components/button";
 import Layout from "@/components/layout";
 import Textarea from "@/components/textarea";
 import LinkProfile from "@/components/link-profile";
 import FormErrorMessage from "@/components/form-error-msg";
+import NotFoundPage from "@/components/404-page";
 // INTERFACE
 import type { Answer, Post } from "@prisma/client";
-import type { GetStaticPaths, GetStaticProps } from "next";
+import type { GetServerSideProps } from "next";
 
 interface AnswerWithUser {
   id: number;
@@ -47,6 +49,7 @@ interface ICommunityPostRes {
   post?: PostWithUser;
   isWondering: boolean;
   error?: any;
+  id: string;
 }
 
 interface IAnswerForm {
@@ -59,13 +62,8 @@ interface IAnswerResponse {
   error?: any;
 }
 
-export default function CommunityDetail({
-  ok,
-  post,
-  error,
-}: ICommunityPostRes) {
+function CommunityDetail() {
   const { id } = useRouter().query; // postId
-  const { user } = useUser();
 
   // Get 'post' data
   const { data, mutate } = useSWR<ICommunityPostRes>(
@@ -74,32 +72,24 @@ export default function CommunityDetail({
 
   // Mutate 'isWondering'
   const [wonder, { isLoading }] = useMutation(`/api/posts/${id}/wonder`);
-  const [wonderCount, setWonderCount] = useState(post?._count.Wonderings ?? 0);
-  const [isWondering, setIsWondering] = useState(false);
-  useEffect(() => {
-    if (data?.ok) setIsWondering(data.isWondering);
-  }, [data?.isWondering, data?.ok]);
   const onWonderClick = () => {
-    if (!data || isLoading) return;
-    // if (!data || !data.post || isLoading) return;
-    // mutate(
-    //   {
-    //     ...data,
-    //     post: {
-    //       ...data.post,
-    //       _count: {
-    //         ...data.post._count,
-    //         Wonderings: data.isWondering
-    //           ? data.post._count.Wonderings - 1
-    //           : data.post._count.Wonderings + 1,
-    //       },
-    //     },
-    //     isWondering: !data.isWondering,
-    //   },
-    //   false
-    // );
-    setIsWondering((prev) => !prev);
-    setWonderCount((prev) => (isWondering ? prev - 1 : prev + 1));
+    if (!data?.post || isLoading) return;
+    mutate(
+      {
+        ...data,
+        post: {
+          ...data.post,
+          _count: {
+            ...data.post._count,
+            Wonderings: data.isWondering
+              ? data.post._count.Wonderings - 1
+              : data.post._count.Wonderings + 1,
+          },
+        },
+        isWondering: !data.isWondering,
+      },
+      false
+    );
     wonder({}); // DB
   };
 
@@ -112,7 +102,6 @@ export default function CommunityDetail({
   } = useForm<IAnswerForm>();
 
   // Post 'answer' data
-  const [replyCount, setReplyCount] = useState(post?._count.Answers ?? 0);
   const [sendAnswer, { data: answerData, isLoading: isAnswerLoading }] =
     useMutation<IAnswerResponse>(`/api/posts/${id}/answers`);
   const onValid = (formData: IAnswerForm) => {
@@ -120,22 +109,12 @@ export default function CommunityDetail({
     sendAnswer(formData); // DB
   };
   useEffect(() => {
-    if (answerData?.ok && answerData.answer && user) {
+    // Mutate new 'answer'
+    if (answerData?.ok) {
+      mutate();
       reset();
-      // Mutate 'reply'
-      post?.Answers.push({
-        id: answerData.answer.id,
-        answer: answerData.answer.answer,
-        createdAt: new Date(Date.now()).toISOString(),
-        user: {
-          id: user.id,
-          name: user.name,
-          avatar: user.avatar,
-        },
-      });
-      setReplyCount((prev) => prev + 1);
     }
-  }, [answerData, post, reset, user]);
+  }, [answerData?.ok, answerData?.answer?.id, reset, mutate]);
 
   return (
     <Layout canGoBack>
@@ -146,9 +125,9 @@ export default function CommunityDetail({
       {/* Profile */}
       <section className="px-4 py-3 mb-3 border-b">
         <LinkProfile
-          avatar={post?.user.avatar}
-          userName={post?.user.name}
-          href={`/users/profiles/${post?.userId}`}
+          avatar={data?.post?.user.avatar}
+          userName={data?.post?.user.name}
+          href={`/users/profiles/${data?.post?.userId}`}
           px={40}
         />
       </section>
@@ -156,15 +135,22 @@ export default function CommunityDetail({
       <section>
         <div className="mt-2 px-4 text-gray-700">
           <span className="text-orange-500 font-medium">Q.&nbsp;</span>
-          <span>{post?.question}</span>
-          <p className="mt-2 text-xs text-gray-500">{post?.updatedAt + ""}</p>
+          <span>{data?.post?.question}</span>
+          <p className="mt-2 text-xs text-gray-500">
+            <time
+              dateTime={data?.post?.updatedAt + ""}
+              suppressHydrationWarning
+            >
+              {formatTime(data?.post?.updatedAt + "", true)}
+            </time>
+          </p>
         </div>
         <div className="flex px-4 space-x-6 mt-3 text-gray-700 py-2.5 border-t border-b-2 w-full">
           <button
             onClick={onWonderClick}
             className={cls(
               "flex space-x-1 items-center",
-              isWondering ? "text-green-600" : ""
+              data?.isWondering ? "text-green-600" : ""
             )}
           >
             <svg
@@ -181,7 +167,7 @@ export default function CommunityDetail({
                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
               ></path>
             </svg>
-            <span>궁금해요 {wonderCount}</span>
+            <span>궁금해요 {data?.post?._count.Wonderings}</span>
           </button>
           <span className="flex space-x-1 items-center">
             <svg
@@ -198,15 +184,15 @@ export default function CommunityDetail({
                 d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
               ></path>
             </svg>
-            <span>답변 {replyCount}</span>
+            <span>답변 {data?.post?._count.Answers}</span>
           </span>
         </div>
       </section>
 
       {/* Reply[] */}
-      {post?.Answers && post?.Answers.length > 0 ? (
+      {data?.post?.Answers && data.post.Answers.length > 0 ? (
         <section className="px-4 py-5 space-y-5 border-b-2">
-          {post?.Answers.map((answer) => (
+          {data.post.Answers.map((answer) => (
             <div className="flex items-start space-x-3" key={answer.id}>
               {answer.user.avatar ? (
                 <Image
@@ -224,7 +210,9 @@ export default function CommunityDetail({
                   {answer.user.name}
                 </span>
                 <span className="text-xs font-normal text-gray-500 block">
-                  {answer.createdAt}
+                  <time dateTime={answer.createdAt} suppressHydrationWarning>
+                    {formatTime(answer.createdAt, true)}
+                  </time>
                 </span>
                 <p className="text-gray-700 mt-2">{answer.answer}</p>
               </div>
@@ -245,6 +233,10 @@ export default function CommunityDetail({
               value: 5,
               message: "답변을 5자 이상 적어주세요.",
             },
+            maxLength: {
+              value: 500,
+              message: "답변을 500자 이하 적어주세요.",
+            },
           })}
           name="reply"
           label="Reply"
@@ -260,20 +252,67 @@ export default function CommunityDetail({
   );
 }
 
-export const getStaticPaths: GetStaticPaths = () => {
-  return {
-    paths: [],
-    fallback: "blocking",
-  };
-};
+export default function Page({
+  ok,
+  post,
+  isWondering,
+  error,
+  id,
+}: ICommunityPostRes) {
+  return (
+    <>
+      {ok ? (
+        <SWRConfig
+          value={{
+            fallback: {
+              [`/api/posts/${id}`]: {
+                ok,
+                post,
+                isWondering,
+                error,
+              },
+            },
+          }}
+        >
+          <CommunityDetail />
+        </SWRConfig>
+      ) : (
+        <NotFoundPage />
+      )}
+    </>
+  );
+}
 
-export const getStaticProps: GetStaticProps = async (ctx) => {
+export const getServerSideProps: GetServerSideProps = async ({
+  req,
+  res,
+  params,
+}) => {
   try {
     // postId
-    const id = ctx.params?.id;
+    const id = params?.id;
     if (typeof id !== "string") throw new Error("Please only one params");
 
-    // Get 'post'
+    // GET: 'isWondering' with session
+    const { user } = await getIronSession<IIronSessionData>(
+      req,
+      res,
+      sessionOptions
+    );
+    if (!user) throw new Error("Please log-in");
+    const isWondering = Boolean(
+      await prismaClient.wondering.findFirst({
+        where: {
+          postId: +id,
+          userId: user.id,
+        },
+        select: {
+          id: true,
+        },
+      })
+    );
+
+    // GET: 'post'
     const post = await prismaClient.post.findUnique({
       where: {
         id: +id,
@@ -314,6 +353,8 @@ export const getStaticProps: GetStaticProps = async (ctx) => {
       props: {
         ok: true,
         post: JSON.parse(JSON.stringify(post)),
+        isWondering,
+        id,
       },
     };
   } catch (error) {

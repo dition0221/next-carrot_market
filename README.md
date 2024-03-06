@@ -2460,10 +2460,10 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
            - `fallback: true` : "blocking"처럼 작동하지만, 로딩 중에도 화면을 보여줌
              - `useRouter().isFallback` 조건문을 통해 로딩 중 화면을 보여줄 수 있음
 - **24-03-04 : [Challenge] ISR (Incremental Static Regeneration)**
-  - [Challenge] `/community/[id].tsx`를 정적 페이지로 만들기
-    - `getStaticProps`(SSG)를 사용해 대부분의 데이터를 가져옴
-      - 궁금해요, 댓글 데이터 변경 시 `await res.revalidate(경로)`를 실행하여, 정적 페이지 갱신
-      - 동적 URL에 대해 `getStaticPaths` 사용
+  - _[Challenge] `/community/[id].tsx`를 정적 페이지로 만들기_
+    - _`getStaticProps`(SSG)를 사용해 대부분의 데이터를 가져옴_
+      - _궁금해요, 댓글 데이터 변경 시 `await res.revalidate(경로)`를 실행하여, 정적 페이지 갱신_
+      - _동적 URL에 대해 `getStaticPaths` 사용_
         ```
         export const getStaticPaths: GetStaticPaths = () => {
           return {
@@ -2472,30 +2472,48 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
           };
         };
         ```
-    - `isWondering` 부분은 사용자(session)마다 값이 다르므로, 이것만 CSR 방식으로 가져옴
-      - 정적 페이지에서는 req, res, session 등 사용 불가
-    - mutate
-      - 궁금해요 : `useSWR()`의 mutate 사용
-      - 댓글 : 댓글배열.push()
-    - ISSUE : 상대시간(timeago.js 등)에 대해 client와 server간 콘텐츠 불일치 에러 발생
-      - <a href="https://nextjs.org/docs/messages/react-hydration-error" target="_blank">공식문서</a>
-    - 궁금해요, 댓글 등 상호작용 요소가 많기 때문에 정적페이지 사용이 별로인 것 같음
-      - 오히려 DB 사용량이 더 많은 것 같음
-        - 요청 시 마다 '궁금해요' DB를 사용함
-        - 댓글, 궁금해요 POST 시 DB 사용 및 `res.revalidate()`
+    - _`isWondering` 부분은 사용자(session)마다 값이 다르므로, 이것만 CSR 방식으로 가져옴_
+      - _정적 페이지에서는 req, res, session 등 사용 불가_
+    - _mutate_
+      - _궁금해요 : `useSWR()`의 `mutate()` 사용_
+      - _댓글 : `댓글배열.push()`_
+    - _ISSUE : 상대시간(timeago.js 등)에 대해 client와 server간 콘텐츠 불일치 에러 발생_
+      - _FIX : `<time dateTime={시간값} suppressHydrationWarning>값</time>`_
+      - _ex._
+        ```
+        <span className="text-xs font-normal text-gray-500 block">
+          <time dateTime={answer.createdAt} suppressHydrationWarning>
+            {formatTime(answer.createdAt, true)}
+          </time>
+        </span>
+        ```
+      - _<a href="https://nextjs.org/docs/messages/react-hydration-error" target="_blank">공식문서</a>_
+    - _궁금해요, 댓글 등 상호작용 요소가 많기 때문에 정적페이지 사용이 별로인 것 같음_
+      - _오히려 DB 사용량이 더 많은 것 같음_
+        - _요청 시 마다 '궁금해요' DB를 사용함_
+        - _댓글, 궁금해요 POST 시 DB 사용 및 `res.revalidate()`_
+      - _**SSR 방식**을 사용하기로 결정_
+- **24-03-06 : #21.0 ~ #21.5 / React 18**
+  - _FIX_
+    - _[profile/edit] 아바타 이미지를 교체하지 않을 시 error 수정_
+  - _UPDATE_
+    - _[/community/[id].tsx]를 SSR 페이지로 만들기_
+    - _SSR + SWR인 경우, error 페이지 핸들링_
+    - _[enter] token 로직 업데이트_
+      _1. 해당 사용자의 모든 token을 삭제 후, 새로운 토큰을 생성_
+      _2. 사용자의 method(email, phone)와 난수가 일치 시 로그인_
+      - _난수를 unique로 할 필요 없음 (method가 unique값이기 때문)_
+      <!-- TODO: 한 token에 대해 여러 번 시도하는 것을 막기 -->
 
 ---
 
 - To-Do
   - [form] useForm register의 검증 옵션 및 error 메시지 추가
-    - [/enter] 특정 메일주소만 가입 가능하도록
     - .etc
-  - [Token] 한 계정이 token을 여러 개 생성 시 최신 하나만 유지하도록 하기
-    - 토큰의 유효기간을 짧게 설정하기 (기본값 14일) (ex. 3분)
+  - [Token] 토큰의 유효기간을 짧게 설정하기 (ex. 3분)
     - 유효기간 만료 or 토큰 인증 시 토큰 삭제
-    - 토큰이 존재하는 경우, 토큰 재생성 못하게 막기
-  - [Token] payload(난수)가 겹칠 수 있는 문제 해결
-  - [Token] 다른 계정의 token을 사용하는 문제 해결 (자신의 token만 사용하도록 하기)
+      - createdAt 사용?
+    - 한 토큰에 대해 여러 번 시도하는 것을 막기
   - [skeleton] isLoading, 데이터가 없는 경우의 화면 구현하기
     - `react-loading-skeleton` 패키지 사용
     - [/products/[id].tsx]
@@ -2504,14 +2522,16 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
     - .etc
   - [404] 404페이지 만들기 (data가 없을 시)
     - [/products/[id].tsx]
-    - [/community/[id].tsx]
+    - [/community/[id].tsx] 完
   - [error] useSWR()의 error 핸들링하기
   - [무한스크롤] 홈, 동네생활, 판매내역, 구매내역, 관심목록에 적용하기
     - [DB] take, skip 사용하기
   - [/api/users/me/index.ts] POST부분 리팩토링
   - [/user/profile/[id].tsx]사용자 프로필 페이지 생성하기
+    - 프로필 이미지 갱신 시 cloudflare에서 기존 이미지 삭제
   - [stream] 이미지 추가하기
   - [채팅방] 채팅방 삭제 및 물건 post 삭제 기능 구현하기
   - [middleware] 특정 지역 차단하기
   - [SEO] 모든 페이지에 &lt;title&gt; 적기
-  - [render] 모든 페이지에 렌더링 방식 재설정
+  - [render] 모든 페이지에 렌더링 방식 재설정하기
+  - [/enter] 소셜 로그인 구현하기

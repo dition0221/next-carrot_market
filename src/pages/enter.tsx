@@ -9,14 +9,21 @@ import Button from "@/components/button";
 import Input from "@/components/input";
 // INTERFACE
 import type { IResponseType } from "@/libs/server/withHandler";
+import FormErrorMessage from "@/components/form-error-msg";
 
 export interface IEnterForm {
   email?: string;
   phone?: string;
 }
 
-export interface ITokenForm {
+interface ITokenForm {
   token: number;
+}
+
+interface IEnterRes {
+  ok: boolean;
+  email?: string;
+  phone?: string;
 }
 
 export default function Enter() {
@@ -24,8 +31,13 @@ export default function Enter() {
 
   // Log-in <form>
   const [enter, { isLoading, data, error }] =
-    useMutation<IResponseType>("/api/users/enter");
-  const { register, handleSubmit, reset } = useForm<IEnterForm>();
+    useMutation<IEnterRes>("/api/users/enter");
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<IEnterForm>();
   const onValid = async (validForm: IEnterForm) => {
     if (isLoading) return alert("로딩 중 입니다.");
     enter(validForm); // Send form data to Back-End
@@ -50,14 +62,16 @@ export default function Enter() {
     register: tokenRegister,
     handleSubmit: tokenHandleSubmit,
     reset: tokenReset,
+    formState: { errors: tokenErrors },
   } = useForm<ITokenForm>();
-  const onTokenValid = (validForm: ITokenForm) => {
+  const onTokenValid = ({ token }: ITokenForm) => {
     if (isTokenLoading) return;
-    confirmToken(validForm);
+    confirmToken({ token, ...data });
     tokenReset();
   };
   useEffect(() => {
     if (tokenData?.ok) router.push("/");
+    if (tokenData?.ok === false) return alert(tokenData.error);
   }, [tokenData, router]);
 
   return (
@@ -69,7 +83,10 @@ export default function Enter() {
           className="flex flex-col mt-8 space-y-4"
         >
           <Input
-            register={tokenRegister("token")}
+            register={tokenRegister("token", {
+              required: true,
+              pattern: { value: /^\d+$/, message: "" },
+            })}
             name="token"
             label="Confirmation Token"
             type="number"
@@ -112,7 +129,17 @@ export default function Enter() {
           >
             {method === "email" ? (
               <Input
-                register={register("email")}
+                register={register("email", {
+                  required: true,
+                  validate: {
+                    allowAddress: (value) =>
+                      /^[A-Za-z0-9._%+-]+@naver\.com$/.test(value ?? "") ||
+                      /^[A-Za-z0-9._%+-]+@daum\.net$/.test(value ?? "") ||
+                      /^[A-Za-z0-9._%+-]+@hanmail\.net$/.test(value ?? "") ||
+                      /^[A-Za-z0-9._%+-]+@kakao\.com$/.test(value ?? "") ||
+                      "It is not allowed email address",
+                  },
+                })}
                 name="email"
                 label="Email address"
                 type="email"
@@ -121,7 +148,13 @@ export default function Enter() {
             ) : null}
             {method === "phone" ? (
               <Input
-                register={register("phone")}
+                register={register("phone", {
+                  required: true,
+                  pattern: {
+                    value: /^\d{11}$/,
+                    message: "Only allow 11 numbers of phone",
+                  },
+                })}
                 name="phone"
                 label="Phone number"
                 type="number"
@@ -136,6 +169,17 @@ export default function Enter() {
               <Button
                 text={isLoading ? "Loading.." : "Get one-time password"}
               />
+            ) : null}
+
+            {/* form error */}
+            {errors.email?.message ? (
+              <FormErrorMessage text={errors.email.message} />
+            ) : null}
+            {errors.phone?.message ? (
+              <FormErrorMessage text={errors.phone.message} />
+            ) : null}
+            {tokenErrors.token?.message ? (
+              <FormErrorMessage text={tokenErrors.token.message} />
             ) : null}
           </form>
         </>

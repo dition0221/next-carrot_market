@@ -7,7 +7,7 @@ import type { User } from "@prisma/client";
   기본형 : const { user, isLoading } = useUser();
 */
 
-interface IUserResponse {
+export interface IUserResponse {
   ok: boolean;
   profile?: User;
   error?: string;

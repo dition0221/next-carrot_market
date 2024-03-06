@@ -54,10 +54,6 @@ async function handler(
       },
     });
 
-    // ODR (On-Demand Revalidation)
-    await res.revalidate(`/community/${id}`);
-    await res.revalidate("/community");
-
     return res.status(200).json({ ok: true, answer: newAnswer });
   } catch (error) {
     console.log(error);

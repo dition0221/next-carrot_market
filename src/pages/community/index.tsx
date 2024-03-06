@@ -9,6 +9,7 @@ import Layout from "@/components/layout";
 import Link from "next/link";
 // INTERFACE
 import type { Post } from "@prisma/client";
+import type { GetStaticProps } from "next";
 
 interface PostWithUser extends Post {
   user: {
@@ -121,7 +122,7 @@ export default function Community({ ok, posts, error }: IPostList) {
   );
 }
 
-export async function getStaticProps() {
+export const getStaticProps: GetStaticProps = async () => {
   try {
     const posts = await prismaClient.post.findMany({
       include: {
@@ -160,4 +161,4 @@ export async function getStaticProps() {
       },
     };
   }
-}
+};

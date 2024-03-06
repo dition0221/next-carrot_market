@@ -3,7 +3,7 @@ import Image from "next/image";
 import useSWR, { SWRConfig } from "swr";
 import { getIronSession } from "iron-session";
 // LIBS
-import useUser from "@/libs/client/useUser";
+import useUser, { type IUserResponse } from "@/libs/client/useUser";
 import { cls, getImage } from "@/libs/client/utils";
 import prismaClient from "@/libs/server/prismaClient";
 import {
@@ -15,7 +15,8 @@ import Layout from "@/components/layout";
 import LinkProfile from "@/components/link-profile";
 // INTERFACE
 import type { Review } from "@prisma/client";
-import type { NextPageContext } from "next";
+import type { GetServerSideProps } from "next";
+import NotFoundPage from "@/components/404-page";
 
 interface ReviewWithUser extends Review {
   createdBy: {
@@ -52,6 +53,7 @@ function Profile() {
           />
         ) : null}
 
+        {/* Lists */}
         <section className="mt-10 flex justify-around">
           <Link href="/profile/sold" className="flex flex-col items-center">
             <div className="w-14 h-14 text-white bg-orange-500 rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors">
@@ -125,13 +127,15 @@ function Profile() {
               <article key={review.id}>
                 <div className="flex items-center space-x-4">
                   {review.createdBy.avatar ? (
-                    <Image
-                      src={getImage(review.createdBy.avatar, "avatar")}
-                      alt="reviewer's avatar"
-                      width={48}
-                      height={48}
-                      className="border rounded-full"
-                    />
+                    <Link href={`/users/profile/${review.createdBy.id}`}>
+                      <Image
+                        src={getImage(review.createdBy.avatar, "avatar")}
+                        alt="reviewer's avatar"
+                        width={48}
+                        height={48}
+                        className="border rounded-full"
+                      />
+                    </Link>
                   ) : (
                     <div className="w-12 h-12 rounded-full bg-slate-400" />
                   )}
@@ -170,29 +174,40 @@ function Profile() {
   );
 }
 
-export default function Page({ data }: { data: IReviewList }) {
+export default function Page({ ok, profile, error }: IUserResponse) {
   return (
-    <SWRConfig
-      value={{
-        fallback: {
-          "/api/users/me": data,
-        },
-      }}
-    >
-      <Profile />
-    </SWRConfig>
+    <>
+      {ok ? (
+        <SWRConfig
+          value={{
+            fallback: {
+              "/api/users/me": {
+                ok,
+                profile,
+                error,
+              },
+            },
+          }}
+        >
+          <Profile />
+        </SWRConfig>
+      ) : (
+        <NotFoundPage />
+      )}
+    </>
   );
 }
 
-export async function getServerSideProps({ req, res }: NextPageContext) {
+export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   try {
-    // Get user data
     const { user } = await getIronSession<IIronSessionData>(
       req!,
       res!,
       sessionOptions
     );
     if (!user) throw new Error("Please log-in");
+
+    // GET: user data
     const profile = await prismaClient.user.findUnique({
       where: {
         id: user?.id,
@@ -202,21 +217,17 @@ export async function getServerSideProps({ req, res }: NextPageContext) {
 
     return {
       props: {
-        userData: {
-          ok: true,
-          profile: JSON.parse(JSON.stringify(profile)),
-        },
+        ok: true,
+        profile: JSON.parse(JSON.stringify(profile)),
       },
     };
   } catch (error) {
     console.log(error);
     return {
       props: {
-        userData: {
-          ok: false,
-          error: (error as Error).message || error,
-        },
+        ok: false,
+        error: (error as Error).message || error,
       },
     };
   }
-}
+};
