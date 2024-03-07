@@ -22,7 +22,7 @@ async function handler(
   if (!method) return res.status(400).json({ ok: false });
 
   try {
-    // Find token from DB
+    // 1) Find token from DB
     const foundToken = await prismaClient.token.findFirst({
       where: {
         payload: token,
@@ -30,18 +30,37 @@ async function handler(
           ...method,
         },
       },
+      select: {
+        userId: true,
+        createdAt: true,
+      },
     });
     if (!foundToken)
       return res.status(401).json({ ok: false, error: "Token is wrong" });
 
-    // After user log-in, add user data to session
+    // Token validity time: 3 mins
+    if (new Date(foundToken.createdAt).getTime() < Date.now() - 3 * 60 * 1000) {
+      await prismaClient.token.deleteMany({
+        where: {
+          payload: token,
+          user: {
+            ...method,
+          },
+        },
+      });
+      return res
+        .status(401)
+        .json({ ok: false, error: "Token is expired, Please login again" });
+    }
+
+    // 2) After user log-in, add user data to session
     const session = await getSession(req, res);
     session.user = {
       id: foundToken.userId,
     };
     await session.save();
 
-    // Delete all tokens
+    // 3) Delete all tokens
     await prismaClient.token.deleteMany({
       where: {
         userId: foundToken.userId,

@@ -99,7 +99,7 @@ export async function getServerSideProps() {
     return {
       props: {
         ok: false,
-        error,
+        error: (error as Error).message || JSON.stringify(error),
       },
     };
   }

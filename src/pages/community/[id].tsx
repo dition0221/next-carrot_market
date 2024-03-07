@@ -293,13 +293,15 @@ export const getServerSideProps: GetServerSideProps = async ({
     const id = params?.id;
     if (typeof id !== "string") throw new Error("Please only one params");
 
-    // GET: 'isWondering' with session
+    // session: user
     const { user } = await getIronSession<IIronSessionData>(
       req,
       res,
       sessionOptions
     );
     if (!user) throw new Error("Please log-in");
+
+    // GET: 'isWondering' with session
     const isWondering = Boolean(
       await prismaClient.wondering.findFirst({
         where: {
@@ -362,7 +364,7 @@ export const getServerSideProps: GetServerSideProps = async ({
     return {
       props: {
         ok: false,
-        error: (error as Error).message || String(error),
+        error: (error as Error).message || JSON.stringify(error),
       },
     };
   }

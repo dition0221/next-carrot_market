@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
-import useSWR from "swr";
+import useSWR, { SWRConfig } from "swr";
 // LIBS
 import useMutation from "@/libs/client/useMutation";
 import { cls, getImage } from "@/libs/client/utils";
@@ -12,7 +12,12 @@ import Button from "@/components/button";
 import Layout from "@/components/layout";
 import LinkProfile from "@/components/link-profile";
 // INTERFACE
+import type { GetServerSideProps } from "next";
 import type { Product, User } from "@prisma/client";
+import { getIronSession } from "iron-session";
+import { IIronSessionData, sessionOptions } from "@/libs/server/getSession";
+import prismaClient from "@/libs/server/prismaClient";
+import NotFoundPage from "@/components/404-page";
 
 export interface ProductWithUser extends Product {
   user: User;
@@ -24,6 +29,7 @@ interface IProductDetailResponse {
   isLiked?: boolean;
   relatedProducts?: Product[];
   error?: any;
+  id?: string;
 }
 
 interface IChatData {
@@ -32,7 +38,7 @@ interface IChatData {
   error?: any;
 }
 
-export default function ProductDetail() {
+function ProductDetail() {
   const { user } = useUser();
 
   // route parameter
@@ -179,3 +185,124 @@ export default function ProductDetail() {
     </Layout>
   );
 }
+
+export default function Page({
+  ok,
+  product,
+  isLiked,
+  relatedProducts,
+  id,
+  error,
+}: IProductDetailResponse) {
+  return (
+    <>
+      {ok ? (
+        <SWRConfig
+          value={{
+            fallback: {
+              [`/api/products/${id}`]: {
+                ok,
+                product,
+                isLiked,
+                relatedProducts,
+                error,
+              },
+            },
+          }}
+        >
+          <ProductDetail />
+        </SWRConfig>
+      ) : (
+        <NotFoundPage />
+      )}
+    </>
+  );
+}
+
+export const getServerSideProps: GetServerSideProps = async ({
+  req,
+  res,
+  params,
+}) => {
+  // productId
+  const id = params?.id;
+  if (typeof id !== "string")
+    throw new Error("Only one dynamicParam is allowed");
+
+  // session: user
+  const { user } = await getIronSession<IIronSessionData>(
+    req,
+    res,
+    sessionOptions
+  );
+  if (!user) throw new Error("Please log-in");
+
+  try {
+    // GET 'Product'
+    const product = await prismaClient.product.findUnique({
+      where: { id: +id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+    if (!product) throw new Error("404 Not Found");
+
+    // GET 'similar Product'
+    const terms = product.name
+      .split(" ")
+      .filter((word) => word !== "") // Except blank
+      .map((word) => ({
+        name: {
+          contains: word,
+        },
+      }));
+    const relatedProducts = await prismaClient.product.findMany({
+      where: {
+        OR: terms,
+        AND: {
+          id: {
+            not: +id,
+          },
+        },
+      },
+    });
+
+    // GET 'Favorite'
+    const isLiked = Boolean(
+      await prismaClient.record.findFirst({
+        where: {
+          productId: +id,
+          userId: user?.id,
+          kind: "Favorite",
+        },
+        select: {
+          id: true,
+        },
+      })
+    );
+
+    return {
+      props: {
+        ok: true,
+        product: JSON.parse(JSON.stringify(product)),
+        isLiked,
+        relatedProducts: JSON.parse(JSON.stringify(relatedProducts)),
+        id,
+      },
+    };
+  } catch (error) {
+    console.log(error);
+    return {
+      props: {
+        ok: false,
+        error: (error as Error).message || JSON.stringify(error),
+      },
+    };
+  }
+};

@@ -226,7 +226,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
     return {
       props: {
         ok: false,
-        error: (error as Error).message || error,
+        error: (error as Error).message || JSON.stringify(error),
       },
     };
   }

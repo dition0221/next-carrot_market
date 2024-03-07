@@ -12,11 +12,13 @@ import {
 } from "@/libs/server/getSession";
 
 export async function middleware(req: NextRequest, ev: NextFetchEvent) {
+  /* Defend */
   // Defend from bot
   if (userAgent(req).isBot) {
     return new Response("No bot", { status: 403 });
   }
 
+  /* Session */
   // Check logged-in user using session
   const isCookie = req.cookies.has("carrot-session");
   const { user } = await getIronSession<IIronSessionData>(
@@ -35,7 +37,7 @@ export async function middleware(req: NextRequest, ev: NextFetchEvent) {
   if (isUser && req.nextUrl.pathname.startsWith("/enter")) {
     const url = req.nextUrl.clone();
     url.pathname = "/profile";
-    return NextResponse.rewrite(url);
+    return NextResponse.redirect(url);
   }
 }
 

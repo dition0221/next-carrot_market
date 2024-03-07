@@ -18,57 +18,68 @@ async function handler(
   // user
   const { user } = await getSession(req, res);
 
-  // Get 'Product' from DB
-  const product = await prismaClient.product.findUnique({
-    where: { id: +id },
-    include: {
-      user: {
+  try {
+    // GET 'Product'
+    const product = await prismaClient.product.findUnique({
+      where: { id: +id },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+    if (!product)
+      return res.status(404).json({ ok: false, error: "404 Not Found" });
+
+    // GET 'similar 'Product'
+    const terms = product.name
+      .split(" ")
+      .filter((word) => word !== "") // Except blank
+      .map((word) => ({
+        name: {
+          contains: word,
+        },
+      }));
+    const relatedProducts = await prismaClient.product.findMany({
+      where: {
+        OR: terms,
+        AND: {
+          id: {
+            not: +id,
+          },
+        },
+      },
+    });
+
+    // GET 'Favorite'
+    const isLiked = Boolean(
+      await prismaClient.record.findFirst({
+        where: {
+          productId: +id,
+          userId: user?.id,
+          kind: "Favorite",
+        },
         select: {
           id: true,
-          name: true,
-          avatar: true,
         },
-      },
-    },
-  });
-  if (!product)
-    return res.status(404).json({ ok: false, error: "404 Not Found" });
+      })
+    );
 
-  // Get similar 'Product' from DB
-  const terms = product.name
-    .split(" ")
-    .filter((word) => word !== "") // Except blank
-    .map((word) => ({
-      name: {
-        contains: word,
-      },
-    }));
-  const relatedProducts = await prismaClient.product.findMany({
-    where: {
-      OR: terms,
-      AND: {
-        id: {
-          not: +id,
-        },
-      },
-    },
-  });
-
-  // 'Favorite' or not
-  const isLiked = Boolean(
-    await prismaClient.record.findFirst({
-      where: {
-        productId: +id,
-        userId: user?.id,
-        kind: "Favorite",
-      },
-      select: {
-        id: true,
-      },
-    })
-  );
-
-  return res.status(200).json({ ok: true, product, isLiked, relatedProducts });
+    return res
+      .status(200)
+      .json({ ok: true, product, isLiked, relatedProducts });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({
+        ok: true,
+        error: (error as Error).message || JSON.stringify(error),
+      });
+  }
 }
 
 export default withHandler({

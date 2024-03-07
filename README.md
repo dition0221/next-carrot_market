@@ -2503,35 +2503,29 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
       _1. 해당 사용자의 모든 token을 삭제 후, 새로운 토큰을 생성_
       _2. 사용자의 method(email, phone)와 난수가 일치 시 로그인_
       - _난수를 unique로 할 필요 없음 (method가 unique값이기 때문)_
-      <!-- TODO: 한 token에 대해 여러 번 시도하는 것을 막기 -->
+- **24-03-07**
+  - _UPDATE_
+    - _[token] 토큰의 유효기간으로 3분 설정_
+    - _[/products/[id]] SSR + SWR로 변경_
+    - _[404] 동적URL에서 data가 없을 시 404 반환_
 
 ---
 
 - To-Do
   - [form] useForm register의 검증 옵션 및 error 메시지 추가
-    - .etc
-  - [Token] 토큰의 유효기간을 짧게 설정하기 (ex. 3분)
-    - 유효기간 만료 or 토큰 인증 시 토큰 삭제
-      - createdAt 사용?
-    - 한 토큰에 대해 여러 번 시도하는 것을 막기
-  - [skeleton] isLoading, 데이터가 없는 경우의 화면 구현하기
-    - `react-loading-skeleton` 패키지 사용
-    - [/products/[id].tsx]
-    - [/community/[id].tsx]
-    - [/profile/index.tsx]
-    - .etc
-  - [404] 404페이지 만들기 (data가 없을 시)
-    - [/products/[id].tsx]
-    - [/community/[id].tsx] 完
-  - [error] useSWR()의 error 핸들링하기
+  - [Token] 한 토큰에 대해 여러 번 시도하는 것을 막기
   - [무한스크롤] 홈, 동네생활, 판매내역, 구매내역, 관심목록에 적용하기
-    - [DB] take, skip 사용하기
+    - [DB] take, skip 사용하기 (10)
   - [/api/users/me/index.ts] POST부분 리팩토링
   - [/user/profile/[id].tsx]사용자 프로필 페이지 생성하기
     - 프로필 이미지 갱신 시 cloudflare에서 기존 이미지 삭제
   - [stream] 이미지 추가하기
-  - [채팅방] 채팅방 삭제 및 물건 post 삭제 기능 구현하기
   - [middleware] 특정 지역 차단하기
+    - `req.geo`를 사용
+    - 호스팅 시 데이터를 제공받을 수 있음
   - [SEO] 모든 페이지에 &lt;title&gt; 적기
   - [render] 모든 페이지에 렌더링 방식 재설정하기
   - [/enter] 소셜 로그인 구현하기
+  - 변경 / 삭제
+    - [채팅방] 채팅방 삭제 및 물건 post 삭제 기능 구현하기
+  - [Font] 폰트 적용

@@ -17,6 +17,8 @@ export default function LinkProfile({
   px,
   isEdit,
 }: ILinkProfileProps) {
+  const size = `w-${px / 4} h-${px / 4}`;
+
   return (
     <article className="flex items-center space-x-3">
       {avatar ? (
@@ -29,7 +31,7 @@ export default function LinkProfile({
           priority
         />
       ) : (
-        <div className={`w-${px / 4} h-${px / 4} rounded-full bg-slate-300`} />
+        <div className={`${size} rounded-full bg-slate-500`} />
       )}
       <div>
         <p className="text-sm font-semibold text-gray-700">{userName}</p>
