@@ -127,7 +127,7 @@ function Profile() {
               <article key={review.id}>
                 <div className="flex items-center space-x-4">
                   {review.createdBy.avatar ? (
-                    <Link href={`/users/profile/${review.createdBy.id}`}>
+                    <Link href={`/users/profiles/${review.createdBy.id}`}>
                       <Image
                         src={getImage(review.createdBy.avatar, "avatar")}
                         alt="reviewer's avatar"

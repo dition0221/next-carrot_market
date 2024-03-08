@@ -5,6 +5,7 @@ import { useRouter } from "next/router";
 // LIBS
 import useUser from "@/libs/client/useUser";
 import useMutation from "@/libs/client/useMutation";
+import { deleteImage, getImage } from "@/libs/client/utils";
 // COMPONENTS
 import Layout from "@/components/layout";
 import Input from "@/components/input";
@@ -35,15 +36,12 @@ export default function EditProfile() {
     watch,
   } = useForm<IEditProfileForm>();
 
-  // Default form
+  // Default <form>
   useEffect(() => {
     setValue("name", user?.name!);
     if (user?.email) setValue("email", user.email);
     if (user?.phone) setValue("phone", user.phone);
-    if (user?.avatar)
-      setAvatarPreview(
-        `https://imagedelivery.net/kk4YLvIogqMNHpBdH1Y55w/${user?.avatar}/avatar`
-      );
+    if (user?.avatar) setAvatarPreview(getImage(user.avatar, "avatar"));
   }, [setValue, user]);
 
   // Change avatar image
@@ -65,7 +63,7 @@ export default function EditProfile() {
     if (isLoading || isAvatarLoading) return;
     if (email === "" && phone === "")
       return setError("root", {
-        message: "이메일 또는 휴대폰 번호를 적어주세요.",
+        message: "Please write an email or phone number",
       });
 
     // If avatar changed
@@ -73,6 +71,9 @@ export default function EditProfile() {
       setIsAvatarLoading(true);
 
       try {
+        // Delete previous image
+        deleteImage(user.avatar);
+
         // Ask for CF URL
         const cloudflareUrl = (await (
           await fetch("/api/files")
@@ -81,7 +82,7 @@ export default function EditProfile() {
 
         // Upload avatar file to Cloudflare
         const form = new FormData();
-        form.append("file", avatar[0], String(user.id));
+        form.append("file", avatar[0], `/users/${user.id}`);
         const uploadAvatar = (await (
           await fetch(cloudflareUrl.url!, {
             method: "POST",
@@ -141,13 +142,10 @@ export default function EditProfile() {
             <input
               {...register("avatar", {
                 validate: {
-                  isImage: (value) => {
-                    if (!value?.[0]) return true;
-                    return (
-                      (value && value[0]?.type.includes("image")) ||
-                      "이미지 파일만 업로드 가능합니다."
-                    );
-                  },
+                  isImage: (value) =>
+                    value?.[0]
+                      ? value[0].type.includes("image") || "Image file only"
+                      : true,
                 },
               })}
               id="avatar"
@@ -159,10 +157,10 @@ export default function EditProfile() {
         </div>
         <Input
           register={register("name", {
-            required: "name은 필수 입력 사항입니다.",
+            required: "Name is required",
             maxLength: {
               value: 12,
-              message: "name은 12자 이내로 작성해야 합니다.",
+              message: "Name is less than 12 characters",
             },
           })}
           name="name"
@@ -172,14 +170,30 @@ export default function EditProfile() {
           maxLength={12}
         />
         <Input
-          register={register("email")}
+          register={register("email", {
+            validate: {
+              allowAddress: (value) =>
+                value
+                  ? /^[A-Za-z0-9._%+-]+@naver\.com$/.test(value) ||
+                    /^[A-Za-z0-9._%+-]+@daum\.net$/.test(value) ||
+                    /^[A-Za-z0-9._%+-]+@hanmail\.net$/.test(value) ||
+                    /^[A-Za-z0-9._%+-]+@kakao\.com$/.test(value) ||
+                    "It is not allowed email address"
+                  : true,
+            },
+          })}
           name="email"
           label="Email address"
           type="email"
           required={false}
         />
         <Input
-          register={register("phone")}
+          register={register("phone", {
+            pattern: {
+              value: /^010+\d{8}$/,
+              message: "Only allow 11 numbers of phone",
+            },
+          })}
           name="phone"
           label="Phone number"
           type="number"
@@ -193,6 +207,12 @@ export default function EditProfile() {
         ) : null}
         {errors.name?.message ? (
           <FormErrorMessage text={errors.name.message} />
+        ) : null}
+        {errors.email?.message ? (
+          <FormErrorMessage text={errors.email.message} />
+        ) : null}
+        {errors.phone?.message ? (
+          <FormErrorMessage text={errors.phone.message} />
         ) : null}
         {errors.root?.message ? (
           <FormErrorMessage text={errors.root.message} />

@@ -44,11 +44,18 @@ async function handler(
           phone: true,
         },
       });
+      if (!currentUser)
+        return res.status(404).json({ ok: false, error: "Not Found" });
+
+      // New values (& 'avatarId')
       const newName = name && name !== currentUser?.name ? name : undefined;
       const newEmail =
         email && email !== currentUser?.email ? email : undefined;
       const newPhone =
         phone && phone !== currentUser?.phone ? phone : undefined;
+
+      // * SSG(ODR) Update
+      await res.revalidate(`/users/profiles/${user.id}`);
 
       // Update 'name'
       if (newName)

@@ -54,14 +54,19 @@ export default function CommunityWrite() {
           name="question"
           label="Question"
           register={register("question", {
-            required: "질문을 적어주세요.",
+            required: "Please write a question",
             minLength: {
               value: 5,
-              message: "질문을 5자 이상 적어주세요.",
+              message: "Please write a question more than 5 characters",
+            },
+            maxLength: {
+              value: 1000,
+              message: "Please write a question less than 1000 characters",
             },
           })}
           placeholder="Ask a question!"
           required
+          maxLength={1000}
         />
         {errors.question?.message ? (
           <FormErrorMessage text={errors.question.message} />

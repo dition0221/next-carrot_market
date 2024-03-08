@@ -228,20 +228,21 @@ function CommunityDetail() {
       >
         <Textarea
           register={register("answer", {
-            required: "답변을 적어주세요.",
+            required: "Please write a reply",
             minLength: {
               value: 5,
-              message: "답변을 5자 이상 적어주세요.",
+              message: "Please write a reply more than 5 characters",
             },
             maxLength: {
               value: 500,
-              message: "답변을 500자 이하 적어주세요.",
+              message: "Please write a reply less than 100 characters",
             },
           })}
           name="reply"
           label="Reply"
           placeholder="Answer this question!"
           required
+          maxLength={500}
         />
         {errors.answer?.message ? (
           <FormErrorMessage text={errors.answer.message} />

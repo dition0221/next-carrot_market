@@ -2503,29 +2503,110 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
       _1. 해당 사용자의 모든 token을 삭제 후, 새로운 토큰을 생성_
       _2. 사용자의 method(email, phone)와 난수가 일치 시 로그인_
       - _난수를 unique로 할 필요 없음 (method가 unique값이기 때문)_
+  - suspense
+    - 코드에서 loading 상태를 나타내는 부분을 제거할 수 있게 해주는 API
+      - loading 상태에 대해 신경쓰지 않아도, 사용자가 loading 상태 화면을 볼 수 있음
+    - 주의사항
+      - SSR, SSG 등과 함께 사용 불가 (CSR에서만 사용 가능)
+      - 개발자가 사용한다고 되는 게 아니라, 라이브러리에서 기능을 지원해줘야 함
+    - 장점 : 이미 데이터가 있다고 가정 하에 코드를 짤 수 있음
+      - if문을 사용해 데이터를 체크할 필요가 없음
+    - (SWR 사용 시) 페이지 전체인 경우
+      - 기본형
+        ```
+        import dynamic from "next/dynamic";
+        function 화면컴포넌트() {
+          <SWRConfig value={{ suspense: true }}>
+            <Suspense fallback={로딩컴포넌트}>
+              <페이지컴포넌트 />
+            </Suspense>
+          </SWRConfig>
+        }
+        export default dynamic(async () => 화면컴포넌트, { ssr: false });
+        ```
+      - 모든 SWR 요청이 끝날 때 까지 기다린 후, 컴포넌트를 렌더링 해줌
+    - (SWR 사용 시) 컴포넌트인 경우
+      - 페이지에서 useSWR()를 사용하면 안 됨
+      - 기본형
+        ```
+        const 컴포넌트명 = () => {
+          const { data, isLoading } = useSWR(경로);
+          return ......
+        }
+        export default function 페이지컴포넌트명() {
+          return (
+            <Suspense fallback={로딩컴포넌트}>
+              <컴포넌트명 />
+            </Suspense>
+          )
+        }
+        ```
+  - Server Components (RSC; React Server Components)
+    - 서버 컴포넌트는 client에서 JavaScript를 전혀 사용하지 않아도 생성 가능
+      - 사용자가 JavaScript를 로딩하지 않아도 됨 ➡️ 빠름, SSR은 아님
+      - 서버가 컴포넌트들을 rendering 한 후, 사용자에게 결과물만 보여줌
+        - 컴포넌트에서 서버관련 일(DB 등)을 할 수 있을 것
+    - NextJS의 App Router에서는 기본적으로 Server Components를 사용함
+      - 필요 시 Client Components를 사용 가능
+    - 설치법 : `npm i next@latest react@rc react-dom@rc`
+    - 설정법 : 'next.config.js'파일에서 `experimental` 프로퍼티 추가하기
+      ```
+      module.exports= {
+        experimental: {
+          reactRoot: true,
+          runtime: "nodejs",
+          serverComponents: true,
+        },
+      }
+      ```
+    - 사용법
+      1. `파일명.server.tsx`로 파일명 변경하기
+      2. Suspense를 사용해 결과물만 화면에 반환하기
+    - <a href="https://nextjs.org/docs/app/building-your-application/rendering/server-components" target="_blank">공식문서</a>
 - **24-03-07**
   - _UPDATE_
     - _[token] 토큰의 유효기간으로 3분 설정_
     - _[/products/[id]] SSR + SWR로 변경_
     - _[404] 동적URL에서 data가 없을 시 404 반환_
+- **24-03-08**
+  - _UPDATE_
+    - _[form] useForm register의 검증 옵션 및 error 메시지 추가_
+    - _[/user/profile/[id]] 사용자 프로필 페이지 생성 (SSG)_
+    - _[user/edit] 프로필 이미지 갱신 시 cloudflare에서 기존 이미지 삭제_
+      - _기본형_
+        ```
+        await fetch(
+          `https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/images/v1/<IMAGE_ID>`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer <API_TOKEN>`,
+            },
+          }
+        );
+        ```
+      - _<a href="https://developers.cloudflare.com/api/operations/cloudflare-images-delete-image" target="_blank">공식문서</a>_
+    - _[product/[id]] 수정/삭제 기능 추가_
+    - _favicon_
+  - _FIX_
+    - _[chats/[id]] 프로필 링크 수정_
 
 ---
 
 - To-Do
-  - [form] useForm register의 검증 옵션 및 error 메시지 추가
+  - [profile/edit] errors.root에 대해 바로 없어지게 하는 옵션? 변경하기
   - [Token] 한 토큰에 대해 여러 번 시도하는 것을 막기
   - [무한스크롤] 홈, 동네생활, 판매내역, 구매내역, 관심목록에 적용하기
     - [DB] take, skip 사용하기 (10)
   - [/api/users/me/index.ts] POST부분 리팩토링
-  - [/user/profile/[id].tsx]사용자 프로필 페이지 생성하기
-    - 프로필 이미지 갱신 시 cloudflare에서 기존 이미지 삭제
-  - [stream] 이미지 추가하기
   - [middleware] 특정 지역 차단하기
     - `req.geo`를 사용
     - 호스팅 시 데이터를 제공받을 수 있음
   - [SEO] 모든 페이지에 &lt;title&gt; 적기
   - [render] 모든 페이지에 렌더링 방식 재설정하기
-  - [/enter] 소셜 로그인 구현하기
+  - [/enter] 소셜 로그인 구현하기 (NextAuth)
   - 변경 / 삭제
     - [채팅방] 채팅방 삭제 및 물건 post 삭제 기능 구현하기
+    - [product/edit] 프로필 이미지 갱신 시 cloudflare에서 기존 이미지 삭제
   - [Font] 폰트 적용

@@ -5,19 +5,24 @@ import { useEffect } from "react";
 import useSWR, { SWRConfig } from "swr";
 // LIBS
 import useMutation from "@/libs/client/useMutation";
-import { cls, getImage } from "@/libs/client/utils";
+import { cls, deleteImage, getImage } from "@/libs/client/utils";
 import useUser from "@/libs/client/useUser";
+import prismaClient from "@/libs/server/prismaClient";
 // COMPONENTS
 import Button from "@/components/button";
 import Layout from "@/components/layout";
 import LinkProfile from "@/components/link-profile";
+import NotFoundPage from "@/components/404-page";
 // INTERFACE
 import type { GetServerSideProps } from "next";
 import type { Product, User } from "@prisma/client";
+import type { IResponseType } from "@/libs/server/withHandler";
+// SESSION
 import { getIronSession } from "iron-session";
-import { IIronSessionData, sessionOptions } from "@/libs/server/getSession";
-import prismaClient from "@/libs/server/prismaClient";
-import NotFoundPage from "@/components/404-page";
+import {
+  type IIronSessionData,
+  sessionOptions,
+} from "@/libs/server/getSession";
 
 export interface ProductWithUser extends Product {
   user: User;
@@ -69,15 +74,35 @@ function ProductDetail() {
     useMutation<IChatData>("/api/chats");
   const talkToSeller = () => {
     if (isChatLoading) return;
-    if (!data?.product) return alert("상품이 존재하지 않습니다.");
-    if (data.product.userId === user?.id)
-      return alert("자신에게 채팅방을 만들 수 없습니다.");
+    if (!data?.product) return alert("Product is not exist");
+    if (data.product.userId === user?.id) return alert("Can't to talk myself");
 
     createChat({ product: data.product });
   };
   useEffect(() => {
     if (chatData?.ok) router.push(`/chats/${chatData.chatRoomId}`);
   }, [chatData, router]);
+
+  // Delete product
+  const onDeleteProduct = async () => {
+    if (!data?.product) return;
+    if (user?.id !== data?.product?.userId) return;
+
+    // Check from user
+    const isDelete = confirm("Are you sure to delete this product?");
+    if (!isDelete) return;
+
+    // Delete image
+    deleteImage(data.product.imageUrl);
+
+    // Delete from DB
+    const { ok } = (await fetch(`/api/products/${id}`, {
+      method: "DELETE",
+    })) as IResponseType;
+    ok
+      ? router.replace("/", undefined, { shallow: true })
+      : alert("Error: Fail to delete product");
+  };
 
   return (
     <Layout canGoBack>
@@ -106,6 +131,24 @@ function ProductDetail() {
             href={`/users/profiles/${data?.product?.userId}`}
             px={48}
           />
+
+          {/* Edit / Delete */}
+          {data?.product?.userId === user?.id ? (
+            <article className="mt-4 space-x-2">
+              <Link
+                href={`/products/${id}/edit`}
+                className="px-3 text-white rounded-lg bg-blue-500 hover:bg-blue-600 inline-block"
+              >
+                Edit
+              </Link>
+              <button
+                onClick={onDeleteProduct}
+                className="px-3 text-white rounded-lg bg-red-500 hover:bg-red-600"
+              >
+                Delete
+              </button>
+            </article>
+          ) : null}
 
           {/* Product profile */}
           <article className="mt-3 pt-5 border-t">

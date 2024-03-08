@@ -41,8 +41,7 @@ function Stream() {
 
   // Fetch detail stream
   const { data, mutate } = useSWR<IStreamResponse>(
-    id ? `/api/streams/${id}` : null,
-    { refreshInterval: 5000 }
+    id ? `/api/streams/${id}` : null
   );
 
   // Message <form>
@@ -114,10 +113,14 @@ function Stream() {
           >
             <div className="flex relative max-w-md items-center  w-full mx-auto">
               <input
-                {...register("message", { required: true })}
+                {...register("message", {
+                  required: true,
+                  maxLength: 100,
+                })}
                 type="text"
                 className="shadow-sm rounded-full w-full border-gray-300 focus:ring-orange-500 focus:outline-none pr-12 focus:border-orange-500"
                 required
+                maxLength={100}
               />
               <div className="absolute inset-y-0 flex py-1.5 pr-1.5 right-0">
                 <button className="flex focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 items-center bg-orange-500 rounded-full px-3 hover:bg-orange-600 text-sm text-white">

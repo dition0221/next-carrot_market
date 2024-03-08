@@ -39,3 +39,11 @@ export function scrollToDown() {
     top: document.documentElement.scrollHeight,
   });
 }
+
+// Delete image file in CF
+export async function deleteImage(imageId: string | null) {
+  await fetch("/api/files", {
+    method: "DELETE",
+    body: imageId,
+  });
+}

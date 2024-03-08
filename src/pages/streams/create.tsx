@@ -53,16 +53,28 @@ export default function CreateStream() {
     <Layout title="라이브 시작하기" canGoBack>
       <form onSubmit={handleSubmit(onValid)} className="px-4 space-y-4">
         <Input
-          register={register("name", { required: "라이브 제목이 필요합니다." })}
+          register={register("name", {
+            required: "Live's name is required",
+            maxLength: {
+              value: 50,
+              message: "Live's name is less than 50 characters",
+            },
+          })}
           name="name"
           label="Name"
           type="text"
           required={false}
+          placeholder="name"
+          maxLength={50}
         />
         <Input
           register={register("price", {
-            required: "가격이 필요합니다.",
+            required: "Price is required",
             valueAsNumber: true,
+            min: {
+              value: 0,
+              message: "Price can be from 0",
+            },
           })}
           name="price"
           label="Price"
@@ -72,10 +84,17 @@ export default function CreateStream() {
           required={false}
         />
         <Textarea
-          register={register("description", { required: "설명이 필요합니다." })}
+          register={register("description", {
+            required: "Description is required",
+            maxLength: {
+              value: 1000,
+              message: "Description is less than 1000 characters",
+            },
+          })}
           name="description"
           label="Description"
           required={false}
+          maxLength={1000}
         />
 
         {/* Form errors */}

@@ -1,30 +1,45 @@
-import Image from "next/image";
+import { useEffect, useState } from "react";
+import { getIronSession } from "iron-session";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
 // LIBS
-import useMutation from "@/libs/client/useMutation";
-// COMPONENTS
-import Layout from "@/components/layout";
-import Input from "@/components/input";
-import Textarea from "@/components/textarea";
-import Button from "@/components/button";
-import FormErrorMessage from "@/components/form-error-msg";
-// INTERFACE
-import type { IProductList } from "@/pages/api/products";
-import type { ICloudflareUrl, IUploadImage } from "@/pages/api/files";
 import useUser from "@/libs/client/useUser";
+import useMutation from "@/libs/client/useMutation";
+import { deleteImage, getImage } from "@/libs/client/utils";
+import prismaClient from "@/libs/server/prismaClient";
+import {
+  type IIronSessionData,
+  sessionOptions,
+} from "@/libs/server/getSession";
+// COMPONENTS
+import FormErrorMessage from "@/components/form-error-msg";
+import Button from "@/components/button";
+import Textarea from "@/components/textarea";
+import Input from "@/components/input";
+import Image from "next/image";
+import Layout from "@/components/layout";
+// INTERFACE
+import type { GetServerSideProps } from "next";
+import type { IProductForm } from "@/pages/products/upload";
+import type { ICloudflareUrl, IUploadImage } from "@/pages/api/files";
+import type { IProductList } from "@/pages/api/products";
 
-export interface IProductForm {
-  photo?: FileList;
-  name: string;
-  price: string;
-  description: string;
+interface IEditProductProps {
+  product: {
+    id: number;
+    userId: number;
+    imageUrl: string | null;
+    name: string;
+    price: number;
+    description: string;
+  };
 }
 
-export default function ProductUpload() {
-  const router = useRouter();
+export default function EditProduct({ product }: IEditProductProps) {
   const { user } = useUser();
+
+  const router = useRouter();
+  const { id } = router.query;
 
   // <form>
   const {
@@ -32,7 +47,16 @@ export default function ProductUpload() {
     handleSubmit,
     formState: { errors },
     watch,
+    setValue,
   } = useForm<IProductForm>();
+
+  // Default <form>
+  useEffect(() => {
+    setValue("name", product.name);
+    setValue("price", product.price + "");
+    setValue("description", product.description);
+    if (product.imageUrl) setPhotoPreview(getImage(product.imageUrl, "public"));
+  }, [product, setValue]);
 
   // Change product's photo
   const [photoPreview, setPhotoPreview] = useState("");
@@ -45,8 +69,9 @@ export default function ProductUpload() {
   }, [photo]);
 
   // Submit form
-  const [uploadProduct, { isLoading, data }] =
-    useMutation<IProductList>("/api/products");
+  const [editProduct, { isLoading, data }] = useMutation<IProductList>(
+    `/api/products/${id}`
+  );
   const [isImgLoading, setIsImgLoading] = useState(false);
   const onValid = async ({ name, price, description, photo }: IProductForm) => {
     if (isLoading || isImgLoading) return;
@@ -56,6 +81,9 @@ export default function ProductUpload() {
       setIsImgLoading(true);
 
       try {
+        // delete previous image in CF
+        deleteImage(product.imageUrl);
+
         // Ask for CF URL
         const cloudflareUrl = (await (
           await fetch("/api/files")
@@ -73,8 +101,8 @@ export default function ProductUpload() {
         ).json()) as IUploadImage;
         if (!uploadImage.success) throw new Error();
 
-        // Upload to DB
-        return uploadProduct({
+        // Edit to DB
+        return editProduct({
           name,
           price,
           description,
@@ -87,31 +115,32 @@ export default function ProductUpload() {
       }
     }
 
-    uploadProduct({ name, price, description });
+    return editProduct({ name, price, description });
   };
 
-  // When finish uploading, Go to 'product detail' page
+  // When finish, Go to 'product detail' page
   useEffect(() => {
-    if (data?.ok && data.product) {
+    // Success
+    if (data?.ok && data.product)
       router.replace(`/products/${data.product.id}`);
-    }
+
+    // Fail: Error handling
+    if (data?.ok === false && data.error) alert(data.error);
   }, [data, router]);
 
   return (
-    <Layout title="상품 등록" canGoBack>
+    <Layout title="상품 수정" canGoBack>
       <form className="px-4 space-y-4" onSubmit={handleSubmit(onValid)}>
         <div>
-          {photoPreview ? (
-            <div className="relative w-full h-48">
+          <label className="relative w-full h-48 text-gray-600 hover:text-orange-500 flex justify-center items-center border-2 border-dashed border-gray-300 hover:border-orange-500 rounded-md cursor-pointer">
+            {photoPreview ? (
               <Image
                 src={photoPreview}
                 alt="product image"
                 className="object-contain bg-slate-200 rounded-md"
                 fill={true}
               />
-            </div>
-          ) : (
-            <label className="w-full h-48 text-gray-600 hover:text-orange-500 flex justify-center items-center border-2 border-dashed border-gray-300 hover:border-orange-500 rounded-md cursor-pointer">
+            ) : (
               <svg
                 className="h-12 w-12"
                 stroke="currentColor"
@@ -126,21 +155,21 @@ export default function ProductUpload() {
                   strokeLinejoin="round"
                 />
               </svg>
-              <input
-                {...register("photo", {
-                  validate: {
-                    isImage: (value) =>
-                      value?.[0]
-                        ? value[0].type.includes("image") || "Image file only"
-                        : true,
-                  },
-                })}
-                className="hidden"
-                type="file"
-                accept="image/*"
-              />
-            </label>
-          )}
+            )}
+            <input
+              {...register("photo", {
+                validate: {
+                  isImage: (value) =>
+                    value?.[0]
+                      ? value[0].type.includes("image") || "Image file only"
+                      : true,
+                },
+              })}
+              className="hidden"
+              type="file"
+              accept="image/*"
+            />
+          </label>
         </div>
         <Input
           register={register("name", {
@@ -209,3 +238,50 @@ export default function ProductUpload() {
     </Layout>
   );
 }
+
+export const getServerSideProps: GetServerSideProps = async ({
+  params,
+  req,
+  res,
+}) => {
+  try {
+    const id = params?.id;
+    if (typeof id !== "string")
+      throw new Error("Only one dynamic params allowed");
+
+    // session
+    const { user } = await getIronSession<IIronSessionData>(
+      req,
+      res,
+      sessionOptions
+    );
+
+    // GET 'product'
+    const product = await prismaClient.product.findUnique({
+      where: {
+        id: +id,
+      },
+      select: {
+        id: true,
+        userId: true,
+        imageUrl: true,
+        name: true,
+        price: true,
+        description: true,
+      },
+    });
+    if (!product) throw new Error("Not found product");
+    if (user?.id !== product.userId) throw new Error("No authorization");
+
+    return {
+      props: {
+        product: JSON.parse(JSON.stringify(product)),
+      },
+    };
+  } catch (error) {
+    console.log(error);
+    return {
+      notFound: true,
+    };
+  }
+};

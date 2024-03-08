@@ -123,7 +123,7 @@ export default function ChatDetail() {
               page.chats?.map((chat) => (
                 <Message
                   key={chat.id}
-                  userId={chat.id}
+                  userId={chat.user.id}
                   text={chat.content}
                   createdAt={chat.createdAt}
                   avatar={chat.user.avatar}

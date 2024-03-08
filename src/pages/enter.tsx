@@ -151,7 +151,7 @@ export default function Enter() {
                 register={register("phone", {
                   required: true,
                   pattern: {
-                    value: /^\d{11}$/,
+                    value: /^010+\d{8}$/,
                     message: "Only allow 11 numbers of phone",
                   },
                 })}
