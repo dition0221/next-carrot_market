@@ -50,7 +50,7 @@ export default function CreateStream() {
   }, [data?.ok, data?.stream?.id, router]);
 
   return (
-    <Layout title="라이브 시작하기" canGoBack>
+    <Layout title="라이브 시작하기" canGoBack seo="Start live stream">
       <form onSubmit={handleSubmit(onValid)} className="px-4 space-y-4">
         <Input
           register={register("name", {

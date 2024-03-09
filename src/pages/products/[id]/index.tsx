@@ -93,7 +93,7 @@ function ProductDetail() {
     if (!isDelete) return;
 
     // Delete image
-    deleteImage(data.product.imageUrl);
+    await deleteImage(data.product.imageUrl);
 
     // Delete from DB
     const { ok } = (await fetch(`/api/products/${id}`, {
@@ -105,7 +105,7 @@ function ProductDetail() {
   };
 
   return (
-    <Layout canGoBack>
+    <Layout canGoBack seo={data?.product?.name ?? "Product"}>
       <div className="px-4">
         <section className="mb-8">
           {/* Product image */}

@@ -34,6 +34,7 @@ async function handler(
   if (req.method === "POST") {
     try {
       const { name, email, phone, avatarId }: IEditProfile = req.body;
+
       const currentUser = await prismaClient.user.findUnique({
         where: {
           id: user.id,
@@ -47,42 +48,16 @@ async function handler(
       if (!currentUser)
         return res.status(404).json({ ok: false, error: "Not Found" });
 
-      // New values (& 'avatarId')
-      const newName = name && name !== currentUser?.name ? name : undefined;
-      const newEmail =
-        email && email !== currentUser?.email ? email : undefined;
-      const newPhone =
-        phone && phone !== currentUser?.phone ? phone : undefined;
+      // New values
+      const newEmail = email && email !== currentUser.email ? email : undefined;
+      const newPhone = phone && phone !== currentUser.phone ? phone : undefined;
+      const newValues: any = {};
+      if (newEmail) newValues.email = newEmail;
+      if (newPhone) newValues.phone = newPhone;
+      if (name !== currentUser.name) newValues.name = name;
+      if (avatarId) newValues.avatar = avatarId;
 
-      // * SSG(ODR) Update
-      await res.revalidate(`/users/profiles/${user.id}`);
-
-      // Update 'name'
-      if (newName)
-        await prismaClient.user.update({
-          where: {
-            id: user.id,
-          },
-          data: {
-            name: newName,
-          },
-        });
-
-      // Update 'avatar'
-      if (avatarId)
-        await prismaClient.user.update({
-          where: {
-            id: user.id,
-          },
-          data: {
-            avatar: avatarId,
-          },
-        });
-
-      // 1) No happening
-      if (!newEmail && !newPhone) return res.status(200).json({ ok: true });
-
-      // 2) Check duplication: email
+      // 1) Check duplication: email
       if (newEmail && !newPhone) {
         const alreadyExists = Boolean(
           await prismaClient.user.findUnique({
@@ -98,18 +73,9 @@ async function handler(
           return res
             .status(409)
             .json({ ok: false, error: "Email already taken" });
-        await prismaClient.user.update({
-          where: {
-            id: user.id,
-          },
-          data: {
-            email: newEmail,
-          },
-        });
-        return res.status(200).json({ ok: true });
       }
 
-      // 3) Check duplication: phone
+      // 2) Check duplication: phone
       if (newPhone && !newEmail) {
         const alreadyExists = Boolean(
           await prismaClient.user.findUnique({
@@ -125,18 +91,9 @@ async function handler(
           return res
             .status(409)
             .json({ ok: false, error: "Phone already taken" });
-        await prismaClient.user.update({
-          where: {
-            id: user.id,
-          },
-          data: {
-            phone: newPhone,
-          },
-        });
-        return res.status(200).json({ ok: true });
       }
 
-      // 4) Check duplication: email & phone
+      // 3) Check duplication: email & phone
       if (newEmail && newPhone) {
         const alreadyExists = Boolean(
           await prismaClient.user.findFirst({
@@ -152,20 +109,28 @@ async function handler(
           return res
             .status(409)
             .json({ ok: false, error: "Email or Phone already taken" });
-        await prismaClient.user.update({
-          where: {
-            id: user.id,
-          },
-          data: {
-            email: newEmail,
-            phone: newPhone,
-          },
-        });
-        return res.status(200).json({ ok: true });
       }
+
+      // Update DB
+      await prismaClient.user.update({
+        where: {
+          id: user.id,
+        },
+        data: {
+          ...newValues,
+        },
+      });
+
+      // SSG(ODR) Update
+      await res.revalidate(`/users/profiles/${user.id}`);
+
+      return res.status(200).json({ ok: true });
     } catch (error) {
       console.log(error);
-      return res.status(500).json({ ok: false, error: String(error) });
+      return res.status(500).json({
+        ok: false,
+        error: (error as Error).message || JSON.stringify(error),
+      });
     }
   }
 }

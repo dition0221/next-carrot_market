@@ -10,6 +10,7 @@ import Input from "@/components/input";
 // INTERFACE
 import type { IResponseType } from "@/libs/server/withHandler";
 import FormErrorMessage from "@/components/form-error-msg";
+import Head from "next/head";
 
 export interface IEnterForm {
   email?: string;
@@ -76,6 +77,10 @@ export default function Enter() {
 
   return (
     <main className="mt-16 px-4">
+      <Head>
+        <title>Enter | Carrot-Market</title>
+      </Head>
+
       <h3 className="text-3xl font-bold text-center mb-8">Enter to Carrot</h3>
       {data?.ok ? (
         <form

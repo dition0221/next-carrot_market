@@ -29,7 +29,7 @@ export default function Chats() {
     useInfiniteScroll<IChatRoomList>("/api/chats");
 
   return (
-    <Layout title="채팅" hasTabBar>
+    <Layout title="채팅" hasTabBar seo="Chats">
       {/* Chat list */}
       <section>
         {data?.[0].ok === false ? (

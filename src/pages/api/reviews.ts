@@ -17,7 +17,11 @@ async function handler(
       where: {
         createdForId: user.id,
       },
-      include: {
+      select: {
+        id: true,
+        createdAt: true,
+        review: true,
+        score: true,
         createdBy: {
           select: {
             id: true,

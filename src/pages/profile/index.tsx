@@ -4,7 +4,7 @@ import useSWR, { SWRConfig } from "swr";
 import { getIronSession } from "iron-session";
 // LIBS
 import useUser, { type IUserResponse } from "@/libs/client/useUser";
-import { cls, getImage } from "@/libs/client/utils";
+import { cls, formatTime, getImage } from "@/libs/client/utils";
 import prismaClient from "@/libs/server/prismaClient";
 import {
   type IIronSessionData,
@@ -13,22 +13,23 @@ import {
 // COMPONENTS
 import Layout from "@/components/layout";
 import LinkProfile from "@/components/link-profile";
-// INTERFACE
-import type { Review } from "@prisma/client";
-import type { GetServerSideProps } from "next";
 import NotFoundPage from "@/components/404-page";
-
-interface ReviewWithUser extends Review {
-  createdBy: {
-    id: number;
-    name: string;
-    avatar: string | null;
-  };
-}
+// INTERFACE
+import type { GetServerSideProps } from "next";
 
 interface IReviewList {
   ok: boolean;
-  reviews?: ReviewWithUser[];
+  reviews?: {
+    id: number;
+    createdAt: string;
+    review: string;
+    score: number;
+    createdBy: {
+      id: number;
+      name: string;
+      avatar: string | null;
+    };
+  }[];
   error?: any;
 }
 
@@ -40,7 +41,7 @@ function Profile() {
   const { data: reviewData } = useSWR<IReviewList>("/api/reviews");
 
   return (
-    <Layout title="나의 캐럿" hasTabBar>
+    <Layout title="나의 캐럿" hasTabBar seo="My profile">
       <div className="px-4">
         {/* Profile */}
         {user ? (
@@ -122,7 +123,7 @@ function Profile() {
 
         {/* Received review list */}
         {reviewData?.reviews?.length ? (
-          <section className="mt-12 space-y-12">
+          <section className="mt-12 border-t pt-6 space-y-12">
             {reviewData?.reviews?.map((review) => (
               <article key={review.id}>
                 <div className="flex items-center space-x-4">
@@ -164,7 +165,14 @@ function Profile() {
                     </div>
                   </div>
                 </div>
-                <p className="mt-2 text-gray-700 text-sm">{review.review}</p>
+                <div className="flex items-center mt-2 space-x-4">
+                  <span className="px-2.5 py-0.5 rounded-full text-xs bg-gray-100 text-gray-800">
+                    <time dateTime={review.createdAt} suppressHydrationWarning>
+                      {formatTime(review.createdAt, true)}
+                    </time>
+                  </span>
+                  <span className="text-gray-700 text-sm">{review.review}</span>
+                </div>
               </article>
             ))}
           </section>

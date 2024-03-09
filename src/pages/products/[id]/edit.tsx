@@ -82,7 +82,7 @@ export default function EditProduct({ product }: IEditProductProps) {
 
       try {
         // delete previous image in CF
-        deleteImage(product.imageUrl);
+        await deleteImage(product.imageUrl);
 
         // Ask for CF URL
         const cloudflareUrl = (await (
@@ -129,7 +129,7 @@ export default function EditProduct({ product }: IEditProductProps) {
   }, [data, router]);
 
   return (
-    <Layout title="상품 수정" canGoBack>
+    <Layout title="상품 수정" canGoBack seo="Edit product">
       <form className="px-4 space-y-4" onSubmit={handleSubmit(onValid)}>
         <div>
           <label className="relative w-full h-48 text-gray-600 hover:text-orange-500 flex justify-center items-center border-2 border-dashed border-gray-300 hover:border-orange-500 rounded-md cursor-pointer">
@@ -139,6 +139,8 @@ export default function EditProduct({ product }: IEditProductProps) {
                 alt="product image"
                 className="object-contain bg-slate-200 rounded-md"
                 fill={true}
+                sizes="30vw, 30vh"
+                priority
               />
             ) : (
               <svg

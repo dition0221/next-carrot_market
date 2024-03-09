@@ -1,11 +1,13 @@
 import Link from "next/link";
 // LIBS
+import prismaClient from "@/libs/server/prismaClient";
 import useInfiniteScroll from "@/libs/client/useInfiniteScroll";
 // COMPONENTS
 import Layout from "@/components/layout";
 import FloatingButton from "@/components/floating-button";
 // INTERFACE
 import type { Stream } from "@prisma/client";
+import { GetServerSideProps } from "next";
 
 interface IStreamsResponse {
   ok: boolean;
@@ -13,16 +15,18 @@ interface IStreamsResponse {
   error?: any;
 }
 
-export default function Streams() {
+export default function Streams({ ok, streams, error }: IStreamsResponse) {
   // Infinite scroll
-  const { data, ref, isLoading } =
-    useInfiniteScroll<IStreamsResponse>("/api/streams");
+  const { data, ref, isLoading } = useInfiniteScroll<IStreamsResponse>(
+    "/api/streams",
+    { ok, streams, error }
+  );
 
   return (
-    <Layout title="라이브 스트리밍" hasTabBar>
+    <Layout title="라이브 스트리밍" hasTabBar seo="Live stream">
       {/* Stream list */}
       <section className="divide-y-[1px] space-y-4">
-        {data?.[0].ok === false ? (
+        {ok === false ? (
           <p className="text-center text-base italic text-gray-600">
             현재 라이브가 없습니다.
           </p>
@@ -45,11 +49,7 @@ export default function Streams() {
       </section>
 
       {/* Infinite scroll */}
-      {isLoading ? (
-        <p className="text-center italic text-gray-500 text-sm">Loading..</p>
-      ) : (
-        <div ref={ref} />
-      )}
+      {!isLoading ? <div ref={ref} /> : null}
 
       <FloatingButton href="/streams/create">
         <svg
@@ -71,3 +71,30 @@ export default function Streams() {
     </Layout>
   );
 }
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  try {
+    const streams = await prismaClient.stream.findMany({
+      take: 5,
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+    if (streams.length === 0) throw new Error("Not Found");
+
+    return {
+      props: {
+        ok: true,
+        streams: JSON.parse(JSON.stringify(streams)),
+      },
+    };
+  } catch (error) {
+    console.log(error);
+    return {
+      props: {
+        ok: false,
+        error: (error as Error).message || JSON.stringify(error),
+      },
+    };
+  }
+};

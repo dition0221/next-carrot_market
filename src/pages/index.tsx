@@ -1,37 +1,47 @@
 import useSWR, { SWRConfig } from "swr";
 // LIBS
 import prismaClient from "@/libs/server/prismaClient";
+import useInfiniteScroll from "@/libs/client/useInfiniteScroll";
 // COMPONENTS
 import Layout from "@/components/layout";
 import FloatingButton from "@/components/floating-button";
 import Item from "@/components/item";
 // INTERFACE
 import type { IProductList } from "@/pages/api/products";
+import type { GetServerSideProps } from "next";
 
-function Home() {
+export default function Home({ ok, products, error }: IProductList) {
   // Fetch 'Product' list from DB
-  const { data } = useSWR<IProductList>("/api/products");
+  const { data, ref, isLoading } = useInfiniteScroll<IProductList>(
+    "/api/products",
+    { ok, products, error }
+  );
 
   return (
-    <Layout title="홈" hasTabBar>
+    <Layout title="홈" hasTabBar seo="Home">
       <section className="flex flex-col">
         {/* Product List */}
-        {data?.ok === false ? (
-          <p className="text-center text-sm text-slate-500">
-            상품이 존재하지 않습니다.
+        {ok === false ? (
+          <p className="text-center text-base italic text-gray-600">
+            현재 채팅방이 없습니다.
           </p>
         ) : null}
-        {data?.products?.map((product) => (
-          <Item
-            id={product.id}
-            title={product.name}
-            price={product.price}
-            imageUrl={product.imageUrl}
-            hearts={product._count?.Records ?? 0}
-            key={product.id}
-          />
-        ))}
+        {data?.map((page) =>
+          page.products?.map((product) => (
+            <Item
+              id={product.id}
+              title={product.name}
+              price={product.price}
+              imageUrl={product.imageUrl}
+              hearts={product._count?.Records ?? 0}
+              key={product.id}
+            />
+          ))
+        )}
       </section>
+
+      {/* Infinite scroll */}
+      {!isLoading ? <div ref={ref} /> : null}
 
       <FloatingButton href="/products/upload">
         <svg
@@ -54,12 +64,12 @@ function Home() {
   );
 }
 
-export default function Page({ ok, products, error }: IProductList) {
+/* export default function Page({ ok, products, error }: IProductList) {
   return (
     <SWRConfig
       value={{
         fallback: {
-          "/api/products": {
+          "/api/products?page=0": {
             ok,
             products,
             error,
@@ -70,9 +80,9 @@ export default function Page({ ok, products, error }: IProductList) {
       <Home />
     </SWRConfig>
   );
-}
+} */
 
-export async function getServerSideProps() {
+export const getServerSideProps: GetServerSideProps = async () => {
   try {
     const products = await prismaClient.product.findMany({
       include: {
@@ -86,7 +96,16 @@ export async function getServerSideProps() {
           },
         },
       },
+      take: 10,
     });
+    if (products.length === 0) {
+      return {
+        props: {
+          ok: false,
+          error: "Not Found",
+        },
+      };
+    }
 
     return {
       props: {
@@ -103,4 +122,4 @@ export async function getServerSideProps() {
       },
     };
   }
-}
+};

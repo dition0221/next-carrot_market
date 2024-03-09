@@ -17,7 +17,7 @@ interface IPostProps {
 
 export default function Post({ data, post }: IPostProps) {
   return (
-    <Layout title={data.title}>
+    <Layout title={data.title} seo={data.title}>
       <div
         className="blog-post-content"
         dangerouslySetInnerHTML={{ __html: post }}

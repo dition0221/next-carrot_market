@@ -98,7 +98,7 @@ export default function ProductUpload() {
   }, [data, router]);
 
   return (
-    <Layout title="상품 등록" canGoBack>
+    <Layout title="상품 등록" canGoBack seo="Upload product">
       <form className="px-4 space-y-4" onSubmit={handleSubmit(onValid)}>
         <div>
           {photoPreview ? (

@@ -113,6 +113,7 @@ export default function ChatDetail() {
     <Layout
       canGoBack
       title={chatRoomData?.chatRoom?.ChatRoomUsers?.[0].user.name}
+      seo={`Chat w.${chatRoomData?.chatRoom?.ChatRoomUsers?.[0].user.name}`}
     >
       {/* Chats */}
       <section className="pb-32 px-4 space-y-4">

@@ -78,7 +78,7 @@ function Stream() {
   };
 
   return (
-    <Layout canGoBack>
+    <Layout canGoBack seo={`Live: ${data?.stream?.name}`}>
       <div className="px-4 space-y-4">
         <div className="w-full bg-slate-300 aspect-video rounded-md shadow-sm" />
 

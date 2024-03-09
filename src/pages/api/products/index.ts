@@ -35,6 +35,13 @@ async function handler(
 ) {
   /* GET: Find 'Product' list from DB */
   if (req.method === "GET") {
+    const { page } = req.query;
+    if (typeof page !== "string")
+      return res
+        .status(400)
+        .json({ ok: false, error: "Only one 'page' parameter is allowed" });
+    const offset = +page;
+
     try {
       const products = await prismaClient.product.findMany({
         include: {
@@ -48,7 +55,12 @@ async function handler(
             },
           },
         },
+        take: 10,
+        skip: offset * 10,
       });
+      if (products.length === 0)
+        return res.status(404).json({ ok: false, error: "Not Found" });
+
       return res.status(200).json({ ok: true, products });
     } catch (error) {
       console.log(error);

@@ -2591,22 +2591,46 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
     - _favicon_
   - _FIX_
     - _[chats/[id]] 프로필 링크 수정_
+- **24-03-09**
+  - _UPDATE_
+    - _[Font] 폰트 적용_
+      - next/font는 모든 글꼴 파일에 자동적으로 자체 호스팅이 내장되어 있음
+      - 레이아웃 쉬프트 없이 폰트를 사용 가능
+      - 구글 폰트에 요청을 보내지 않음
+      - 기본형
+        ```
+        import { 폰트명 } from "next/font/google";
+        const 변수명 = 폰트명({
+          subsets: ["latin"],
+          display: "swap",
+        });
+        <요소 className={변수명.className} />
+        ```
+      - _<a href="https://nextjs.org/docs/app/building-your-application/optimizing/fonts" target="_blank">공식문서</a>_
+      - _<a href="https://velog.io/@dusunax/next.js-google-font-%EC%A0%81%EC%9A%A9%ED%95%98%EA%B8%B0feat.-tailwind" target="_blank">참고자료</a>_
+    - _[product/edit] 프로필 이미지 갱신 시 cloudflare에서 기존 이미지 삭제_
+    - _[SEO] 모든 페이지에 &lt;title&gt; 적기_
+    - _[/api/users/me/index.ts] POST부분 리팩토링_
+      - _업데이트할 컬럼들을 한 객체에 담은 후, 한 번에 업데이트_
+    - _[무한스크롤] 홈(SSR), 동네생활(SSR), 채팅, 라이브(SSR), 판매내역(SSR), 구매내역(SSR), 관심목록(SSR)_
+      - `useSWRInfinite()`의 옵션
+        - `revalidateFirstPage` : [boolean] 첫페이지 재검증 여부 (기본값 true)
+        - `fallbackData` : [T[] | undefined] 첫페이지의 초기데이터
+      - ex.
+        ```
+        const { data, setSize, isLoading, isValidating } = useSWRInfinite<T>(getKey함수, {
+          revalidateFirstPage: false,
+          fallbackData: 초기데이터 ? [초기데이터] : undefined,
+        });
+        ```
 
 ---
 
 - To-Do
-  - [profile/edit] errors.root에 대해 바로 없어지게 하는 옵션? 변경하기
   - [Token] 한 토큰에 대해 여러 번 시도하는 것을 막기
-  - [무한스크롤] 홈, 동네생활, 판매내역, 구매내역, 관심목록에 적용하기
-    - [DB] take, skip 사용하기 (10)
-  - [/api/users/me/index.ts] POST부분 리팩토링
   - [middleware] 특정 지역 차단하기
     - `req.geo`를 사용
     - 호스팅 시 데이터를 제공받을 수 있음
-  - [SEO] 모든 페이지에 &lt;title&gt; 적기
-  - [render] 모든 페이지에 렌더링 방식 재설정하기
   - [/enter] 소셜 로그인 구현하기 (NextAuth)
-  - 변경 / 삭제
-    - [채팅방] 채팅방 삭제 및 물건 post 삭제 기능 구현하기
-    - [product/edit] 프로필 이미지 갱신 시 cloudflare에서 기존 이미지 삭제
-  - [Font] 폰트 적용
+  - [채팅방] 채팅방 삭제 및 물건 post 삭제 기능 구현하기
+  - [DB] 'records' 다시 로직 및 구현하기 (구매내역, 판매내역)

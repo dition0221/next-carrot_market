@@ -30,15 +30,10 @@ export default function withHandler({
 
     // Check online user
     const { user } = await getSession(req, res);
-    if (isPrivate && !user) {
+    if (isPrivate && !user)
       return res.status(401).json({ ok: false, error: "Please log-in" });
-    }
 
-    try {
-      await handler(req, res);
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({ ok: false, error });
-    }
+    // Execute API handler
+    await handler(req, res);
   };
 }

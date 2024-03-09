@@ -13,7 +13,7 @@ async function handler(
   const { user } = await getSession(req, res);
   if (!user) return res.status(401).json({ ok: false, error: "Please log-in" });
 
-  // POST: Create live stream
+  /* POST: Create live stream */
   if (req.method === "POST") {
     try {
       const { name, price, description }: ICreateLiveForm = req.body;
@@ -36,7 +36,7 @@ async function handler(
     }
   }
 
-  // GET: Get stream list
+  /* GET: Get stream list */
   if (req.method === "GET") {
     const { page } = req.query;
     if (typeof page !== "string")
@@ -47,8 +47,8 @@ async function handler(
 
     try {
       const streams = await prismaClient.stream.findMany({
-        take: 3,
-        skip: offset * 3,
+        take: 5,
+        skip: offset * 5,
         orderBy: {
           createdAt: "desc",
         },

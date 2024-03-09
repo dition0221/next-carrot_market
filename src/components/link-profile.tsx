@@ -37,7 +37,7 @@ export default function LinkProfile({
         <p className="text-sm font-semibold text-gray-700">{userName}</p>
         <Link
           href={href}
-          className="text-xs font-medium text-gray-500 rounded-md hover:bg-slate-100 hover:px-2 transition-all"
+          className="text-xs font-medium text-gray-500 rounded-md hover:bg-slate-100 transition-all"
         >
           {isEdit ? "Edit" : "View"} profile &rarr;
         </Link>

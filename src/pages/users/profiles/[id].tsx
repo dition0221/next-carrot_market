@@ -36,14 +36,18 @@ export default function UserProfile({ ok, profile, error }: IUserProfileProps) {
   return (
     <>
       {ok && profile ? (
-        <Layout canGoBack title={"사용자 프로필"}>
+        <Layout
+          canGoBack
+          title={"사용자 프로필"}
+          seo={`${profile.name}'s user profile`}
+        >
           {/* Avatar */}
           <div className="mt-8 mx-auto relative w-1/2 aspect-square bg-slate-500 rounded-full">
             {profile.avatar ? (
               <Image
                 src={getImage(profile.avatar, "public")}
                 alt=""
-                className="object-contain rounded-full"
+                className="object-cover rounded-full"
                 fill
                 sizes="50vw, 50vh"
                 priority
@@ -52,7 +56,7 @@ export default function UserProfile({ ok, profile, error }: IUserProfileProps) {
           </div>
 
           {/* Profile */}
-          <p className="mt-4 text-center text-2xl font-semibold text-orange-500">
+          <p className="mt-4 text-center text-2xl font-semibold">
             {profile.name}
           </p>
           <p className="mt-4 text-center text-sm text-gray-800">

@@ -1,12 +1,15 @@
-import { cls } from "@/libs/client/utils";
 import Link from "next/link";
 import { useRouter } from "next/router";
+// LIBS
+import { cls } from "@/libs/client/utils";
+import Head from "next/head";
 
 interface ILayoutProps {
   title?: string;
   canGoBack?: boolean;
   hasTabBar?: boolean; // <nav>
   children: React.ReactNode;
+  seo: string;
 }
 
 export default function Layout({
@@ -14,12 +17,17 @@ export default function Layout({
   canGoBack,
   hasTabBar,
   children,
+  seo,
 }: ILayoutProps) {
   const router = useRouter();
   const goBackPage = () => router.back();
 
   return (
     <>
+      <Head>
+        <title>{`${seo} | Carrot-Market`}</title>
+      </Head>
+
       <header className="bg-white w-full h-[53px] px-10 text-lg font-semibold py-3 sticky text-gray-700 border-b top-0 flex justify-center items-center">
         {canGoBack ? (
           <button onClick={goBackPage} className="absolute left-4">

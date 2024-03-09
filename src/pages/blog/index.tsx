@@ -15,7 +15,7 @@ interface IBlogProps {
 
 export default function Blog({ posts }: IBlogProps) {
   return (
-    <Layout title="Blog">
+    <Layout title="Blog" seo="Blog">
       <h1 className="my-10 text-center font-semibold text-lg">
         Latest Posts :
       </h1>

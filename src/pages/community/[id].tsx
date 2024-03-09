@@ -117,7 +117,7 @@ function CommunityDetail() {
   }, [answerData?.ok, answerData?.answer?.id, reset, mutate]);
 
   return (
-    <Layout canGoBack>
+    <Layout canGoBack seo={data?.post?.question ?? "Community Question"}>
       <span className="inline-flex ml-4 items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
         동네질문
       </span>

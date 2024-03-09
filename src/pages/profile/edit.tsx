@@ -34,7 +34,9 @@ export default function EditProfile() {
     setError,
     formState: { errors },
     watch,
-  } = useForm<IEditProfileForm>();
+  } = useForm<IEditProfileForm>({
+    mode: "onBlur",
+  });
 
   // Default <form>
   useEffect(() => {
@@ -72,7 +74,7 @@ export default function EditProfile() {
 
       try {
         // Delete previous image
-        deleteImage(user.avatar);
+        await deleteImage(user.avatar);
 
         // Ask for CF URL
         const cloudflareUrl = (await (
@@ -120,7 +122,7 @@ export default function EditProfile() {
   }, [data, setError]);
 
   return (
-    <Layout canGoBack title="프로필 수정">
+    <Layout canGoBack title="프로필 수정" seo="Edit profile">
       <form onSubmit={handleSubmit(onValid)} className="px-4 space-y-4">
         <div className="flex items-center space-x-3">
           {avatarPreview ? (

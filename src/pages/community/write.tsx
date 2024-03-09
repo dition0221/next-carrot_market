@@ -48,7 +48,7 @@ export default function CommunityWrite() {
   }, [data?.post, router]);
 
   return (
-    <Layout title="질문 등록하기" canGoBack>
+    <Layout title="질문 등록하기" canGoBack seo="Write a question to community">
       <form onSubmit={handleSubmit(onValid)} className="px-4 space-y-4">
         <Textarea
           name="question"

@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 // LIBS
-import withHandler, { IResponseType } from "@/libs/server/withHandler";
+import withHandler, { type IResponseType } from "@/libs/server/withHandler";
 import prismaClient from "@/libs/server/prismaClient";
 import { getSession } from "@/libs/server/getSession";
 
@@ -17,6 +17,14 @@ async function handler(
   if (kind !== "Favorite" && kind !== "Purchase" && kind !== "Sale")
     return res.status(400).json({ ok: false, error: "Query parameter error" });
 
+  // Pagination
+  const { page } = req.query;
+  if (typeof page !== "string")
+    return res
+      .status(400)
+      .json({ ok: false, error: "Only one 'page' parameter is allowed" });
+  const offset = +page;
+
   // Get 'kind's of product list
   try {
     const products = await prismaClient.record.findMany({
@@ -24,9 +32,14 @@ async function handler(
         userId: user.id,
         kind,
       },
-      include: {
+      select: {
+        id: true,
         product: {
-          include: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+            imageUrl: true,
             _count: {
               select: {
                 Records: {
@@ -39,7 +52,12 @@ async function handler(
           },
         },
       },
+      take: 10,
+      skip: offset * 10,
     });
+    if (products.length === 0)
+      return res.status(404).json({ ok: false, error: "Not Found" });
+
     return res.status(200).json({ ok: true, products });
   } catch (error) {
     console.log(error);
