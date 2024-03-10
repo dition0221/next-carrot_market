@@ -5,10 +5,14 @@ import Image from "next/image";
 import { getIronSession } from "iron-session";
 import { useEffect } from "react";
 // LIBS
+import prismaClient from "@/libs/server/prismaClient";
+import {
+  type IIronSessionData,
+  sessionOptions,
+} from "@/libs/server/getSession";
+import usePagination from "@/libs/client/usePagination";
 import useMutation from "@/libs/client/useMutation";
 import { cls, formatTime, getImage } from "@/libs/client/utils";
-import prismaClient from "@/libs/server/prismaClient";
-import { IIronSessionData, sessionOptions } from "@/libs/server/getSession";
 // COMPONENTS
 import Button from "@/components/button";
 import Layout from "@/components/layout";
@@ -17,10 +21,9 @@ import LinkProfile from "@/components/link-profile";
 import FormErrorMessage from "@/components/form-error-msg";
 import NotFoundPage from "@/components/404-page";
 // INTERFACE
-import type { Answer, Post } from "@prisma/client";
 import type { GetServerSideProps } from "next";
 
-interface AnswerWithUser {
+interface Answer {
   id: number;
   answer: string;
   createdAt: string;
@@ -31,20 +34,24 @@ interface AnswerWithUser {
   };
 }
 
-interface PostWithUser extends Post {
+interface PostWithUser {
+  id: true;
+  createdAt: string;
+  userId: number;
+  question: string;
   user: {
     id: number;
     name: string;
     avatar: string | null;
   };
-  Answers: AnswerWithUser[];
+  Answers: Answer[];
   _count: {
     Answers: number;
     Wonderings: number;
   };
 }
 
-interface ICommunityPostRes {
+interface ICommunityDetailProps {
   ok: boolean;
   post?: PostWithUser;
   isWondering: boolean;
@@ -56,19 +63,41 @@ interface IAnswerForm {
   answer: string;
 }
 
-interface IAnswerResponse {
+interface IGetAnswersRes {
+  ok: boolean;
+  answers?: Answer[];
+  error?: string;
+}
+
+interface IPostAnswerRes {
   ok: boolean;
   answer?: Answer;
   error?: any;
 }
 
+const ANSWERS_PER_PAGE = 5; // pagination
+
 function CommunityDetail() {
   const { id } = useRouter().query; // postId
 
-  // Get 'post' data
-  const { data, mutate } = useSWR<ICommunityPostRes>(
+  // GET 'post' data
+  const { data, mutate } = useSWR<ICommunityDetailProps>(
     id ? `/api/posts/${id}` : null
   );
+
+  // GET 'answers' data
+  const {
+    data: answersData,
+    size,
+    mutate: answersMutate,
+    isLoading: isAnswersLoading,
+    getMoreFn,
+  } = usePagination<IGetAnswersRes>({
+    url: `/api/posts/${id}/answers`,
+    idParams: id,
+    fallback: { ok: true, ...data?.post?.Answers },
+  });
+  // const;
 
   // Mutate 'isWondering'
   const [wonder, { isLoading }] = useMutation(`/api/posts/${id}/wonder`);
@@ -101,20 +130,20 @@ function CommunityDetail() {
     reset,
   } = useForm<IAnswerForm>();
 
-  // Post 'answer' data
-  const [sendAnswer, { data: answerData, isLoading: isAnswerLoading }] =
-    useMutation<IAnswerResponse>(`/api/posts/${id}/answers`);
+  // POST 'answer' data
+  const [sendAnswer, { data: postAnswerData, isLoading: isAnswerLoading }] =
+    useMutation<IPostAnswerRes>(`/api/posts/${id}/answers`);
   const onValid = (formData: IAnswerForm) => {
     if (isAnswerLoading) return;
     sendAnswer(formData); // DB
   };
   useEffect(() => {
     // Mutate new 'answer'
-    if (answerData?.ok) {
+    if (postAnswerData?.ok) {
       mutate();
       reset();
     }
-  }, [answerData?.ok, answerData?.answer?.id, reset, mutate]);
+  }, [postAnswerData?.ok, postAnswerData?.answer?.id, reset, mutate]);
 
   return (
     <Layout canGoBack seo={data?.post?.question ?? "Community Question"}>
@@ -138,10 +167,10 @@ function CommunityDetail() {
           <span>{data?.post?.question}</span>
           <p className="mt-2 text-xs text-gray-500">
             <time
-              dateTime={data?.post?.updatedAt + ""}
+              dateTime={data?.post?.createdAt + ""}
               suppressHydrationWarning
             >
-              {formatTime(data?.post?.updatedAt + "", true)}
+              {formatTime(data?.post?.createdAt + "", true)}
             </time>
           </p>
         </div>
@@ -192,7 +221,10 @@ function CommunityDetail() {
       {/* Reply[] */}
       {data?.post?.Answers && data.post.Answers.length > 0 ? (
         <section className="px-4 py-5 space-y-5 border-b-2">
-          {data.post.Answers.map((answer) => (
+          {(answersData?.[0].ok && answersData?.[0].answers
+            ? answersData.flatMap((page) => page.answers!)
+            : data?.post?.Answers!
+          ).map((answer) => (
             <div className="flex items-start space-x-3" key={answer.id}>
               {answer.user.avatar ? (
                 <Image
@@ -218,6 +250,15 @@ function CommunityDetail() {
               </div>
             </div>
           ))}
+          {/* Event of reply pagination */}
+          {ANSWERS_PER_PAGE * size < data.post._count.Answers ? (
+            <button
+              onClick={getMoreFn}
+              className="w-full py-1 text-center text-white text-xs bg-slate-500 rounded-lg hover:bg-slate-600 transition-colors"
+            >
+              See more replies
+            </button>
+          ) : null}
         </section>
       ) : null}
 
@@ -259,7 +300,7 @@ export default function Page({
   isWondering,
   error,
   id,
-}: ICommunityPostRes) {
+}: ICommunityDetailProps) {
   return (
     <>
       {ok ? (
@@ -320,7 +361,11 @@ export const getServerSideProps: GetServerSideProps = async ({
       where: {
         id: +id,
       },
-      include: {
+      select: {
+        id: true,
+        createdAt: true,
+        userId: true,
+        question: true,
         user: {
           select: {
             id: true,
@@ -341,6 +386,7 @@ export const getServerSideProps: GetServerSideProps = async ({
               },
             },
           },
+          take: ANSWERS_PER_PAGE,
         },
         _count: {
           select: {

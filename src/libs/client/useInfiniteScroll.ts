@@ -23,8 +23,9 @@ import useSWRInfinite from "swr/infinite";
       return res
         .status(400)
         .json({ ok: false, error: "Only one 'page' parameter is allowed" });
-    const offset = +page;
-  DB에서 'take: 갯수, skip: offset * 갯수' 사용하기
+  const offset = +page;
+  
+  - DB에서 'take: 갯수, skip: offset * 갯수' 사용하기
 */
 
 export default function useInfiniteScroll<T = any>(

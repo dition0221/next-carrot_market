@@ -46,6 +46,11 @@ async function handler(
             },
           },
         },
+        _count: {
+          select: {
+            Chats: true,
+          },
+        },
       },
     });
     if (!chatRoom)

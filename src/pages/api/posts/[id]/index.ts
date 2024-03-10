@@ -19,13 +19,17 @@ async function handler(
   const { user } = await getSession(req, res);
   if (!user) return res.status(401).json({ ok: false, error: "Please log-in" });
 
-  // Get 'post' from DB
+  // GET 'post' from DB
   try {
     const post = await prismaClient.post.findUnique({
       where: {
         id: +id,
       },
-      include: {
+      select: {
+        id: true,
+        createdAt: true,
+        userId: true,
+        question: true,
         user: {
           select: {
             id: true,
@@ -46,6 +50,7 @@ async function handler(
               },
             },
           },
+          take: 1,
         },
         _count: {
           select: {

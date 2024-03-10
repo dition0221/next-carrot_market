@@ -2623,6 +2623,11 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
           fallbackData: 초기데이터 ? [초기데이터] : undefined,
         });
         ```
+- **24-03-09**
+  - _UPDATE_
+    - _[community/[id]] 댓글 pagination_
+  - _FIX_
+    - _[chats/[id]] pagination 이벤트 버튼 활성화 조건 수정_
 
 ---
 
@@ -2632,5 +2637,11 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
     - `req.geo`를 사용
     - 호스팅 시 데이터를 제공받을 수 있음
   - [/enter] 소셜 로그인 구현하기 (NextAuth)
+  - [DB] 'records' 로직 다시 및 구현하기 (구매내역, 판매내역)
   - [채팅방] 채팅방 삭제 및 물건 post 삭제 기능 구현하기
-  - [DB] 'records' 다시 로직 및 구현하기 (구매내역, 판매내역)
+    - 구매자 or 판매자가 대화 종료 시
+      - 채팅방 관련만 삭제
+    - 구매자가 구매 완료 시
+      - 채팅방, 물건 관련 전부 삭제
+      - 구매자의 판매내역에 추가
+  - [product] 판매종료내역 관련

@@ -56,13 +56,14 @@ export default function EditProfile() {
     }
   }, [avatar]);
 
-  // Submit form
-  const [editProfile, { data, isLoading }] =
+  // Submit <form>
+  const [editProfile, { data, isLoading: isEditLoading }] =
     useMutation<IResponseType>("/api/users/me");
   const [isAvatarLoading, setIsAvatarLoading] = useState(false);
+  const isLoading = isEditLoading || isAvatarLoading;
   const onValid = async ({ name, email, phone, avatar }: IEditProfileForm) => {
     // Error handling
-    if (isLoading || isAvatarLoading) return;
+    if (isLoading) return;
     if (email === "" && phone === "")
       return setError("root", {
         message: "Please write an email or phone number",
@@ -164,6 +165,11 @@ export default function EditProfile() {
               value: 12,
               message: "Name is less than 12 characters",
             },
+            validate: {
+              isAdmin: (value) =>
+                !value.toLowerCase().includes("admin") ||
+                "You can't use name 'admin'",
+            },
           })}
           name="name"
           label="Name"
@@ -220,10 +226,7 @@ export default function EditProfile() {
           <FormErrorMessage text={errors.root.message} />
         ) : null}
 
-        <Button
-          text={isLoading || isAvatarLoading ? "Loading.." : "Update profile"}
-          full
-        />
+        <Button text={isLoading ? "Loading.." : "Update profile"} full />
       </form>
     </Layout>
   );

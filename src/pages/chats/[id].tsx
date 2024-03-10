@@ -10,6 +10,7 @@ import { scrollToDown } from "@/libs/client/utils";
 // COMPONENTS
 import Layout from "@/components/layout";
 import Message from "@/components/message";
+import usePagination from "@/libs/client/usePagination";
 
 export interface IWriteChatForm {
   chat: string;
@@ -35,17 +36,21 @@ interface ICheckChatRoom {
   chatRoom?: {
     id: number;
     ChatRoomUsers: {
+      // [0] (상대방)만 사용할 것
       user: {
         name: string;
       };
-    }[]; // [0] (상대방)만 사용할 것
+    }[];
+    _count: {
+      Chats: number;
+    };
   };
   error?: any;
 }
 
 export default function ChatDetail() {
+  const MESSAGES_PER_PAGE = 10; // pagination
   const { user } = useUser();
-
   const router = useRouter();
   const { id } = router.query;
 
@@ -56,23 +61,11 @@ export default function ChatDetail() {
   if (chatRoomData && !chatRoomData.ok) router.replace("/chats");
 
   /* GET: Read chats */
-  const [isMoreEnd, setIsMoreEnd] = useState(false);
-  const getKey = (pageIndex: number, prevData: IChatsResponse) => {
-    // if 'ok: false', Reached the end
-    if (prevData && (prevData as any).ok === false) {
-      setIsMoreEnd(true);
-      return null;
-    }
-    return id ? `/api/chats/${id}/chats?page=${pageIndex}` : null;
-  };
-  const { data, size, setSize, isLoading, isValidating, mutate } =
-    useSWRInfinite<IChatsResponse>(getKey);
-  const isReadLoading = isLoading || isValidating;
-  // pagination
-  const getMoreChats = () => {
-    if (isReadLoading || isMoreEnd) return;
-    setSize((prev) => prev + 1);
-  };
+  const { data, size, mutate, isLoading, getMoreFn } =
+    usePagination<IChatsResponse>({
+      url: `/api/chats/${id}/chats`,
+      idParams: id,
+    });
 
   /* POST: Write a chat */
   const [postChat, { isLoading: isWriteLoading }] = useMutation(
@@ -80,7 +73,7 @@ export default function ChatDetail() {
   );
   const { register, handleSubmit, reset } = useForm<IWriteChatForm>();
   const onValid = (formData: IWriteChatForm) => {
-    if (isWriteLoading || isReadLoading) return;
+    if (isWriteLoading || isLoading) return;
 
     mutate(
       (prev) =>
@@ -169,10 +162,11 @@ export default function ChatDetail() {
         </div>
       </form>
 
-      {/* pagination */}
-      {(data?.[size - 1]?.chats ?? []).length >= 10 ? (
+      {/* Event of pagination */}
+      {MESSAGES_PER_PAGE * size <
+      (chatRoomData?.chatRoom?._count.Chats ?? 0) ? (
         <button
-          onClick={getMoreChats}
+          onClick={getMoreFn}
           className="fixed top-14 left-0 right-0 mx-auto w-7 h-7 rounded-full bg-gray-300 flex justify-center items-center hover:bg-gray-600 transition-colors shadow-md"
         >
           <svg

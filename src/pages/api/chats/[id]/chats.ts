@@ -19,13 +19,15 @@ async function handler(
       .status(400)
       .json({ ok: false, error: "Only one dynamicParam is allowed" });
 
-  /* GET: chat list*/
+  /* GET: Chatting list*/
   if (req.method === "GET") {
     const { page } = req.query;
     if (typeof page !== "string")
       return res
         .status(400)
         .json({ ok: false, error: "Only one dynamicParam is allowed" });
+
+    const MESSAGES_PER_PAGE = 10; // pagination
 
     try {
       const chats = await prismaClient.chat.findMany({
@@ -48,8 +50,8 @@ async function handler(
         orderBy: {
           createdAt: "desc",
         },
-        take: 10,
-        skip: +page * 10,
+        take: MESSAGES_PER_PAGE,
+        skip: +page * MESSAGES_PER_PAGE,
       });
       if (!chats)
         return res.status(404).json({ ok: false, error: "Not Found" });
@@ -64,7 +66,6 @@ async function handler(
   /* POST: Write chat */
   if (req.method === "POST") {
     const { chat } = req.body as IWriteChatForm;
-    //
     if (chat.length < 1 || chat.length > 100)
       return res.status(400).json({ ok: false, error: "Please write a chat" });
 
