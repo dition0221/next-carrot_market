@@ -17,53 +17,89 @@ async function handler(
       .status(400)
       .json({ ok: false, error: "Only one dynamicParam is allowed" });
 
-  // Check authorization of chat room
-  try {
-    const chatRoom = await prismaClient.chatRoom.findFirst({
-      where: {
-        id: +chatRoomId,
-        ChatRoomUsers: {
-          some: {
-            user: {
-              id: user.id,
-            },
-          },
-        },
-      },
-      select: {
-        id: true,
-        ChatRoomUsers: {
-          where: {
-            userId: {
-              not: user.id,
-            },
-          },
-          select: {
-            user: {
-              select: {
-                name: true,
+  /* GET: Check authorization of chat room */
+  if (req.method === "GET") {
+    try {
+      const chatRoom = await prismaClient.chatRoom.findFirst({
+        where: {
+          id: +chatRoomId,
+          ChatRoomUsers: {
+            some: {
+              user: {
+                id: user.id,
               },
             },
           },
         },
-        _count: {
-          select: {
-            Chats: true,
+        select: {
+          id: true,
+          ChatRoomUsers: {
+            where: {
+              userId: {
+                not: user.id,
+              },
+            },
+            select: {
+              user: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+          product: {
+            select: {
+              user: {
+                select: {
+                  id: true,
+                },
+              },
+            },
+          },
+          _count: {
+            select: {
+              Chats: true,
+            },
           },
         },
-      },
-    });
-    if (!chatRoom)
-      return res.status(404).json({ ok: false, error: "Not Found" });
+      });
+      if (!chatRoom)
+        return res.status(404).json({ ok: false, error: "Not Found" });
 
-    return res.status(200).json({ ok: true, chatRoom });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ ok: false, error });
+      return res.status(200).json({ ok: true, chatRoom });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ ok: false, error });
+    }
+  }
+
+  /* DELETE: Delete chat room */
+  if (req.method === "DELETE") {
+    try {
+      await prismaClient.chatRoom.delete({
+        where: {
+          id: +chatRoomId,
+          ChatRoomUsers: {
+            some: {
+              id: user.id,
+            },
+          },
+        },
+      });
+      return res.status(200).json({
+        ok: true,
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        ok: false,
+        error: JSON.stringify(error),
+      });
+    }
   }
 }
 
 export default withHandler({
-  methods: ["GET"],
+  methods: ["GET", "DELETE"],
   handler,
 });

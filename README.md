@@ -2623,11 +2623,22 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
           fallbackData: 초기데이터 ? [초기데이터] : undefined,
         });
         ```
-- **24-03-09**
+- **24-03-10**
   - _UPDATE_
     - _[community/[id]] 댓글 pagination_
   - _FIX_
     - _[chats/[id]] pagination 이벤트 버튼 활성화 조건 수정_
+- **24-03-11**
+  - _UPDATE_
+    - _[채팅방] 채팅방 삭제 및 물건 post 삭제 기능 구현하기_
+      - _구매자 or 판매자가 대화 종료 시_
+        - _채팅방 관련만 삭제_
+  - _TODO_
+    - _[채팅방] 구매자가 구매 완료 시_
+      - _채팅방, 물건 관련 전부 삭제하기_
+      - _판매내역(판매자), 구매내역(구매자) 추가하기_
+      - _?? product를 삭제하면 cascade때문에 다 삭제됨_
+        - _isSoldOut 같은 boolean 값을 추가해야 하나?_
 
 ---
 
@@ -2638,10 +2649,4 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
     - 호스팅 시 데이터를 제공받을 수 있음
   - [/enter] 소셜 로그인 구현하기 (NextAuth)
   - [DB] 'records' 로직 다시 및 구현하기 (구매내역, 판매내역)
-  - [채팅방] 채팅방 삭제 및 물건 post 삭제 기능 구현하기
-    - 구매자 or 판매자가 대화 종료 시
-      - 채팅방 관련만 삭제
-    - 구매자가 구매 완료 시
-      - 채팅방, 물건 관련 전부 삭제
-      - 구매자의 판매내역에 추가
   - [product] 판매종료내역 관련

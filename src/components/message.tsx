@@ -39,7 +39,7 @@ export default function Message({
         )}
       </Link>
       <div className="w-1/2">
-        <p className="w-full text-sm text-gray-700 p-2 border border-gray-300 rounded-md break-words">
+        <p className="w-full text-sm text-gray-700 p-2 border border-gray-300 rounded-md break-words shadow-sm">
           {text}
         </p>
         {createdAt ? (

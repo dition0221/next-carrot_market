@@ -20,14 +20,18 @@ async function handler(
 
   /* GET: Get user's profile */
   if (req.method === "GET") {
-    // Find user with session from DB
-    const profile = await prismaClient.user.findUnique({
-      where: { id: user?.id },
-    });
-    if (!profile)
-      return res.status(404).json({ ok: false, error: "404 Not Found" });
+    try {
+      const profile = await prismaClient.user.findUnique({
+        where: { id: user?.id },
+      });
+      if (!profile)
+        return res.status(404).json({ ok: false, error: "404 Not Found" });
 
-    return res.status(200).json({ ok: true, profile });
+      return res.status(200).json({ ok: true, profile });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({ ok: true, error: JSON.stringify(error) });
+    }
   }
 
   /* POST: Edit user's profile */

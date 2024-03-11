@@ -133,7 +133,10 @@ async function handler(
       return res.status(200).json({ ok: true });
     } catch (error) {
       console.log(error);
-      return res.status(500).json({ ok: false });
+      return res.status(500).json({
+        ok: false,
+        error: JSON.stringify(error),
+      });
     }
   }
 }

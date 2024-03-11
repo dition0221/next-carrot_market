@@ -1,5 +1,8 @@
 import { format, register } from "timeago.js";
 import koLocale from "timeago.js/lib/lang/ko";
+// INTERFACE
+import type { NextRouter } from "next/router";
+import type { IResponseType } from "@/libs/server/withHandler";
 
 // Add classNames
 export function cls(...classNames: string[]) {
@@ -34,7 +37,7 @@ export function formatTime(dateTime: string, isTimeAgo = false) {
 }
 
 // Scroll to down fn.
-export function scrollToDown() {
+export function scrollToTop() {
   window.scrollTo({
     top: document.documentElement.scrollHeight,
   });
@@ -46,4 +49,30 @@ export async function deleteImage(imageId: string | null) {
     method: "DELETE",
     body: imageId,
   });
+}
+
+// fetch "DELETE" to DB
+interface IDeleteDbProps {
+  apiURL: string;
+  returnURL: string;
+  errorContent: string;
+  router: NextRouter;
+}
+
+export async function deleteDB({
+  apiURL,
+  returnURL,
+  errorContent,
+  router,
+}: IDeleteDbProps) {
+  try {
+    const { ok, error } = (await (
+      await fetch(`${apiURL}`, { method: "DELETE" })
+    ).json()) as IResponseType;
+
+    if (ok) router.replace(`${returnURL}`, undefined, { shallow: true });
+    else throw new Error(error);
+  } catch (error) {
+    alert(`${errorContent}\n${JSON.stringify(error)}`);
+  }
 }

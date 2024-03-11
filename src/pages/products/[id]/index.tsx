@@ -3,9 +3,15 @@ import Image from "next/image";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
 import useSWR, { SWRConfig } from "swr";
+// SESSION
+import { getIronSession } from "iron-session";
+import {
+  type IIronSessionData,
+  sessionOptions,
+} from "@/libs/server/getSession";
 // LIBS
 import useMutation from "@/libs/client/useMutation";
-import { cls, deleteImage, getImage } from "@/libs/client/utils";
+import { cls, deleteDB, deleteImage, getImage } from "@/libs/client/utils";
 import useUser from "@/libs/client/useUser";
 import prismaClient from "@/libs/server/prismaClient";
 // COMPONENTS
@@ -16,13 +22,6 @@ import NotFoundPage from "@/components/404-page";
 // INTERFACE
 import type { GetServerSideProps } from "next";
 import type { Product, User } from "@prisma/client";
-import type { IResponseType } from "@/libs/server/withHandler";
-// SESSION
-import { getIronSession } from "iron-session";
-import {
-  type IIronSessionData,
-  sessionOptions,
-} from "@/libs/server/getSession";
 
 export interface ProductWithUser extends Product {
   user: User;
@@ -92,16 +91,16 @@ function ProductDetail() {
     const isDelete = confirm("Are you sure to delete this product?");
     if (!isDelete) return;
 
-    // Delete image
+    // Delete image from CF
     await deleteImage(data.product.imageUrl);
 
     // Delete from DB
-    const { ok } = (await fetch(`/api/products/${id}`, {
-      method: "DELETE",
-    })) as IResponseType;
-    ok
-      ? router.replace("/", undefined, { shallow: true })
-      : alert("Error: Fail to delete product");
+    await deleteDB({
+      apiURL: `/api/products/${id}`,
+      returnURL: "/",
+      errorContent: "Error: Fail to delete product",
+      router,
+    });
   };
 
   return (

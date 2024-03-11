@@ -1,16 +1,23 @@
+import { getIronSession } from "iron-session";
 import { useRouter } from "next/router";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
-import useSWRInfinite from "swr/infinite";
-import useSWR from "swr";
+import useSWR, { SWRConfig } from "swr";
 // LIBS
-import useMutation from "@/libs/client/useMutation";
+import {
+  type IIronSessionData,
+  sessionOptions,
+} from "@/libs/server/getSession";
+import prismaClient from "@/libs/server/prismaClient";
 import useUser from "@/libs/client/useUser";
-import { scrollToDown } from "@/libs/client/utils";
+import useMutation from "@/libs/client/useMutation";
+import { deleteDB, scrollToTop } from "@/libs/client/utils";
 // COMPONENTS
 import Layout from "@/components/layout";
 import Message from "@/components/message";
 import usePagination from "@/libs/client/usePagination";
+// INTERFACE
+import type { GetServerSideProps } from "next";
+import type { User } from "@prisma/client";
 
 export interface IWriteChatForm {
   chat: string;
@@ -31,7 +38,7 @@ interface IChatsResponse {
   chats?: IChats[];
 }
 
-interface ICheckChatRoom {
+interface IChatRoomResponse {
   ok: boolean;
   chatRoom?: {
     id: number;
@@ -41,6 +48,11 @@ interface ICheckChatRoom {
         name: string;
       };
     }[];
+    product: {
+      user: {
+        id: number; // 판매자 id
+      };
+    };
     _count: {
       Chats: number;
     };
@@ -48,16 +60,20 @@ interface ICheckChatRoom {
   error?: any;
 }
 
-export default function ChatDetail() {
+interface IPageProps extends IChatRoomResponse {
+  id: string | string[] | undefined;
+  profile: User | null;
+}
+
+function ChatDetail() {
   const MESSAGES_PER_PAGE = 10; // pagination
   const { user } = useUser();
   const router = useRouter();
   const { id } = router.query;
 
   // Check authorization of chat room
-  const { data: chatRoomData } = useSWR<ICheckChatRoom>(
-    id ? `/api/chats/${id}` : null
-  );
+  const { data: chatRoomData, isLoading: isChatRoomLoading } =
+    useSWR<IChatRoomResponse>(id ? `/api/chats/${id}` : null);
   if (chatRoomData && !chatRoomData.ok) router.replace("/chats");
 
   /* GET: Read chats */
@@ -98,8 +114,42 @@ export default function ChatDetail() {
       false
     );
     postChat(formData); // DB
-    scrollToDown();
+    scrollToTop();
     reset();
+  };
+
+  // Chat menu fn.
+  const onConfirmProduct = async () => {
+    if (isChatRoomLoading || isLoading) return;
+
+    const isConfirm = confirm(
+      "Are you sure to confirm purchase of this product?"
+    );
+    if (!isConfirm) return;
+
+    // TODO: Add 판매내역/구매내역
+
+    // Delete product from DB
+    await deleteDB({
+      apiURL: `/api/products/${id}`,
+      returnURL: "/",
+      errorContent: "Error: Fail to delete product",
+      router,
+    });
+  };
+  const onExitChatRoom = async () => {
+    if (isChatRoomLoading || isLoading) return;
+
+    const isConfirm = confirm("Are you sure to exit this chatroom?");
+    if (!isConfirm) return;
+
+    // Delete chatRoom from DB
+    await deleteDB({
+      apiURL: `/api/chats/${id}`,
+      returnURL: "/chats",
+      errorContent: "Error: Fail to delete chat room",
+      router,
+    });
   };
 
   return (
@@ -130,6 +180,42 @@ export default function ChatDetail() {
             채팅을 시작해보세요.
           </p>
         ) : null}
+
+        {/* Menu bar */}
+        <div className="flex justify-between items-center border-2 px-4 py-2 text-sm border-gray-300 rounded-lg bg-orange-100 shadow-md">
+          {user?.id === chatRoomData?.chatRoom?.product.user.id ? (
+            <span className="font-semibold text-gray-700">
+              구매완료를 부탁하세요
+            </span>
+          ) : (
+            <button
+              onClick={onConfirmProduct}
+              className="flex items-center space-x-2 text-green-600 hover:underline"
+            >
+              <span className="font-semibold">구매확정</span>
+              <svg
+                className="w-4 h-4 fill-green-600"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 448 512"
+              >
+                <path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z" />
+              </svg>
+            </button>
+          )}
+          <button
+            onClick={onExitChatRoom}
+            className="flex items-center space-x-2 text-red-500 hover:underline"
+          >
+            <span className="font-semibold">나가기</span>
+            <svg
+              className="w-4 h-4 fill-red-600"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 512 512"
+            >
+              <path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z" />
+            </svg>
+          </button>
+        </div>
       </section>
 
       {/* Chat form */}
@@ -181,3 +267,116 @@ export default function ChatDetail() {
     </Layout>
   );
 }
+
+export default function Page({ ok, chatRoom, error, id, profile }: IPageProps) {
+  return (
+    <SWRConfig
+      value={{
+        fallback: {
+          [`/api/chats/${id}`]: {
+            ok,
+            chatRoom,
+            error,
+          },
+          "/api/users/me": {
+            ok,
+            profile,
+          },
+        },
+      }}
+    >
+      <ChatDetail />
+    </SWRConfig>
+  );
+}
+
+export const getServerSideProps: GetServerSideProps = async ({
+  params,
+  req,
+  res,
+}) => {
+  try {
+    // URL Parameter
+    const chatRoomId = params?.id;
+    if (!chatRoomId) throw new Error("Only one dynamicParam is allowed");
+
+    // Session
+    const { user } = await getIronSession<IIronSessionData>(
+      req,
+      res,
+      sessionOptions
+    );
+    if (!user) throw new Error("Please log-in");
+
+    // Get user profile
+    const profile = await prismaClient.user.findUnique({
+      where: {
+        id: user.id,
+      },
+    });
+    if (!profile) throw new Error("Not found user");
+
+    // Get 'chatroom' data
+    const chatRoom = await prismaClient.chatRoom.findFirst({
+      where: {
+        id: +chatRoomId,
+        ChatRoomUsers: {
+          some: {
+            user: {
+              id: user.id,
+            },
+          },
+        },
+      },
+      select: {
+        id: true,
+        ChatRoomUsers: {
+          where: {
+            userId: {
+              not: user.id,
+            },
+          },
+          select: {
+            user: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+        product: {
+          select: {
+            user: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        },
+        _count: {
+          select: {
+            Chats: true,
+          },
+        },
+      },
+    });
+    if (!chatRoom) throw new Error("Not Found");
+
+    return {
+      props: {
+        ok: true,
+        chatRoom: JSON.parse(JSON.stringify(chatRoom)),
+        id: +chatRoomId,
+        profile: JSON.parse(JSON.stringify(profile)),
+      },
+    };
+  } catch (error) {
+    console.log(error);
+    return {
+      props: {
+        ok: false,
+        error: (error as Error).message || JSON.stringify(error),
+      },
+    };
+  }
+};

@@ -1,5 +1,7 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import { getSession } from "./getSession";
+// LIBS
+import { getSession } from "@/libs/server/getSession";
+// INTERFACE
+import type { NextApiRequest, NextApiResponse } from "next";
 
 export interface IResponseType {
   ok: boolean;
