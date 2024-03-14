@@ -8,16 +8,9 @@ async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseType>
 ) {
-  const RECORDS_PER_PAGE = 10;
-
   // Check online user
   const { user } = await getSession(req, res);
   if (!user) return res.status(401).json({ ok: false, error: "Please log-in" });
-
-  // Check 'kind' params
-  const { kind } = req.query;
-  if (kind !== "Purchase" && kind !== "Sale")
-    return res.status(400).json({ ok: false, error: "Query parameter error" });
 
   // Pagination
   const { page } = req.query;
@@ -27,12 +20,11 @@ async function handler(
       .json({ ok: false, error: "Only one 'page' parameter is allowed" });
   const offset = +page;
 
-  // GET: product list of kind("Purchase" | "Sale")
+  // GET: 'kind's of product list
   try {
-    const products = await prismaClient.record.findMany({
+    const products = await prismaClient.favorite.findMany({
       where: {
         userId: user.id,
-        kind,
       },
       select: {
         id: true,
@@ -50,8 +42,8 @@ async function handler(
           },
         },
       },
-      take: RECORDS_PER_PAGE,
-      skip: offset * RECORDS_PER_PAGE,
+      take: 10,
+      skip: offset * 10,
     });
     if (products.length === 0)
       return res.status(404).json({ ok: false, error: "Not Found" });
@@ -59,7 +51,7 @@ async function handler(
     return res.status(200).json({ ok: true, products });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ ok: false, error });
+    return res.status(500).json({ ok: false, error: JSON.stringify(error) });
   }
 }
 

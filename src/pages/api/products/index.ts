@@ -8,7 +8,7 @@ import type { Product } from "@prisma/client";
 
 export interface ProductWithCount extends Product {
   _count: {
-    Records: number; // kind
+    Favorite: number; // kind
   };
 }
 
@@ -47,11 +47,7 @@ async function handler(
         include: {
           _count: {
             select: {
-              Records: {
-                where: {
-                  kind: "Favorite",
-                },
-              },
+              Favorite: true,
             },
           },
         },

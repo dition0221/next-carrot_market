@@ -2,6 +2,7 @@ import { getIronSession } from "iron-session";
 import { useRouter } from "next/router";
 import { useForm } from "react-hook-form";
 import useSWR, { SWRConfig } from "swr";
+import { useState } from "react";
 // LIBS
 import {
   type IIronSessionData,
@@ -118,18 +119,30 @@ function ChatDetail() {
     reset();
   };
 
+  /* POST: Add record */
+  const [addRecord, { isLoading: isRecordLoading }] = useMutation<any>(
+    `/api/chats/${id}/record`
+  );
+
   // Chat menu fn.
+  const [isOpenConfirm, setIsOpenConfirm] = useState(false);
   const onConfirmProduct = async () => {
-    if (isChatRoomLoading || isLoading) return;
+    if (isChatRoomLoading || isLoading || isRecordLoading) return;
+    if (!chatRoomData?.chatRoom?.product.user.id || !user?.id)
+      return alert("Fail: Not enough chat room data");
 
     const isConfirm = confirm(
       "Are you sure to confirm purchase of this product?"
     );
     if (!isConfirm) return;
 
-    // TODO: Add 판매내역/구매내역
+    // TODO: Add record (Sale, Purchase)
+    const formData = new FormData();
+    formData.append("sellerId", chatRoomData.chatRoom.product.user.id + "");
+    formData.append("buyerId", user.id + "");
+    await addRecord(formData);
 
-    // Delete product from DB
+    // Delete 'product' from DB
     await deleteDB({
       apiURL: `/api/products/${id}`,
       returnURL: "/",
@@ -138,7 +151,7 @@ function ChatDetail() {
     });
   };
   const onExitChatRoom = async () => {
-    if (isChatRoomLoading || isLoading) return;
+    if (isChatRoomLoading || isLoading || isRecordLoading) return;
 
     const isConfirm = confirm("Are you sure to exit this chatroom?");
     if (!isConfirm) return;
@@ -189,10 +202,12 @@ function ChatDetail() {
             </span>
           ) : (
             <button
-              onClick={onConfirmProduct}
+              onClick={() => setIsOpenConfirm(true)}
               className="flex items-center space-x-2 text-green-600 hover:underline"
             >
-              <span className="font-semibold">구매확정</span>
+              <span className="font-semibold">
+                {isRecordLoading ? "Loading.." : "구매확정"}
+              </span>
               <svg
                 className="w-4 h-4 fill-green-600"
                 xmlns="http://www.w3.org/2000/svg"
@@ -247,6 +262,17 @@ function ChatDetail() {
           </div>
         </div>
       </form>
+
+      {/* Modal box: Confirm product */}
+      {isOpenConfirm ? (
+        <>
+          <div
+            onClick={() => setIsOpenConfirm(false)}
+            className="fixed left-0 right-0 top-0 bottom-0 bg-black opacity-30"
+          ></div>
+          <article className="fixed left-0 right-0 top-0 bottom-0 m-auto w-auto h-1/2 bg-yellow-500"></article>
+        </>
+      ) : null}
 
       {/* Event of pagination */}
       {MESSAGES_PER_PAGE * size <

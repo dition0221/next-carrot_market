@@ -2633,12 +2633,18 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
     - _[채팅방] 채팅방 삭제 및 물건 post 삭제 기능 구현하기_
       - _구매자 or 판매자가 대화 종료 시_
         - _채팅방 관련만 삭제_
+  - ~~_TODO_~~
+    - ~~_[채팅방] 구매자가 구매 완료 시_~~
+      - ~~_채팅방, 물건 관련 전부 삭제하기_~~
+      - ~~_판매내역(판매자), 구매내역(구매자) 추가하기_~~
+      - ~~_?? product를 삭제하면 cascade때문에 다 삭제됨_~~
+        - ~~_isSoldOut 같은 boolean 값을 추가해야 하나?_~~
+- **24-03-14**
+  - _UPDATE_
+    - _[DB] 'records' 로직 다시 및 구현하기 (구매내역, 판매내역)_
+      - _삭제 시 cascade를 하지 않 새로운 model 생성하여 적용_
   - _TODO_
-    - _[채팅방] 구매자가 구매 완료 시_
-      - _채팅방, 물건 관련 전부 삭제하기_
-      - _판매내역(판매자), 구매내역(구매자) 추가하기_
-      - _?? product를 삭제하면 cascade때문에 다 삭제됨_
-        - _isSoldOut 같은 boolean 값을 추가해야 하나?_
+    - _[product] 판매종료내역 관련_
 
 ---
 
@@ -2648,5 +2654,3 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
     - `req.geo`를 사용
     - 호스팅 시 데이터를 제공받을 수 있음
   - [/enter] 소셜 로그인 구현하기 (NextAuth)
-  - [DB] 'records' 로직 다시 및 구현하기 (구매내역, 판매내역)
-  - [product] 판매종료내역 관련

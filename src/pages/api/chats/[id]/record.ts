@@ -19,11 +19,13 @@ async function handler(
 
   try {
     // TODO: Add 판매내역 to seller
-    /* await prismaClient.record.createMany({
-      data:[{
-        
-      }]
-    }) */
+    await prismaClient.record.createMany({
+      data: [
+        {
+          user,
+        },
+      ],
+    });
 
     // TODO: Add 구매내역 to customer
 

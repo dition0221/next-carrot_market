@@ -317,11 +317,10 @@ export const getServerSideProps: GetServerSideProps = async ({
 
     // GET 'Favorite'
     const isLiked = Boolean(
-      await prismaClient.record.findFirst({
+      await prismaClient.favorite.findFirst({
         where: {
           productId: +id,
           userId: user?.id,
-          kind: "Favorite",
         },
         select: {
           id: true,

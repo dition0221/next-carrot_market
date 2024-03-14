@@ -66,11 +66,10 @@ async function handler(
 
       // GET 'Favorite'
       const isLiked = Boolean(
-        await prismaClient.record.findFirst({
+        await prismaClient.favorite.findFirst({
           where: {
             productId: +id,
             userId: user?.id,
-            kind: "Favorite",
           },
           select: {
             id: true,
@@ -89,13 +88,8 @@ async function handler(
     }
   }
 
-  // TODO
   /* POST: Edit 'product' */
   if (req.method === "POST") {
-    const { id } = req.query;
-    if (typeof id !== "string")
-      throw new Error("Only one dynamic param allowed");
-
     const { name, price, description, photoId }: IEditProduct = req.body;
 
     try {

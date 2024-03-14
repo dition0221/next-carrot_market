@@ -13,7 +13,7 @@ export interface IProductList {
       price: number;
       imageUrl: string | null;
       _count: {
-        Records: number;
+        Favorite: number;
       };
     };
   }[];
@@ -27,7 +27,9 @@ interface IProductListProps {
 
 export default function ProductList({ kind, fallbackData }: IProductListProps) {
   const { data, ref, isLoading } = useInfiniteScroll<IProductList>(
-    `/api/users/me/records?kind=${kind}`,
+    kind === "Favorite"
+      ? `/api/users/me/favorite`
+      : `/api/users/me/records?kind=${kind}`,
     fallbackData
   );
 
@@ -46,7 +48,8 @@ export default function ProductList({ kind, fallbackData }: IProductListProps) {
             title={record.product.name}
             price={record.product.price}
             imageUrl={record.product.imageUrl}
-            hearts={record.product._count.Records}
+            hearts={record.product._count.Favorite}
+            isLink={kind === "Favorite" ? true : false}
           />
         ))
       )}

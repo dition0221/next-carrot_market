@@ -23,6 +23,8 @@ export default function Loved({ ok, products, error }: IProductList) {
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   try {
+    const FAVORITES_PER_PAGE = 10;
+
     // session
     const { user } = await getIronSession<IIronSessionData>(
       req,
@@ -32,10 +34,9 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
     if (!user) throw new Error("Please log-in");
 
     // DB
-    const products = await prismaClient.record.findMany({
+    const products = await prismaClient.favorite.findMany({
       where: {
         userId: user.id,
-        kind: "Favorite",
       },
       select: {
         id: true,
@@ -47,17 +48,13 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
             imageUrl: true,
             _count: {
               select: {
-                Records: {
-                  where: {
-                    kind: "Favorite",
-                  },
-                },
+                Favorite: true,
               },
             },
           },
         },
       },
-      take: 10,
+      take: FAVORITES_PER_PAGE,
     });
     if (products.length === 0) throw new Error("Not Found");
 

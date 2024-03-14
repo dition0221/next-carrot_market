@@ -3,26 +3,21 @@ import Image from "next/image";
 // LIBS
 import { getImage } from "@/libs/client/utils";
 
-interface IItemProps {
-  id: number;
+interface IItemChildrenProps {
   title: string;
   price: number;
   imageUrl: string | null;
   hearts: number;
 }
 
-export default function Item({
-  id,
-  title,
-  price,
-  imageUrl,
-  hearts,
-}: IItemProps) {
+interface IItemProps extends IItemChildrenProps {
+  id: number;
+  isLink: boolean;
+}
+
+function ItemChildren({ title, price, imageUrl, hearts }: IItemChildrenProps) {
   return (
-    <Link
-      href={`/products/${id}`}
-      className="flex justify-between border-b p-4 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"
-    >
+    <>
       <div className="flex space-x-4">
         {imageUrl ? (
           <Image
@@ -61,6 +56,21 @@ export default function Item({
           <span>{hearts}</span>
         </div>
       </div>
+    </>
+  );
+}
+
+export default function Item(props: IItemProps) {
+  return props.isLink ? (
+    <Link
+      href={`/products/${props.id}`}
+      className="flex justify-between border-b p-4 rounded-lg cursor-pointer hover:bg-slate-100 transition-colors"
+    >
+      <ItemChildren {...props} />
     </Link>
+  ) : (
+    <li className="flex justify-between border-b p-4 rounded-lg hover:bg-slate-100 transition-colors">
+      <ItemChildren {...props} />
+    </li>
   );
 }

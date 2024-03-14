@@ -1,4 +1,3 @@
-import useSWR, { SWRConfig } from "swr";
 // LIBS
 import prismaClient from "@/libs/server/prismaClient";
 import useInfiniteScroll from "@/libs/client/useInfiniteScroll";
@@ -23,7 +22,7 @@ export default function Home({ ok, products, error }: IProductList) {
         {/* Product List */}
         {ok === false ? (
           <p className="text-center text-base italic text-gray-600">
-            현재 채팅방이 없습니다.
+            현재 중고 상품이 없습니다.
           </p>
         ) : null}
         {data?.map((page) =>
@@ -33,8 +32,9 @@ export default function Home({ ok, products, error }: IProductList) {
               title={product.name}
               price={product.price}
               imageUrl={product.imageUrl}
-              hearts={product._count?.Records ?? 0}
+              hearts={product._count?.Favorite ?? 0}
               key={product.id}
+              isLink
             />
           ))
         )}
@@ -88,11 +88,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
       include: {
         _count: {
           select: {
-            Records: {
-              where: {
-                kind: "Favorite",
-              },
-            },
+            Favorite: true,
           },
         },
       },

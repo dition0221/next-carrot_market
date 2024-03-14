@@ -23,6 +23,8 @@ export default function Bought({ ok, products, error }: IProductList) {
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   try {
+    const RECORDS_PER_PAGE = 10;
+
     // session
     const { user } = await getIronSession<IIronSessionData>(
       req,
@@ -47,17 +49,13 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
             imageUrl: true,
             _count: {
               select: {
-                Records: {
-                  where: {
-                    kind: "Purchase",
-                  },
-                },
+                Favorite: true,
               },
             },
           },
         },
       },
-      take: 10,
+      take: RECORDS_PER_PAGE,
     });
     if (products.length === 0) throw new Error("Not Found");
 
