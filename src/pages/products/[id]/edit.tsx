@@ -102,7 +102,7 @@ export default function EditProduct({ product }: IEditProductProps) {
         if (!uploadImage.success) throw new Error();
 
         // Edit to DB
-        return editProduct({
+        return await editProduct({
           name,
           price,
           description,
@@ -115,7 +115,7 @@ export default function EditProduct({ product }: IEditProductProps) {
       }
     }
 
-    return editProduct({ name, price, description });
+    await editProduct({ name, price, description });
   };
 
   // When finish, Go to 'product detail' page

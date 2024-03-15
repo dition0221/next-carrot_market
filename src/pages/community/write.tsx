@@ -35,9 +35,9 @@ export default function CommunityWrite() {
 
   // Submit form
   const [post, { data, isLoading }] = useMutation<IWriteResponse>("/api/posts");
-  const onValid = (formData: IWriteForm) => {
+  const onValid = async (formData: IWriteForm) => {
     if (isLoading) return alert("로딩 중 입니다.");
-    post({ ...formData, latitude, longitude }); // DB
+    await post({ ...formData, latitude, longitude }); // DB
   };
 
   // Succeed post => Go this post

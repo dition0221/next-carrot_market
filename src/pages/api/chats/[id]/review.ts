@@ -5,9 +5,10 @@ import prismaClient from "@/libs/server/prismaClient";
 import { getSession } from "@/libs/server/getSession";
 
 interface IReqBody {
+  review: string;
+  score: number;
   sellerId: number;
   buyerId: number;
-  productId: number;
 }
 
 async function handler(
@@ -23,22 +24,25 @@ async function handler(
       .status(400)
       .json({ ok: false, error: "Only one dynamicParam is allowed" });
 
+  /* POST: Create a review */
   try {
-    const { sellerId, buyerId, productId } = req.body as IReqBody;
+    const { review, score, sellerId, buyerId } = req.body as IReqBody;
 
-    await prismaClient.record.createMany({
-      data: [
-        {
-          userId: +sellerId,
-          productId: +productId,
-          kind: "Sale",
+    await prismaClient.review.create({
+      data: {
+        review,
+        createdBy: {
+          connect: {
+            id: buyerId,
+          },
         },
-        {
-          userId: +buyerId,
-          productId: +productId,
-          kind: "Purchase",
+        createdFor: {
+          connect: {
+            id: sellerId,
+          },
         },
-      ],
+        score,
+      },
     });
 
     return res.status(200).json({ ok: true });

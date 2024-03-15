@@ -69,6 +69,7 @@ export async function deleteDB({
     const { ok, error } = (await (
       await fetch(`${apiURL}`, { method: "DELETE" })
     ).json()) as IResponseType;
+    console.log(ok); // !!!
 
     if (ok) router.replace(`${returnURL}`, undefined, { shallow: true });
     else throw new Error(error);

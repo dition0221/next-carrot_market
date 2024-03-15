@@ -5,7 +5,10 @@ interface IUseMutationState<T> {
   data?: T;
   error?: object;
 }
-type UseMutationResult<T> = [(data: any) => void, IUseMutationState<T>];
+type UseMutationResult<T> = [
+  (data: any) => Promise<void>,
+  IUseMutationState<T>
+];
 
 /*
   <form>의 데이터를 Back-End로 POST하는 Hook

@@ -49,7 +49,7 @@ function Stream() {
   const [sendMessage, { data: sendMessageData, isLoading }] = useMutation(
     `/api/streams/${id}/messages`
   );
-  const onValid = (formData: IMessageForm) => {
+  const onValid = async (formData: IMessageForm) => {
     if (isLoading) return;
     mutate(
       (prev) =>
@@ -73,7 +73,7 @@ function Stream() {
         },
       false
     );
-    sendMessage(formData); // DB
+    await sendMessage(formData); // DB
     reset();
   };
 

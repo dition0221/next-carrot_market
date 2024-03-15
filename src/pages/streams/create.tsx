@@ -37,9 +37,9 @@ export default function CreateStream() {
   // Submit form
   const [createLive, { data, isLoading }] =
     useMutation<ICreateLiveResponse>("/api/streams");
-  const onValid = (formData: ICreateLiveForm) => {
+  const onValid = async (formData: ICreateLiveForm) => {
     if (isLoading) return;
-    createLive(formData); // DB
+    await createLive(formData); // DB
   };
 
   // Success: push to streaming page

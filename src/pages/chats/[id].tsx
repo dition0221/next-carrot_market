@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { useForm } from "react-hook-form";
 import useSWR, { SWRConfig } from "swr";
 import { useState } from "react";
+import Link from "next/link";
 // LIBS
 import {
   type IIronSessionData,
@@ -12,16 +13,24 @@ import prismaClient from "@/libs/server/prismaClient";
 import useUser from "@/libs/client/useUser";
 import useMutation from "@/libs/client/useMutation";
 import { deleteDB, scrollToTop } from "@/libs/client/utils";
+import usePagination from "@/libs/client/usePagination";
 // COMPONENTS
 import Layout from "@/components/layout";
 import Message from "@/components/message";
-import usePagination from "@/libs/client/usePagination";
+import Button from "@/components/button";
+import Textarea from "@/components/textarea";
+import Input from "@/components/input";
 // INTERFACE
 import type { GetServerSideProps } from "next";
 import type { User } from "@prisma/client";
 
 export interface IWriteChatForm {
   chat: string;
+}
+
+interface IReviewForm {
+  score: number;
+  review: string;
 }
 
 interface IChats {
@@ -50,6 +59,8 @@ interface IChatRoomResponse {
       };
     }[];
     product: {
+      id: number;
+      name: number;
       user: {
         id: number; // 판매자 id
       };
@@ -89,7 +100,7 @@ function ChatDetail() {
     `/api/chats/${id}/chats`
   );
   const { register, handleSubmit, reset } = useForm<IWriteChatForm>();
-  const onValid = (formData: IWriteChatForm) => {
+  const onValid = async (formData: IWriteChatForm) => {
     if (isWriteLoading || isLoading) return;
 
     mutate(
@@ -114,7 +125,7 @@ function ChatDetail() {
         ],
       false
     );
-    postChat(formData); // DB
+    await postChat(formData); // DB
     scrollToTop();
     reset();
   };
@@ -136,15 +147,16 @@ function ChatDetail() {
     );
     if (!isConfirm) return;
 
-    // TODO: Add record (Sale, Purchase)
-    const formData = new FormData();
-    formData.append("sellerId", chatRoomData.chatRoom.product.user.id + "");
-    formData.append("buyerId", user.id + "");
-    await addRecord(formData);
+    // Add record (Sale, Purchase)
+    await addRecord({
+      sellerId: chatRoomData.chatRoom.product.user.id,
+      buyerId: user.id,
+      productId: chatRoomData.chatRoom.product.id,
+    }); // DB
 
-    // Delete 'product' from DB
+    //  Delete 'product' from DB (cascade 'chatRoom')
     await deleteDB({
-      apiURL: `/api/products/${id}`,
+      apiURL: `/api/products/${chatRoomData.chatRoom.product.id}`,
       returnURL: "/",
       errorContent: "Error: Fail to delete product",
       router,
@@ -163,6 +175,27 @@ function ChatDetail() {
       errorContent: "Error: Fail to delete chat room",
       router,
     });
+  };
+
+  // Write a review
+  const [writeReview, { isLoading: isReviewLoading }] = useMutation(
+    `/api/chats/${id}/review`
+  );
+  const {
+    register: reviewRegister,
+    handleSubmit: reviewHandleSubmit,
+    formState: { errors: reviewErrors },
+  } = useForm<IReviewForm>();
+  const onReviewValid = async ({ review, score }: IReviewForm) => {
+    if (isReviewLoading) return;
+
+    await onConfirmProduct();
+    await writeReview({
+      review,
+      score,
+      sellerId: chatRoomData?.chatRoom?.product.user.id!,
+      buyerId: user?.id!,
+    }); // DB
   };
 
   return (
@@ -195,41 +228,49 @@ function ChatDetail() {
         ) : null}
 
         {/* Menu bar */}
-        <div className="flex justify-between items-center border-2 px-4 py-2 text-sm border-gray-300 rounded-lg bg-orange-100 shadow-md">
-          {user?.id === chatRoomData?.chatRoom?.product.user.id ? (
-            <span className="font-semibold text-gray-700">
-              구매완료를 부탁하세요
-            </span>
-          ) : (
-            <button
-              onClick={() => setIsOpenConfirm(true)}
-              className="flex items-center space-x-2 text-green-600 hover:underline"
-            >
-              <span className="font-semibold">
-                {isRecordLoading ? "Loading.." : "구매확정"}
+        <div className="border-2 px-4 py-2 text-sm border-gray-300 rounded-lg bg-orange-100 shadow-md">
+          <Link
+            href={`/products/${chatRoomData?.chatRoom?.product.id}`}
+            className="font-semibold text-gray-700 hover:underline"
+          >
+            {chatRoomData?.chatRoom?.product.name}
+          </Link>
+          <div className="flex justify-between items-center">
+            {user?.id === chatRoomData?.chatRoom?.product.user.id ? (
+              <span className="font-semibold text-gray-700">
+                구매완료를 부탁하세요
               </span>
-              <svg
-                className="w-4 h-4 fill-green-600"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 448 512"
+            ) : (
+              <button
+                onClick={() => setIsOpenConfirm(true)}
+                className="flex items-center space-x-2 text-green-600 hover:underline"
               >
-                <path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z" />
+                <span className="font-semibold">
+                  {isRecordLoading ? "Loading.." : "구매확정"}
+                </span>
+                <svg
+                  className="w-4 h-4 fill-green-600"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 448 512"
+                >
+                  <path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z" />
+                </svg>
+              </button>
+            )}
+            <button
+              onClick={onExitChatRoom}
+              className="flex items-center space-x-2 text-red-500 hover:underline"
+            >
+              <span className="font-semibold">나가기</span>
+              <svg
+                className="w-4 h-4 fill-red-600"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 512 512"
+              >
+                <path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z" />
               </svg>
             </button>
-          )}
-          <button
-            onClick={onExitChatRoom}
-            className="flex items-center space-x-2 text-red-500 hover:underline"
-          >
-            <span className="font-semibold">나가기</span>
-            <svg
-              className="w-4 h-4 fill-red-600"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 512 512"
-            >
-              <path d="M377.9 105.9L500.7 228.7c7.2 7.2 11.3 17.1 11.3 27.3s-4.1 20.1-11.3 27.3L377.9 406.1c-6.4 6.4-15 9.9-24 9.9c-18.7 0-33.9-15.2-33.9-33.9l0-62.1-128 0c-17.7 0-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32l128 0 0-62.1c0-18.7 15.2-33.9 33.9-33.9c9 0 17.6 3.6 24 9.9zM160 96L96 96c-17.7 0-32 14.3-32 32l0 256c0 17.7 14.3 32 32 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-64 0c-53 0-96-43-96-96L0 128C0 75 43 32 96 32l64 0c17.7 0 32 14.3 32 32s-14.3 32-32 32z" />
-            </svg>
-          </button>
+          </div>
         </div>
       </section>
 
@@ -269,8 +310,58 @@ function ChatDetail() {
           <div
             onClick={() => setIsOpenConfirm(false)}
             className="fixed left-0 right-0 top-0 bottom-0 bg-black opacity-30"
-          ></div>
-          <article className="fixed left-0 right-0 top-0 bottom-0 m-auto w-auto h-1/2 bg-yellow-500"></article>
+          />
+          <article className="max-w-lg w-full fixed left-0 right-0 top-0 bottom-0 m-auto h-fit bg-gray-200 p-4 rounded-lg shadow-lg">
+            <form onSubmit={reviewHandleSubmit(onReviewValid)} className="mb-2">
+              <Input
+                type="number"
+                name="score"
+                label="score"
+                register={reviewRegister("score", {
+                  required: "Please write a score",
+                  valueAsNumber: true,
+                  min: {
+                    value: 1,
+                    message: "Please more than 1",
+                  },
+                  max: {
+                    value: 5,
+                    message: "Please less than 5",
+                  },
+                })}
+                required
+                min={1}
+                max={5}
+              />
+              <Textarea
+                name="review"
+                label="Review"
+                register={reviewRegister("review", {
+                  required: "Please write a review",
+                  maxLength: {
+                    value: 500,
+                    message: "Please less than 500",
+                  },
+                })}
+                required
+                maxLength={500}
+              />
+              <div>
+                <Button text="Submit" />
+                {reviewErrors.review?.message ? (
+                  <span className="ml-4 italic text-red-500 font-semibold underline text-sm">
+                    {reviewErrors.review.message}
+                  </span>
+                ) : null}
+                {reviewErrors.score?.message ? (
+                  <span className="ml-4 italic text-red-500 font-semibold underline text-sm">
+                    {reviewErrors.score.message}
+                  </span>
+                ) : null}
+              </div>
+            </form>
+            <Button onClick={onConfirmProduct} text="No Review" />
+          </article>
         </>
       ) : null}
 
@@ -372,6 +463,8 @@ export const getServerSideProps: GetServerSideProps = async ({
         },
         product: {
           select: {
+            id: true,
+            name: true,
             user: {
               select: {
                 id: true,

@@ -74,7 +74,7 @@ export default function ProductUpload() {
         if (!uploadImage.success) throw new Error();
 
         // Upload to DB
-        return uploadProduct({
+        return await uploadProduct({
           name,
           price,
           description,
@@ -87,7 +87,7 @@ export default function ProductUpload() {
       }
     }
 
-    uploadProduct({ name, price, description });
+    await uploadProduct({ name, price, description });
   };
 
   // When finish uploading, Go to 'product detail' page

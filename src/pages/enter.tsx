@@ -41,7 +41,7 @@ export default function Enter() {
   } = useForm<IEnterForm>();
   const onValid = async (validForm: IEnterForm) => {
     if (isLoading) return alert("로딩 중 입니다.");
-    enter(validForm); // Send form data to Back-End
+    await enter(validForm); // Send form data to Back-End
     reset();
   };
 
@@ -65,9 +65,9 @@ export default function Enter() {
     reset: tokenReset,
     formState: { errors: tokenErrors },
   } = useForm<ITokenForm>();
-  const onTokenValid = ({ token }: ITokenForm) => {
+  const onTokenValid = async ({ token }: ITokenForm) => {
     if (isTokenLoading) return;
-    confirmToken({ token, ...data });
+    await confirmToken({ token, ...data });
     tokenReset();
   };
   useEffect(() => {

@@ -22,7 +22,7 @@ async function handler(
       .status(400)
       .json({ ok: false, error: "Only one dynamicParam is allowed" });
 
-  // user
+  // user: session
   const { user } = await getSession(req, res);
 
   /* GET */
@@ -121,16 +121,12 @@ async function handler(
       await prismaClient.product.delete({
         where: {
           id: +id,
-          userId: user?.id,
         },
       });
       return res.status(200).json({ ok: true });
     } catch (error) {
       console.log(error);
-      return res.status(500).json({
-        ok: false,
-        error: JSON.stringify(error),
-      });
+      return res.status(500).json({ ok: false, error: JSON.stringify(error) });
     }
   }
 }

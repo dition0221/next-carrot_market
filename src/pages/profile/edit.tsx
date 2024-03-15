@@ -95,7 +95,7 @@ export default function EditProfile() {
         if (!uploadAvatar.success) throw new Error();
 
         // Upload to DB
-        return editProfile({
+        return await editProfile({
           name,
           email,
           phone,
@@ -108,7 +108,7 @@ export default function EditProfile() {
       }
     }
 
-    editProfile({ name, email, phone });
+    await editProfile({ name, email, phone });
   };
 
   // Success: Redirect to profile-page

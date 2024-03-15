@@ -62,21 +62,21 @@ function ProductDetail() {
   const [toggleFav, { isLoading: isToggleLoading }] = useMutation(
     `/api/products/${id}/favorite`
   );
-  const onFavoriteClick = () => {
+  const onFavoriteClick = async () => {
     if (isToggleLoading) return;
     boundMutate((prev) => prev && { ...prev, isLiked: !prev.isLiked }, false);
-    toggleFav({}); // DB
+    await toggleFav({}); // DB
   };
 
   // Click 'Talk to seller' button
   const [createChat, { isLoading: isChatLoading, data: chatData }] =
     useMutation<IChatData>("/api/chats");
-  const talkToSeller = () => {
+  const talkToSeller = async () => {
     if (isChatLoading) return;
     if (!data?.product) return alert("Product is not exist");
     if (data.product.userId === user?.id) return alert("Can't to talk myself");
 
-    createChat({ product: data.product });
+    await createChat({ product: data.product });
   };
   useEffect(() => {
     if (chatData?.ok) router.push(`/chats/${chatData.chatRoomId}`);

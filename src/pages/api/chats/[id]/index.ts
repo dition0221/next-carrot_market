@@ -49,6 +49,8 @@ async function handler(
           },
           product: {
             select: {
+              id: true,
+              name: true,
               user: {
                 select: {
                   id: true,
@@ -79,22 +81,12 @@ async function handler(
       await prismaClient.chatRoom.delete({
         where: {
           id: +chatRoomId,
-          ChatRoomUsers: {
-            some: {
-              id: user.id,
-            },
-          },
         },
       });
-      return res.status(200).json({
-        ok: true,
-      });
+      return res.status(200).json({ ok: true });
     } catch (error) {
       console.log(error);
-      return res.status(500).json({
-        ok: false,
-        error: JSON.stringify(error),
-      });
+      return res.status(500).json({ ok: false, error: JSON.stringify(error) });
     }
   }
 }

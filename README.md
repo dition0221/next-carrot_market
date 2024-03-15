@@ -2645,6 +2645,13 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
       - _삭제 시 cascade를 하지 않 새로운 model 생성하여 적용_
   - _TODO_
     - _[product] 판매종료내역 관련_
+- **24-03-15**
+  - _UPDATE: [chat/[id]]_
+    - _현재 거래중인 물품의 link 추가_
+    - _물건 구매 확정 시 review 기능(옵션) 업데이트_
+  - _ISSUE_
+    - _[api/product/[id]] product "DELETE" 시 product와 record 간의 관계 때문에 에러_
+      - _record와 product 간의 관계를 끊어내고, 일일이 저장하는 방식으로 해야하나? (model 수정)_
 
 ---
 

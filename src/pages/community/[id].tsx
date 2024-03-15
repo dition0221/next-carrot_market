@@ -101,7 +101,7 @@ function CommunityDetail() {
 
   // Mutate 'isWondering'
   const [wonder, { isLoading }] = useMutation(`/api/posts/${id}/wonder`);
-  const onWonderClick = () => {
+  const onWonderClick = async () => {
     if (!data?.post || isLoading) return;
     mutate(
       {
@@ -119,7 +119,7 @@ function CommunityDetail() {
       },
       false
     );
-    wonder({}); // DB
+    await wonder({}); // DB
   };
 
   // Answer <form>
@@ -133,9 +133,9 @@ function CommunityDetail() {
   // POST 'answer' data
   const [sendAnswer, { data: postAnswerData, isLoading: isAnswerLoading }] =
     useMutation<IPostAnswerRes>(`/api/posts/${id}/answers`);
-  const onValid = (formData: IAnswerForm) => {
+  const onValid = async (formData: IAnswerForm) => {
     if (isAnswerLoading) return;
-    sendAnswer(formData); // DB
+    await sendAnswer(formData); // DB
   };
   useEffect(() => {
     // Mutate new 'answer'
