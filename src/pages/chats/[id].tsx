@@ -12,7 +12,7 @@ import {
 import prismaClient from "@/libs/server/prismaClient";
 import useUser from "@/libs/client/useUser";
 import useMutation from "@/libs/client/useMutation";
-import { deleteDB, scrollToTop } from "@/libs/client/utils";
+import { deleteDB, deleteImage, scrollToTop } from "@/libs/client/utils";
 import usePagination from "@/libs/client/usePagination";
 // COMPONENTS
 import Layout from "@/components/layout";
@@ -60,7 +60,8 @@ interface IChatRoomResponse {
     }[];
     product: {
       id: number;
-      name: number;
+      name: string;
+      imageUrl: string;
       user: {
         id: number; // 판매자 id
       };
@@ -147,12 +148,15 @@ function ChatDetail() {
     );
     if (!isConfirm) return;
 
-    // Add record (Sale, Purchase)
+    // Add record (Sale, Purchase) to DB
     await addRecord({
       sellerId: chatRoomData.chatRoom.product.user.id,
       buyerId: user.id,
       productId: chatRoomData.chatRoom.product.id,
-    }); // DB
+    });
+
+    // Delete product's image from CF
+    await deleteImage(chatRoomData.chatRoom.product.imageUrl);
 
     //  Delete 'product' from DB (cascade 'chatRoom')
     await deleteDB({
@@ -465,6 +469,7 @@ export const getServerSideProps: GetServerSideProps = async ({
           select: {
             id: true,
             name: true,
+            imageUrl: true,
             user: {
               select: {
                 id: true,

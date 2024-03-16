@@ -30,6 +30,10 @@ async function handler(
           },
         },
       },
+      take: 3,
+      orderBy: {
+        createdAt: "desc",
+      },
     });
     return res.status(200).json({ ok: true, reviews });
   } catch (error) {

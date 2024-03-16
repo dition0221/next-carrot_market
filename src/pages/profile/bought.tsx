@@ -7,11 +7,13 @@ import {
 import prismaClient from "@/libs/server/prismaClient";
 // COMPONENTS
 import Layout from "@/components/layout";
-import ProductList, { type IProductList } from "@/components/product-list";
+import ProductList, {
+  type IRecordProductList,
+} from "@/components/product-list";
 // INTERFACE
 import type { GetServerSideProps } from "next";
 
-export default function Bought({ ok, products, error }: IProductList) {
+export default function Bought({ ok, products, error }: IRecordProductList) {
   return (
     <Layout title="구매내역" canGoBack seo="Purchase list">
       <section className="flex flex-col">
@@ -41,19 +43,9 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
       },
       select: {
         id: true,
-        product: {
-          select: {
-            id: true,
-            name: true,
-            price: true,
-            imageUrl: true,
-            _count: {
-              select: {
-                Favorite: true,
-              },
-            },
-          },
-        },
+        name: true,
+        price: true,
+        createdAt: true,
       },
       take: RECORDS_PER_PAGE,
     });
@@ -62,7 +54,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
     return {
       props: {
         ok: true,
-        products,
+        products: JSON.parse(JSON.stringify(products)),
       },
     };
   } catch (error) {

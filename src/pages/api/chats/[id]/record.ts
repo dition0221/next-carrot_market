@@ -2,7 +2,6 @@ import { NextApiRequest, NextApiResponse } from "next";
 // LIBS
 import withHandler, { IResponseType } from "@/libs/server/withHandler";
 import prismaClient from "@/libs/server/prismaClient";
-import { getSession } from "@/libs/server/getSession";
 
 interface IReqBody {
   sellerId: number;
@@ -14,9 +13,7 @@ async function handler(
   req: NextApiRequest,
   res: NextApiResponse<IResponseType>
 ) {
-  const { user } = await getSession(req, res);
-  if (!user) return res.status(401).json({ ok: false, error: "Please log-in" });
-
+  // Check 'chatRoom'
   const { id: chatRoomId } = req.query;
   if (typeof chatRoomId !== "string")
     return res
@@ -26,17 +23,31 @@ async function handler(
   try {
     const { sellerId, buyerId, productId } = req.body as IReqBody;
 
+    const product = await prismaClient.product.findUnique({
+      where: {
+        id: productId,
+      },
+      select: {
+        name: true,
+        price: true,
+      },
+    });
+    if (!product)
+      return res.status(404).json({ ok: false, error: "Product not found" });
+
     await prismaClient.record.createMany({
       data: [
         {
           userId: +sellerId,
-          productId: +productId,
           kind: "Sale",
+          name: product.name,
+          price: product.price,
         },
         {
           userId: +buyerId,
-          productId: +productId,
           kind: "Purchase",
+          name: product.name,
+          price: product.price,
         },
       ],
     });

@@ -36,19 +36,9 @@ async function handler(
       },
       select: {
         id: true,
-        product: {
-          select: {
-            id: true,
-            name: true,
-            price: true,
-            imageUrl: true,
-            _count: {
-              select: {
-                Favorite: true,
-              },
-            },
-          },
-        },
+        name: true,
+        price: true,
+        createdAt: true,
       },
       take: RECORDS_PER_PAGE,
       skip: offset * RECORDS_PER_PAGE,

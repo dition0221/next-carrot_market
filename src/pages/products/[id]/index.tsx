@@ -44,8 +44,6 @@ interface IChatData {
 
 function ProductDetail() {
   const { user } = useUser();
-
-  // route parameter
   const router = useRouter();
   const { id } = router.query;
 
@@ -54,8 +52,7 @@ function ProductDetail() {
     id ? `/api/products/${id}` : null
   );
   useEffect(() => {
-    // If not data
-    if (data?.ok === false) router.replace("/");
+    if (data?.ok === false) router.replace("/"); // If not data
   }, [data?.ok, router]);
 
   // Click 'Favorite'
@@ -87,7 +84,7 @@ function ProductDetail() {
     if (!data?.product) return;
     if (user?.id !== data?.product?.userId) return;
 
-    // Check from user
+    // Check confirmation from user
     const isDelete = confirm("Are you sure to delete this product?");
     if (!isDelete) return;
 

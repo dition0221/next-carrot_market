@@ -2646,12 +2646,16 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
   - _TODO_
     - _[product] 판매종료내역 관련_
 - **24-03-15**
-  - _UPDATE: [chat/[id]]_
+  - _UPDATE: [chats/[id]]_
     - _현재 거래중인 물품의 link 추가_
     - _물건 구매 확정 시 review 기능(옵션) 업데이트_
   - _ISSUE_
-    - _[api/product/[id]] product "DELETE" 시 product와 record 간의 관계 때문에 에러_
+    - _[api/products/[id]] product "DELETE" 시 product와 record 간의 관계 때문에 에러_
       - _record와 product 간의 관계를 끊어내고, 일일이 저장하는 방식으로 해야하나? (model 수정)_
+- **24-03-16**
+  - _FIX_
+    - _[chats/[id]] 구매 확정 시 product 이미지 삭제 (CloudFlare)_
+    - _[DB] Record 모델과 Product 모델 간의 관계를 끊음_
 
 ---
 

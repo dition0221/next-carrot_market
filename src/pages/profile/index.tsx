@@ -208,6 +208,7 @@ export default function Page({ ok, profile, error }: IUserResponse) {
 
 export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
   try {
+    // session
     const { user } = await getIronSession<IIronSessionData>(
       req!,
       res!,

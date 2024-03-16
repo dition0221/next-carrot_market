@@ -36,7 +36,7 @@ async function handler(
             imageUrl: true,
             _count: {
               select: {
-                Favorite: true,
+                Favorites: true,
               },
             },
           },

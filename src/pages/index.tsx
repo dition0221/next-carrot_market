@@ -88,7 +88,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
       include: {
         _count: {
           select: {
-            Favorite: true,
+            Favorites: true,
           },
         },
       },

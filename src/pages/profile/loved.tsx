@@ -7,11 +7,13 @@ import {
 import prismaClient from "@/libs/server/prismaClient";
 // COMPONENTS
 import Layout from "@/components/layout";
-import ProductList, { type IProductList } from "@/components/product-list";
+import ProductList, {
+  type IFavoriteProductList,
+} from "@/components/product-list";
 // INTERFACE
 import type { GetServerSideProps } from "next";
 
-export default function Loved({ ok, products, error }: IProductList) {
+export default function Loved({ ok, products, error }: IFavoriteProductList) {
   return (
     <Layout title="관심목록" canGoBack seo="Interest list">
       <section className="flex flex-col">
@@ -48,7 +50,7 @@ export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
             imageUrl: true,
             _count: {
               select: {
-                Favorite: true,
+                Favorites: true,
               },
             },
           },

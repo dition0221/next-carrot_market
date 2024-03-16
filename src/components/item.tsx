@@ -1,21 +1,23 @@
 import Link from "next/link";
 import Image from "next/image";
 // LIBS
-import { getImage } from "@/libs/client/utils";
+import { formatTime, getImage } from "@/libs/client/utils";
 
 interface IItemChildrenProps {
   title: string;
   price: number;
   imageUrl: string | null;
-  hearts: number;
+  hearts: number | null;
+  date?: string;
 }
 
-interface IItemProps extends IItemChildrenProps {
-  id: number;
-  isLink: boolean;
-}
-
-function ItemChildren({ title, price, imageUrl, hearts }: IItemChildrenProps) {
+function ItemChildren({
+  title,
+  price,
+  imageUrl,
+  hearts,
+  date,
+}: IItemChildrenProps) {
   return (
     <>
       <div className="flex space-x-4">
@@ -37,27 +39,42 @@ function ItemChildren({ title, price, imageUrl, hearts }: IItemChildrenProps) {
         </div>
       </div>
 
-      <div className="flex justify-end items-end space-x-1.5">
-        <div className="flex items-center text-sm text-gray-600 space-x-0.5">
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-            ></path>
-          </svg>
-          <span>{hearts}</span>
+      {hearts !== null ? (
+        <div className="flex justify-end items-end space-x-1.5">
+          <div className="flex items-center text-sm text-gray-600 space-x-0.5">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+              ></path>
+            </svg>
+            <span>{hearts}</span>
+          </div>
         </div>
-      </div>
+      ) : null}
+
+      {date ? (
+        <span className="flex items-end text-sm text-gray-600">
+          <time dateTime={date} suppressHydrationWarning>
+            {formatTime(date)}
+          </time>
+        </span>
+      ) : null}
     </>
   );
+}
+
+interface IItemProps extends IItemChildrenProps {
+  id: number;
+  isLink: boolean;
 }
 
 export default function Item(props: IItemProps) {
