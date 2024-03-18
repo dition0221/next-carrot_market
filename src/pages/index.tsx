@@ -32,7 +32,7 @@ export default function Home({ ok, products, error }: IProductList) {
               title={product.name}
               price={product.price}
               imageUrl={product.imageUrl}
-              hearts={product._count?.Favorite ?? 0}
+              hearts={product._count?.Favorites ?? 0}
               key={product.id}
               isLink
             />
@@ -83,6 +83,8 @@ export default function Home({ ok, products, error }: IProductList) {
 } */
 
 export const getServerSideProps: GetServerSideProps = async () => {
+  const PRODUCT_PER_PAGE = 10;
+
   try {
     const products = await prismaClient.product.findMany({
       include: {
@@ -92,7 +94,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
           },
         },
       },
-      take: 10,
+      take: PRODUCT_PER_PAGE,
     });
     if (products.length === 0) {
       return {

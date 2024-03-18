@@ -40,6 +40,8 @@ async function handler(
       return res
         .status(400)
         .json({ ok: false, error: "Only one 'page' parameter is allowed" });
+
+    const PRODUCT_PER_PAGE = 10;
     const offset = +page;
 
     try {
@@ -51,8 +53,8 @@ async function handler(
             },
           },
         },
-        take: 10,
-        skip: offset * 10,
+        take: PRODUCT_PER_PAGE,
+        skip: offset * PRODUCT_PER_PAGE,
       });
       if (products.length === 0)
         return res.status(404).json({ ok: false, error: "Not Found" });

@@ -2656,6 +2656,7 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
   - _FIX_
     - _[chats/[id]] 구매 확정 시 product 이미지 삭제 (CloudFlare)_
     - _[DB] Record 모델과 Product 모델 간의 관계를 끊음_
+- **24-03-18 : #22.0 ~ #22.6 / Deploy**
 
 ---
 
