@@ -41,6 +41,8 @@ export default function Enter() {
   } = useForm<IEnterForm>();
   const onValid = async (validForm: IEnterForm) => {
     if (isLoading) return alert("로딩 중 입니다.");
+    if (validForm.phone) return alert("이메일은 개발 중 입니다.");
+
     await enter(validForm); // Send form data to Back-End
     reset();
   };
@@ -128,6 +130,7 @@ export default function Enter() {
               </button>
             </div>
           </section>
+
           <form
             onSubmit={handleSubmit(onValid)}
             className="flex flex-col mt-8 space-y-4"

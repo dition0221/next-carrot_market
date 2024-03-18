@@ -1,16 +1,18 @@
 import { NextApiRequest, NextApiResponse } from "next";
 // LIBS
-import withHandler, { IResponseType } from "@/libs/server/withHandler";
+import withHandler, { type IResponseType } from "@/libs/server/withHandler";
 import prismaClient from "@/libs/server/prismaClient";
-// SMS
-import twilio from "twilio";
 // E-MAIL
 import { SendMailOptions } from "nodemailer";
 import smtpTransporter from "@/libs/server/email";
 // INTERFACE
 import type { IEnterForm } from "@/pages/enter";
 
-const twilioClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
+/*
+  // SMS
+  import twilio from "twilio";
+  const twilioClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
+*/
 
 async function handler(
   req: NextApiRequest,
@@ -63,18 +65,16 @@ async function handler(
     */
 
     // If email, Send e-mail for token
-    /*
     if (email) {
       const mailOptions: SendMailOptions = {
         from: process.env.MAIL_ADDRESS,
         to: email,
-        subject: "[TEST] 테스트 메일 발송입니다.",
-        text: `안녕하세요, ${email}님. 인증 코드는 ${payload} 입니다.`,
+        subject: "[Carrot-Market] 로그인 인증 메일",
+        text: `안녕하세요, ${email}님.\n인증 코드는 ${payload} 입니다.`,
       };
       const sendedMail = await smtpTransporter.sendMail(mailOptions);
       console.log(sendedMail);
     }
-    */
 
     return res.status(200).json({ ok: true, ...method });
   } catch (error) {

@@ -64,24 +64,6 @@ export default function Home({ ok, products, error }: IProductList) {
   );
 }
 
-/* export default function Page({ ok, products, error }: IProductList) {
-  return (
-    <SWRConfig
-      value={{
-        fallback: {
-          "/api/products?page=0": {
-            ok,
-            products,
-            error,
-          },
-        },
-      }}
-    >
-      <Home />
-    </SWRConfig>
-  );
-} */
-
 export const getServerSideProps: GetServerSideProps = async () => {
   const PRODUCT_PER_PAGE = 10;
 

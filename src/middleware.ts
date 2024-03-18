@@ -18,6 +18,9 @@ export async function middleware(req: NextRequest, ev: NextFetchEvent) {
     return new Response("No bot", { status: 403 });
   }
 
+  // !
+  console.log("geo", req.geo);
+
   /* Session */
   // Check logged-in user using session
   const isCookie = req.cookies.has("carrot-session");
