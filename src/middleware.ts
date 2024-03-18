@@ -18,8 +18,10 @@ export async function middleware(req: NextRequest, ev: NextFetchEvent) {
     return new Response("No bot", { status: 403 });
   }
 
-  // !
-  console.log("geo", req.geo);
+  // Only KR
+  if (process.env.NODE_ENV === "production" && req.geo?.country !== "KR") {
+    return new Response("No access", { status: 403 });
+  }
 
   /* Session */
   // Check logged-in user using session

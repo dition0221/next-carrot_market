@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/router";
+import Head from "next/head";
 // LIBS
 import { cls } from "@/libs/client/utils";
 import useMutation from "@/libs/client/useMutation";
 // COMPONENTS
 import Button from "@/components/button";
 import Input from "@/components/input";
+import FormErrorMessage from "@/components/form-error-msg";
 // INTERFACE
 import type { IResponseType } from "@/libs/server/withHandler";
-import FormErrorMessage from "@/components/form-error-msg";
-import Head from "next/head";
 
 export interface IEnterForm {
   email?: string;
