@@ -13,6 +13,19 @@ Back-End : <img src="https://img.shields.io/badge/Prisma-2D3748?style=flat-squar
 3rd party : <img src="https://img.shields.io/badge/Twilio-f22f46?style=flat-square&logo=twilio&logoColor=white"/> <img src="https://img.shields.io/badge/Nodemailer-22B573?style=flat-square&logoColor=white"/> <img src="https://img.shields.io/badge/Cloudflare-F38020?style=flat-square&logo=cloudflare&logoColor=white"/>  
 etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observer-000?style=flat-square&logoColor=white"/> <img src="https://img.shields.io/badge/timeago.js-000?style=flat-square&logoColor=white"/>
 
+![thumbnail](https://github.com/dition0221/dition0221/assets/129196812/2be6964e-d08b-4732-adad-353ecdc450ff)
+
+---
+
+> ⭐ 결과물 : https://dition0221-next-carrot-market.vercel.app/
+>
+> ![image](https://github.com/dition0221/dition0221/assets/129196812/b92900df-c767-497a-8b98-aa014483fcd9)
+>
+> **NextJS, Tailwind, Prisma, PlanetScale, Cloudflare** 등을 사용한 serverless '**당근마켓 클론 사이트**'입니다.
+> **API Route**를 사용해 Back-End를 구현하였으며, **SSR/SSG** 등을 사용하여 SEO에도 신경썼습니다.
+
+<!-- > 소셜 로그인 개발중 (NextAuth 사용 예정) -->
+
 ---
 
 - **24-01-02 : #3.0 ~ #4.8 / Set up + Tailwind CSS (1)**
