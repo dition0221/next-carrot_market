@@ -89,8 +89,6 @@ function CommunityDetail() {
   const {
     data: answersData,
     size,
-    mutate: answersMutate,
-    isLoading: isAnswersLoading,
     getMoreFn,
   } = usePagination<IGetAnswersRes>({
     url: `/api/posts/${id}/answers`,

@@ -21,6 +21,8 @@ async function handler(
 
   // GET 'post' from DB
   try {
+    const ANSWERS_PER_PAGE = 5; // pagination
+
     const post = await prismaClient.post.findUnique({
       where: {
         id: +id,
@@ -50,7 +52,7 @@ async function handler(
               },
             },
           },
-          take: 1,
+          take: ANSWERS_PER_PAGE,
         },
         _count: {
           select: {
