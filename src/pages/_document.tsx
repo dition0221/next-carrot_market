@@ -29,10 +29,14 @@ export default function Document() {
         <meta name="theme-color" content="#ffffff" />
 
         {/* Link Preview */}
+        <meta
+          property="description"
+          content="Serverless 'Carrot-Market' clone coding using NextJS, Tailwind, Prisma, PlanetScale, Cloudflare. by dition0221."
+        />
         <meta property="og:title" content="dition0221's Carrot-Market" />
         <meta
           property="og:description"
-          content="Serverless 'CARROT MARKET' clone coding using NextJS, Tailwind, Prisma, PlanetScale, Cloudflare."
+          content="Serverless 'Carrot-Market' clone coding using NextJS, Tailwind, Prisma, PlanetScale, Cloudflare. by dition0221."
         />
         <meta
           property="og:image"
@@ -43,6 +47,24 @@ export default function Document() {
           content="https://dition0221-next-carrot-market.vercel.app/"
         />
         <meta property="og:type" content="website" />
+        <meta property="twitter:title" content="dition0221's Carrot-Market" />
+        <meta
+          property="twitter:description"
+          content="Serverless 'Carrot-Market' clone coding using NextJS, Tailwind, Prisma, PlanetScale, Cloudflare. by dition0221."
+        />
+        <meta
+          property="twitter:image"
+          content="https://dition0221-next-carrot-market.vercel.app/thumbnail.png"
+        />
+        <meta
+          property="twitter:card"
+          content="https://dition0221-next-carrot-market.vercel.app/thumbnail.png"
+        />
+        <meta
+          property="twitter:url"
+          content="https://dition0221-next-carrot-market.vercel.app/"
+        />
+        <meta property="twitter:type" content="website" />
       </Head>
       <body>
         <Main />

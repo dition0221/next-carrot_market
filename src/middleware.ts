@@ -48,5 +48,5 @@ export async function middleware(req: NextRequest, ev: NextFetchEvent) {
 
 // Execute middleware only on page
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!api|_next/static|favicon.ico).*)"],
 };
