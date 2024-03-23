@@ -10,6 +10,7 @@ import {
   type IIronSessionData,
   sessionOptions,
 } from "@/libs/server/getSession";
+import crawlers from "crawler-user-agents";
 
 export async function middleware(req: NextRequest, ev: NextFetchEvent) {
   // Open graph: Link Preview
@@ -18,15 +19,20 @@ export async function middleware(req: NextRequest, ev: NextFetchEvent) {
   }
 
   /* Defend */
-  // Defend from bot
-  /* if (userAgent(req).isBot) {
+  const userAgentInfo = userAgent(req);
+
+  // Defend from unknown bot
+  if (
+    userAgentInfo.isBot &&
+    !crawlers.some((entry) => RegExp(entry.pattern).test(userAgentInfo.ua))
+  ) {
     return new Response("No bot", { status: 403 });
-  } */
+  }
 
   // Only KR
-  /* if (process.env.NODE_ENV === "production" && req.geo?.country !== "KR") {
+  if (process.env.NODE_ENV === "production" && req.geo?.country !== "KR") {
     return new Response("No access", { status: 403 });
-  } */
+  }
 
   /* Session */
   // Check logged-in user using session

@@ -2786,6 +2786,13 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
   - [middleware] 특정 지역 차단하기
     - `req.geo`를 사용
     - 호스팅 시 데이터를 제공받을 수 있음
+- **24-03-23 : Open graph**
+  - crawler-user-agents 패키지
+    - 설치법 : `npm i crawler-user-agents -D`
+    - 사용법
+      ```
+      import crawlers from "crawler-user-agents";
+      ```
 
 ---
 
