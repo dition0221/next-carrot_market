@@ -19,14 +19,14 @@ export async function middleware(req: NextRequest, ev: NextFetchEvent) {
 
   /* Defend */
   // Defend from bot
-  if (userAgent(req).isBot) {
+  /* if (userAgent(req).isBot) {
     return new Response("No bot", { status: 403 });
-  }
+  } */
 
   // Only KR
-  if (process.env.NODE_ENV === "production" && req.geo?.country !== "KR") {
+  /* if (process.env.NODE_ENV === "production" && req.geo?.country !== "KR") {
     return new Response("No access", { status: 403 });
-  }
+  } */
 
   /* Session */
   // Check logged-in user using session
