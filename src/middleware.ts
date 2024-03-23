@@ -33,6 +33,8 @@ export async function middleware(req: NextRequest, ev: NextFetchEvent) {
   );
   const isUser = Boolean(isCookie && user);
   if (!isUser && !req.nextUrl.pathname.startsWith("/enter")) {
+    if (req.nextUrl.pathname === "/thumbnail.png") return;
+
     const url = req.nextUrl.clone();
     url.pathname = "/enter";
     return NextResponse.rewrite(url);
@@ -48,5 +50,5 @@ export async function middleware(req: NextRequest, ev: NextFetchEvent) {
 
 // Execute middleware only on page
 export const config = {
-  matcher: ["/((?!api|_next/static|favicon.ico).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };
