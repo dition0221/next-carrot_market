@@ -17,7 +17,11 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
 
 ---
 
+> ![미리보기](https://github.com/dition0221/dition0221/assets/129196812/221cba83-52db-4d13-b4a0-653389a53482)
+>
 > **⭐ 결과물 : https://dition0221-next-carrot-market.vercel.app/**
+>
+> ---
 >
 > ![image](https://github.com/dition0221/dition0221/assets/129196812/b92900df-c767-497a-8b98-aa014483fcd9)
 >
@@ -2783,15 +2787,28 @@ etc : <img src="https://img.shields.io/badge/react&dash;intersection&dash;observ
     - _[chats/[id]] 구매 확정 시 product 이미지 삭제 (CloudFlare)_
     - _[DB] Record 모델과 Product 모델 간의 관계를 끊음_
 - **24-03-18 : #22.0 ~ #22.6 / Deploy**
-  - [middleware] 특정 지역 차단하기
-    - `req.geo`를 사용
-    - 호스팅 시 데이터를 제공받을 수 있음
+  - _[middleware] 특정 지역 차단하기_
+    - _`req.geo`를 사용_
+    - _호스팅 시 데이터를 제공받을 수 있음_
 - **24-03-23 : Open graph**
   - crawler-user-agents 패키지
+    - 단일 JSON 파일처럼 로봇, 크롤러 및 스파이더가 사용하는 HTTP 사용자 에이전트 목록이 포함되어있는 패키지
     - 설치법 : `npm i crawler-user-agents -D`
     - 사용법
       ```
       import crawlers from "crawler-user-agents";
+      if (RegExp(entry.pattern).test(req.headers['user-agent'])) { ... }
+      ```
+    - ex.
+      ```
+      // Defend from unknown bot
+      const userAgentInfo = userAgent(req);
+      if (
+        userAgentInfo.isBot &&
+        !crawlers.some((entry) => RegExp(entry.pattern).test(userAgentInfo.ua))
+      ) {
+        return new Response("No bot", { status: 403 });
+      }
       ```
 
 ---
