@@ -12,6 +12,11 @@ import {
 } from "@/libs/server/getSession";
 
 export async function middleware(req: NextRequest, ev: NextFetchEvent) {
+  // Open graph: Link Preview
+  if (req.nextUrl.pathname === "/thumbnail.png") {
+    return NextResponse.next();
+  }
+
   /* Defend */
   // Defend from bot
   if (userAgent(req).isBot) {
@@ -33,8 +38,6 @@ export async function middleware(req: NextRequest, ev: NextFetchEvent) {
   );
   const isUser = Boolean(isCookie && user);
   if (!isUser && !req.nextUrl.pathname.startsWith("/enter")) {
-    if (req.nextUrl.pathname === "/thumbnail.png") return;
-
     const url = req.nextUrl.clone();
     url.pathname = "/enter";
     return NextResponse.rewrite(url);
